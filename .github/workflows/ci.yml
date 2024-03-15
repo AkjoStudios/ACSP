@@ -12,16 +12,16 @@ jobs:
         runs-on: ubuntu-latest
         steps:
             - name: Checkout Repository
-              uses: actions/checkout@v3
+              uses: actions/checkout@v4
     bot:
         name: Build and Test - ACSP Bot
         runs-on: ubuntu-latest
         steps:
             - name: Checkout Repository
-              uses: actions/checkout@v3
+              uses: actions/checkout@v4
     backend:
         name: Build and Test - ACSP Backend
         runs-on: ubuntu-latest
         steps:
             - name: Checkout Repository
-              uses: actions/checkout@v3
+              uses: actions/checkout@v4
