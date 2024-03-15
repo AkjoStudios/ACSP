@@ -1,0 +1,18 @@
+name: CI across all ACSP modules
+
+on:
+    push:
+        branches: [main,develop]
+    pull_request:
+        branches: [main,develop]
+    workflow_dispatch:
+jobs:
+    frontend:
+        name: Build and Test - ACSP Frontend
+        runs-on: ubuntu-latest
+    bot:
+        name: Build and Test - ACSP Bot
+        runs-on: ubuntu-latest
+    backend:
+        name: Build and Test - ACSP Backend
+        runs-on: ubuntu-latest
