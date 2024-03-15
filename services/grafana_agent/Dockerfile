@@ -7,4 +7,4 @@ ADD ./config.river /etc/agent/config.river
 
 EXPOSE 12345
 
-CMD [ "grafana-agent", "/etc/agent/config.river" ]
+CMD [ "grafana-agent", "run", "--server.http.listen-addr=0.0.0.0:12345", "/etc/agent/config.river" ]
