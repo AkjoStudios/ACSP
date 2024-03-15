@@ -1,4 +1,5 @@
 FROM grafana/grafana-enterprise:latest-ubuntu
+USER root
 
 ADD ./grafana.ini /etc/grafana/grafana.ini
 
