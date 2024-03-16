@@ -1,0 +1,20 @@
+FROM prom/prometheus:latest
+
+ARG GRAFANA_METRICS_TOKEN
+ARG PROMETHEUS_PASSWORD
+
+ADD prometheus.yml /etc/prometheus/prometheus.yml
+
+RUN echo ${GRAFANA_METRICS_TOKEN} > /etc/prometheus/grafana_token
+RUN echo ${PROMETHEUS_PASSWORD} > /etc/prometheus/prometheus_password
+
+EXPOSE 9090
+
+CMD [ \
+    "--config.file=/etc/prometheus/prometheus.yml", \
+    "--storage.tsdb.path=/prometheus", \
+    "--storage.tsdb.retention-time=30d", \
+    "--web.console.libraries=/usr/share/prometheus/console_libraries" \
+    "--web.console.templates=/usr/share/prometheus/consoles", \
+    "--log.level=info", \
+]

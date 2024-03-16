@@ -1,0 +1,10 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  scrape_timeout: 10s
+  external_labels:
+  monitor: 'acsp-monitor'
+scrape_configs:
+  - job_name: 'grafana_agent'
+    static_configs:
+      - targets: ['acsp-grafana-agent:12345']
