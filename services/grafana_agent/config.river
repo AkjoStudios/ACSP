@@ -8,6 +8,8 @@ local.file "agent_token" {
   is_secret = true
 }
 
+discovery.process "default" {}
+
 prometheus.exporter.unix "default" {}
 
 prometheus.exporter.self "agent" {}
@@ -18,6 +20,12 @@ prometheus.exporter.postgres "acsp_db" {
 
 prometheus.exporter.postgres "auth_db" {
   data_source_names = [env("AUTH_DB_URL")]
+}
+
+prometheus.scrape "process" {
+  job_name = "process"
+  targets = discovery.process.default.targets
+  forward_to = [prometheus.remote_write.default.receiver]
 }
 
 prometheus.scrape "unix" {
