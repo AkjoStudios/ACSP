@@ -23,6 +23,10 @@ prometheus.scrape "grafana" {
   ]
   metrics_path = "/metrics"
   forward_to = [prometheus.remote_write.default.receiver]
+  basic_auth {
+    username = "agent_user"
+    password = local.file.agent_token.content
+  }
 }
 
 prometheus.remote_write "default" {
