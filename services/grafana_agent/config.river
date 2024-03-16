@@ -4,7 +4,7 @@ logging {
 }
 
 local.file "agent_token" {
-  filename = "/var/agent/data/agent_token"
+  filename = "/etc/agent/agent_token"
   is_secret = true
 }
 

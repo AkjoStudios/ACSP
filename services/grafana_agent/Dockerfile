@@ -2,7 +2,7 @@ FROM grafana/agent:latest
 USER root
 
 ARG GRAFANA_AGENT_TOKEN
-RUN echo ${GRAFANA_AGENT_TOKEN} > /var/agent/data/agent_token
+RUN echo ${GRAFANA_AGENT_TOKEN} > /etc/agent/agent_token
 
 ENV AGENT_MODE=flow
 
