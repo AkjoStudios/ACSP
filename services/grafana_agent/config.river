@@ -8,6 +8,10 @@ local.file "agent_token" {
   is_secret = true
 }
 
+prometheus.operator.servicemonitors "default" {
+    forward_to = [prometheus.remote_write.default.receiver]
+}
+
 discovery.process "default" {}
 
 prometheus.exporter.unix "default" {}
