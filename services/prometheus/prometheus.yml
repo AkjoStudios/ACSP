@@ -7,7 +7,7 @@ global:
 scrape_configs:
   - job_name: 'grafana_agent'
     static_configs:
-      - targets: ['acsp-grafana-agent:12345']
+      - targets: ['acsp-grafana-agent:9090']
     basic_auth:
       username: 'agent_user'
       password_file: '/etc/prometheus/agent_token'
