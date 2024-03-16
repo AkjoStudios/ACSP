@@ -11,7 +11,16 @@ local.file "agent_token" {
 prometheus.exporter.unix "default" {}
 
 prometheus.scrape "unix" {
+  job_name = "unix"
   targets = prometheus.exporter.unix.default.targets
+  forward_to = [prometheus.remote_write.default.receiver]
+}
+
+prometheus.scrape "grafana" {
+  job_name = "grafana"
+  targets = [
+    "__address__" = "acsp-grafana:3000/metrics"
+  ]
   forward_to = [prometheus.remote_write.default.receiver]
 }
 
