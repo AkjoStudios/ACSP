@@ -3,4 +3,4 @@ USER root
 
 EXPOSE 3567
 
-CMD [ "supertokens", "start", "--host", "0.0.0.0", "--port", "3567" ]
+CMD [ "supertokens", "start", "--host", "localhost", "--port", "3567" ]
