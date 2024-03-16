@@ -5,11 +5,11 @@ deleteDatasources:
     orgId: 1
 
 datasources:
-  - name: Grafana Agent
+  - name: Prometheus
     type: prometheus
     access: proxy
     orgId: 1
-    url: http://acsp-grafana-agent:9090
+    url: http://acsp-prometheus:9090
     isDefault: true
     basicAuth: true
     basicAuthUser: agent_user
