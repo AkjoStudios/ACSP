@@ -1,8 +1,8 @@
 FROM prom/prometheus:latest
 USER root
 
-ARG GRAFANA_METRICS_TOKEN
-ARG PROMETHEUS_PASSWORD
+ARG GRAFANA_AGENT_TOKEN
+RUN echo ${GRAFANA_AGENT_TOKEN} > /etc/prometheus/agent_token
 
 ADD prometheus.yml /etc/prometheus/prometheus.yml
 

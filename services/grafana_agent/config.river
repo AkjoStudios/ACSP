@@ -2,3 +2,19 @@ logging {
   level  = "info"
   format = "logfmt"
 }
+
+local.file "agent_token" {
+  filename = "/var/agent/data/agent_token"
+  is_secret = true
+}
+
+prometheus.remote_write "default" {
+  endpoint {
+    url = "http://localhost:9090/api/prom/push"
+
+    basic_auth {
+      username = "agent_user"
+      password = local.file.agent_token.content
+    }
+  }
+}
