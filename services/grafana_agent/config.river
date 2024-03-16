@@ -13,7 +13,7 @@ prometheus.exporter.unix "default" {}
 prometheus.exporter.self "agent" {}
 
 prometheus.exporter.mongodb "acsp_db" {
-  mongodb_url = env("ACSP_DB_URL")
+  mongodb_uri = env("ACSP_DB_URL")
 }
 
 prometheus.scrape "unix" {
