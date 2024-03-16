@@ -19,7 +19,7 @@ prometheus.scrape "unix" {
 prometheus.scrape "grafana" {
   job_name = "grafana"
   targets = [
-    { "__address__" = "acsp-grafana:3000", "__metrics_path__" = "/metrics" },
+    { "__address__" = "acsp-grafana", "__metrics_path__" = "/metrics" },
   ]
   forward_to = [prometheus.remote_write.default.receiver]
 }
