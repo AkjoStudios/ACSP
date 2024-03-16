@@ -19,7 +19,7 @@ datasources:
       basicAuthPassword: $GRAFANA_AGENT_TOKEN
   - name: ACSP Database
     type: postgres
-    url: http://acsp-db:$ACSP_DB_PORT
+    url: $ACSP_DB_HOST:$ACSP_DB_PORT
     user: $ACSP_DB_USER
     secureJsonData:
       password: $ACSP_DB_PASSWORD
@@ -30,5 +30,5 @@ datasources:
       maxIdleConns: 100
       maxIdleConnsAuto: true
       connMaxLifetime: 14400
-      postgresVersion: 1000
+      postgresVersion: 1500
       timescaledb: false
