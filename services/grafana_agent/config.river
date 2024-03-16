@@ -38,7 +38,7 @@ prometheus.scrape "acsp_db" {
   forward_to = [prometheus.remote_write.default.receiver]
 }
 
-prometheus.scrape "acsp_db" {
+prometheus.scrape "auth_db" {
   job_name = "auth_db"
   targets = prometheus.exporter.postgres.auth_db.targets
   forward_to = [prometheus.remote_write.default.receiver]
