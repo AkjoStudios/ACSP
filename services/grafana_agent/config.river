@@ -14,6 +14,8 @@ prometheus.exporter.unix "default" {}
 
 prometheus.exporter.self "agent" {}
 
+prometheus.exporter.cadvisor "default" {}
+
 prometheus.exporter.postgres "acsp_db" {
   data_source_names = [env("ACSP_DB_URL")]
 }
@@ -37,6 +39,12 @@ prometheus.scrape "unix" {
 prometheus.scrape "agent" {
   job_name = "agent"
   targets = prometheus.exporter.self.agent.targets
+  forward_to = [prometheus.remote_write.default.receiver]
+}
+
+prometheus.scrape "cadvisor" {
+  job_name = "cadvisor"
+  targets = prometheus.exporter.cadvisor.default.targets
   forward_to = [prometheus.remote_write.default.receiver]
 }
 
