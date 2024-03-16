@@ -12,8 +12,8 @@ prometheus.exporter.unix "default" {}
 
 prometheus.exporter.self "agent" {}
 
-prometheus.exporter.mongodb "acsp_db" {
-  mongodb_uri = env("ACSP_DB_URL")
+prometheus.exporter.postgres "acsp_db" {
+  data_source_names = [env("ACSP_DB_URL")]
 }
 
 prometheus.scrape "unix" {
@@ -30,7 +30,7 @@ prometheus.scrape "agent" {
 
 prometheus.scrape "acsp_db" {
   job_name = "acsp_db"
-  targets = prometheus.exporter.mongodb.acsp_db.targets
+  targets = prometheus.exporter.postgres.acsp_db.targets
   forward_to = [prometheus.remote_write.default.receiver]
 }
 
