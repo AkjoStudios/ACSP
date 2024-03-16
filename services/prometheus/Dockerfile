@@ -1,4 +1,5 @@
 FROM prom/prometheus:latest
+USER root
 
 ARG GRAFANA_METRICS_TOKEN
 ARG PROMETHEUS_PASSWORD
