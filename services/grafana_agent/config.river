@@ -22,11 +22,11 @@ prometheus.scrape "grafana" {
     { "__address__" = "acsp-grafana:3000" },
   ]
   metrics_path = "/metrics"
-  forward_to = [prometheus.remote_write.default.receiver]
   basic_auth {
     username = "agent_user"
-    password = local.file.agent_token.content
+    password_file = "/etc/agent/agent_token"
   }
+  forward_to = [prometheus.remote_write.default.receiver]
 }
 
 prometheus.remote_write "default" {
