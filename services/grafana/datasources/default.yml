@@ -9,7 +9,7 @@ datasources:
     type: prometheus
     access: proxy
     orgId: 1
-    url: http://acsp-grafana-agent:12345
+    url: http://acsp-grafana-agent:9090
     isDefault: true
     basicAuth: true
     basicAuthUser: agent_user
