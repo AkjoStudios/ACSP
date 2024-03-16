@@ -16,6 +16,10 @@ prometheus.exporter.postgres "acsp_db" {
   data_source_names = [env("ACSP_DB_URL")]
 }
 
+prometheus.exporter.postgres "auth_db" {
+  data_source_names = [env("AUTH_DB_URL")]
+}
+
 prometheus.scrape "unix" {
   job_name = "unix"
   targets = prometheus.exporter.unix.default.targets
@@ -31,6 +35,12 @@ prometheus.scrape "agent" {
 prometheus.scrape "acsp_db" {
   job_name = "acsp_db"
   targets = prometheus.exporter.postgres.acsp_db.targets
+  forward_to = [prometheus.remote_write.default.receiver]
+}
+
+prometheus.scrape "acsp_db" {
+  job_name = "auth_db"
+  targets = prometheus.exporter.postgres.auth_db.targets
   forward_to = [prometheus.remote_write.default.receiver]
 }
 

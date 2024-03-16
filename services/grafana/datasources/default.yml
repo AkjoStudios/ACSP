@@ -5,6 +5,8 @@ deleteDatasources:
     orgId: 1
   - name: ACSP Database
     orgId: 1
+  - name: Auth Database
+    orgId: 1
 
 datasources:
   - name: Prometheus
@@ -26,8 +28,23 @@ datasources:
     jsonData:
       database: $ACSP_DB_NAME
       sslmode: 'disable'
-      maxOpenConns: 100
-      maxIdleConns: 100
+      maxOpenConns: 10
+      maxIdleConns: 10
+      maxIdleConnsAuto: true
+      connMaxLifetime: 14400
+      postgresVersion: 1500
+      timescaledb: false
+  - name: Auth Database
+    type: postgres
+    url: $AUTH_DB_HOST:$AUTH_DB_PORT
+    user: $AUTH_DB_USER
+    secureJsonData:
+      password: $AUTH_DB_PASSWORD
+    jsonData:
+      database: $AUTH_DB_NAME
+      sslmode: 'disable'
+      maxOpenConns: 10
+      maxIdleConns: 10
       maxIdleConnsAuto: true
       connMaxLifetime: 14400
       postgresVersion: 1500

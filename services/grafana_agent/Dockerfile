@@ -7,6 +7,9 @@ RUN echo ${GRAFANA_AGENT_TOKEN} > /etc/agent/agent_token
 ARG ACSP_DB_URL
 ENV ACSP_DB_URL=${ACSP_DB_URL}
 
+ARG AUTH_DB_URL
+ENV AUTH_DB_URL=${AUTH_DB_URL}
+
 ENV AGENT_MODE=flow
 
 ADD ./config.river /etc/agent/config.river
