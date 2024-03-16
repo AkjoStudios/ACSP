@@ -3,6 +3,15 @@ logging {
   format = "logfmt"
 }
 
+discovery.kubernetes "pods" {
+  role = "pod"
+}
+
+prometheus.scrape "default" {
+  targets    = discovery.kubernetes.pods.targets
+  forward_to = [prometheus.remote_write.default.receiver]
+}
+
 local.file "agent_token" {
   filename = "/etc/agent/agent_token"
   is_secret = true
