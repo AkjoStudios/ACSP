@@ -12,6 +12,10 @@ prometheus.exporter.unix "default" {}
 
 prometheus.exporter.self "agent" {}
 
+prometheus.exporter.mongodb "acsp_db" {
+  mongodb_url = env("ACSP_DB_URL")
+}
+
 prometheus.scrape "unix" {
   job_name = "unix"
   targets = prometheus.exporter.unix.default.targets
@@ -21,6 +25,12 @@ prometheus.scrape "unix" {
 prometheus.scrape "agent" {
   job_name = "agent"
   targets = prometheus.exporter.self.agent.targets
+  forward_to = [prometheus.remote_write.default.receiver]
+}
+
+prometheus.scrape "acsp_db" {
+  job_name = "acsp_db"
+  targets = prometheus.exporter.mongodb.acsp_db.targets
   forward_to = [prometheus.remote_write.default.receiver]
 }
 
