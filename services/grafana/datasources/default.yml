@@ -1,0 +1,17 @@
+apiVersion: 1
+
+deleteDatasources:
+  - name: Prometheus
+    orgId: 1
+
+datasources:
+  - name: Grafana Agent
+    type: prometheus
+    access: proxy
+    orgId: 1
+    url: http://acsp-grafana-agent:12345
+    isDefault: true
+    basicAuth: true
+    basicAuthUser: agent_user
+    secureJsonData:
+      basicAuthPassword: $GRAFANA_AGENT_TOKEN
