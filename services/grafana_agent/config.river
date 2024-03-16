@@ -10,9 +10,17 @@ local.file "agent_token" {
 
 prometheus.exporter.unix "default" {}
 
+prometheus.exporter.self "agent" {}
+
 prometheus.scrape "unix" {
   job_name = "unix"
   targets = prometheus.exporter.unix.default.targets
+  forward_to = [prometheus.remote_write.default.receiver]
+}
+
+prometheus.scrape "agent" {
+  job_name = "agent"
+  targets = prometheus.exporter.self.agent.targets
   forward_to = [prometheus.remote_write.default.receiver]
 }
 
