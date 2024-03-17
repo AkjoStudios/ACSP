@@ -60,6 +60,19 @@ prometheus.scrape "auth_db" {
   forward_to = [prometheus.remote_write.default.receiver]
 }
 
+prometheus.scrape "acsp_auth" {
+    job_name = "acsp_auth"
+    targets = [
+        { "__address__" = "acsp-auth:3001" },
+    ]
+    metrics_path = "/metrics"
+    basic_auth {
+        username = "agent_user"
+        password_file = "/etc/agent/agent_token"
+    }
+    forward_to = [prometheus.remote_write.default.receiver]
+}
+
 prometheus.scrape "grafana" {
   job_name = "grafana"
   targets = [
