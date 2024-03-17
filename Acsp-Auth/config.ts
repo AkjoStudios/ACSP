@@ -16,7 +16,7 @@ export function getWebsiteDomain() {
 export const SuperTokensConfig: TypeInput = {
     framework: "express",
     supertokens: {
-        connectionURI: "https://acsp-supertokens:3567",
+        connectionURI: process.env.SUPERTOKENS_URI ?? "https://try.supertokens.io",
     },
     appInfo: {
         appName: "ACSP Auth",
