@@ -17,6 +17,7 @@ export const SuperTokensConfig: TypeInput = {
     framework: "express",
     supertokens: {
         connectionURI: process.env.SUPERTOKENS_URI ?? "https://try.supertokens.io",
+        apiKey: process.env.AUTH_API_KEY ?? "missing_key"
     },
     appInfo: {
         appName: "ACSP Auth",
