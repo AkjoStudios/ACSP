@@ -1,4 +1,4 @@
-FROM grafana/agent:latest
+FROM grafana/agent:v0.40.3
 USER root
 
 ARG GRAFANA_AGENT_TOKEN

@@ -1,4 +1,4 @@
-FROM grafana/grafana-enterprise:latest-ubuntu
+FROM grafana/grafana-enterprise:10.4.0-ubuntu
 USER root
 
 ARG GRAFANA_AGENT_TOKEN

@@ -1,4 +1,4 @@
-FROM prom/prometheus:latest
+FROM prom/prometheus:v2.50.1
 USER root
 
 ARG GRAFANA_AGENT_TOKEN
