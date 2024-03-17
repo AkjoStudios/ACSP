@@ -4,3 +4,16 @@ spring:
   output:
     ansi:
       enabled: always
+  mvc:
+    static-path-pattern: /static/**
+server:
+  port: 8080
+  address: 0.0.0.0
+  error:
+    whitelabel:
+      enabled: off
+logging:
+  level:
+    org.springframework.boot.web.embedded: OFF
+    org.springframework.boot.web.servlet.context: OFF
+    org.apache.catalina: OFF
