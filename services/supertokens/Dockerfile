@@ -6,4 +6,4 @@ ENV POSTGRESQL_CONNECTION_URI=${AUTH_DB_URL}
 
 EXPOSE 3567
 
-CMD [ "supertokens", "start", "--host", "0.0.0.0", "--port", "3567" ]
+CMD [ "supertokens", "start" ]
