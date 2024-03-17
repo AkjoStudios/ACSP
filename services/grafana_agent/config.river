@@ -8,8 +8,8 @@ local.file "agent_token" {
   is_secret = true
 }
 
-prometheus.operator.servicemonitors "default" {
-    forward_to = [prometheus.remote_write.default.receiver]
+discovery.kubernetes "default" {
+  role = "pod"
 }
 
 discovery.process "default" {}
@@ -26,6 +26,12 @@ prometheus.exporter.postgres "acsp_db" {
 
 prometheus.exporter.postgres "auth_db" {
   data_source_names = [env("AUTH_DB_URL")]
+}
+
+prometheus.scrape "kubernetes" {
+  job_name = "kubernetes"
+  targets = discovery.kubernetes.default.targets
+  forward_to = [prometheus.remote_write.default.receiver]
 }
 
 prometheus.scrape "process" {
