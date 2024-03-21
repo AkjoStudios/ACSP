@@ -1,5 +1,6 @@
 package com.akjostudios.acsp.backend.external;
 
+import com.akjostudios.acsp.backend.external.model.supertokens.SupertokenApiVersions;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
@@ -44,19 +45,23 @@ public class ExternalServiceIndicator implements ReactiveHealthIndicator {
     private @NotNull Mono<Health> checkSupertokensService() {
         return superTokensClient.get().uri("/apiversion")
                 .exchangeToMono(clientResponse -> {
-                    if (clientResponse.statusCode().is2xxSuccessful()) {
-                        return Mono.just(Health.up()
-                                .withDetail(SERVICE_DETAIL, SUPERTOKENS_SERVICE)
-                                .withDetail("code", clientResponse.statusCode().value())
-                                .build()
-                        );
-                    } else {
-                        return Mono.just(Health.down()
-                                .withDetail(SERVICE_DETAIL, SUPERTOKENS_SERVICE)
-                                .withDetail("code", clientResponse.statusCode().value())
-                                .build()
-                        );
+                    Mono<Health.Builder> healthBuilderMono = Mono.just(
+                            clientResponse.statusCode().is2xxSuccessful() ? Health.up() : Health.down()
+                    ).map(builder -> builder
+                            .withDetail(SERVICE_DETAIL, SUPERTOKENS_SERVICE)
+                            .withDetail("code", clientResponse.statusCode().value()
+                    ));
+
+                    if (!clientResponse.statusCode().is2xxSuccessful()) {
+                        return healthBuilderMono.map(Health.Builder::build);
                     }
+
+                    return clientResponse.bodyToMono(SupertokenApiVersions.class)
+                            .map(SupertokenApiVersions::getLatestVersion)
+                            .flatMap(version -> healthBuilderMono.map(builder -> builder
+                                    .withDetail("version", version.toString())
+                                    .build()
+                            ));
                 }).onErrorResume(ex -> Mono.just(Health.down()
                         .withDetail(SERVICE_DETAIL, SUPERTOKENS_SERVICE)
                         .withDetail("message", "Unable to connect to supertokens service!")
