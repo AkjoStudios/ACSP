@@ -5,6 +5,6 @@ watchPatterns = ["/services/grafana"]
 [deploy]
 numReplicas = 1
 healthcheckPath = "/api/health"
-healthcheckTimeout = 300
+healthcheckTimeout = 180
 restartPolicyType = "ON_FAILURE"
 restartPolicyMaxRetries = 3
