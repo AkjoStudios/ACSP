@@ -86,7 +86,7 @@ prometheus.scrape "acsp_backend" {
     metrics_path = "/actuator/prometheus"
     basic_auth {
         username = env("PROMETHEUS_USERNAME")
-        password = local.file.prometheus_password.content
+        password_file = "/etc/agent/prometheus_password"
     }
     forward_to = [prometheus.remote_write.default.receiver]
 }
