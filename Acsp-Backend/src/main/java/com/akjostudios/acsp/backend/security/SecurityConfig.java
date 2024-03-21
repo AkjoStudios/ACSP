@@ -1,6 +1,6 @@
-package com.akjostudios.acsp.backend.config;
+package com.akjostudios.acsp.backend.security;
 
-import com.akjostudios.acsp.backend.error.ErrorHandler;
+import com.akjostudios.acsp.backend.error.WebErrorHandler;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -10,9 +10,15 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.authentication.ReactiveAuthenticationManager;
+import org.springframework.security.authentication.UserDetailsRepositoryReactiveAuthenticationManager;
 import org.springframework.security.config.annotation.method.configuration.EnableReactiveMethodSecurity;
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
+import org.springframework.security.core.userdetails.MapReactiveUserDetailsService;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.crypto.factory.PasswordEncoderFactories;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.server.SecurityWebFilterChain;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.server.ServerWebExchange;
@@ -24,6 +30,7 @@ import reactor.core.publisher.Mono;
 @EnableWebFluxSecurity
 @EnableReactiveMethodSecurity
 public class SecurityConfig {
+    private final SecurityProperties securityProperties;
     private final ObjectMapper objectMapper;
 
     @Bean
@@ -33,12 +40,10 @@ public class SecurityConfig {
     ) {
         return defaultSecurity(http)
                 .authorizeExchange(exchange -> exchange
-                        .pathMatchers("/actuator/**").permitAll()
-                        .pathMatchers("/error").permitAll()
                         .pathMatchers("/api/**").authenticated()
+                        .pathMatchers("/actuator/prometheus").hasRole("PROMETHEUS")
                         .anyExchange().permitAll()
-                ).httpBasic(ServerHttpSecurity.HttpBasicSpec::disable)
-                .build();
+                ).build();
     }
 
     private @NotNull ServerHttpSecurity defaultSecurity(
@@ -69,7 +74,7 @@ public class SecurityConfig {
         try {
             return exchange.getResponse().writeWith(
                     Mono.just(exchange.getResponse().bufferFactory().wrap(
-                            objectMapper.writeValueAsBytes(new ErrorHandler.ErrorResponse(
+                            objectMapper.writeValueAsBytes(new WebErrorHandler.ErrorResponse(
                                     StringUtils.replaceChars(ex.getMessage(), '"', '\''),
                                     status.value(),
                                     exchange.getRequest().getPath().value()
@@ -79,5 +84,22 @@ public class SecurityConfig {
         } catch (Exception e) {
             return Mono.error(e);
         }
+    }
+
+    @Bean
+    public ReactiveAuthenticationManager authenticationManager() {
+        return new UserDetailsRepositoryReactiveAuthenticationManager(
+                new MapReactiveUserDetailsService(
+                        User.withUsername(securityProperties.getPrometheus().getUsername())
+                                .password(securityProperties.getPrometheus().getPassword())
+                                .roles("PROMETHEUS")
+                                .build()
+                )
+        );
+    }
+
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return PasswordEncoderFactories.createDelegatingPasswordEncoder();
     }
 }

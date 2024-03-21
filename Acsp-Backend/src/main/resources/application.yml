@@ -1,11 +1,56 @@
+app:
+  security:
+    prometheus:
+      username: ${PROMETHEUS_USERNAME}
+      password: ${PROMETHEUS_PASSWORD}
 spring:
   application:
     name: ACSP Backend
+  datasource:
+    url: jdbc:postgresql://${ACSP_DB_HOST}:${ACSP_DB_PORT}/${ACSP_DB_NAME}
+    username: ${ACSP_DB_USER}
+    password: ${ACSP_DB_PASSWORD}
+    driver-class-name: org.postgresql.Driver
   output:
     ansi:
       enabled: always
   mvc:
     static-path-pattern: /static/**
+management:
+  endpoint:
+    health:
+      show-details: always
+      probes:
+        enabled: true
+      group:
+        readiness:
+          include: readinessState
+  endpoints:
+    web:
+      exposure:
+        include: [ 'health', 'info', 'prometheus' ]
+  health:
+    diskspace:
+      enabled: false
+  metrics:
+    tags:
+      service: ${RAILWAY_SERVICE_NAME}
+      environment: ${RAILWAY_ENVIRONMENT_NAME}
+  info:
+    java:
+      enabled: true
+    env:
+      enabled: true
+    os:
+      enabled: true
+info:
+  railway:
+    project_name: ${RAILWAY_PROJECT_NAME}
+    environment_name: ${RAILWAY_ENVIRONMENT_NAME}
+    service_name: ${RAILWAY_SERVICE_NAME}
+    service_url: ${RAILWAY_PUBLIC_DOMAIN}
+    replica_id: ${RAILWAY_REPLICA_ID}
+    deployment_id: ${RAILWAY_DEPLOYMENT_ID}
 server:
   port: 8080
   address: 0.0.0.0

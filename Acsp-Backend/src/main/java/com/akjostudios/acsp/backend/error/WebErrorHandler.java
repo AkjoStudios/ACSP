@@ -2,6 +2,7 @@ package com.akjostudios.acsp.backend.error;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.core.annotation.Order;
@@ -14,9 +15,10 @@ import org.springframework.web.server.WebExceptionHandler;
 import reactor.core.publisher.Mono;
 
 @RestControllerAdvice
+@Slf4j
 @RequiredArgsConstructor
 @Order(-2)
-public class ErrorHandler implements WebExceptionHandler {
+public class WebErrorHandler implements WebExceptionHandler {
     private final ObjectMapper objectMapper;
 
     @Override
@@ -25,19 +27,21 @@ public class ErrorHandler implements WebExceptionHandler {
             @NotNull Throwable ex
     ) {
         ServerHttpRequest request = exchange.getRequest();
+
+        int statusCode = HttpStatus.INTERNAL_SERVER_ERROR.value();
+        if (ex instanceof ResponseStatusException responseStatusEx) {
+            statusCode = responseStatusEx.getStatusCode().value();
+        }
+
         ErrorResponse errorResponse = new ErrorResponse(
                 StringUtils.replaceChars(ex.getLocalizedMessage(), '"', '\''),
-                HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                statusCode,
                 request.getURI().getPath()
         );
-
-        if (ex instanceof ResponseStatusException responseStatusEx) {
-            errorResponse = new ErrorResponse(
-                    StringUtils.replaceChars(responseStatusEx.getLocalizedMessage(), '"', '\''),
-                    responseStatusEx.getStatusCode().value(),
-                    request.getURI().getPath()
-            );
-        }
+        log.error(
+                "Error occurred while processing request to '{}' with status code {}: {}",
+                errorResponse.path(), errorResponse.statusCode(), errorResponse.message()
+        );
 
         try {
             return exchange.getResponse().writeWith(Mono.just(

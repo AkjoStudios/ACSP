@@ -8,6 +8,11 @@ local.file "agent_token" {
   is_secret = true
 }
 
+local.file "prometheus_password" {
+  filename = "/etc/agent/prometheus_password"
+  is_secret = true
+}
+
 discovery.process "default" {}
 
 prometheus.exporter.unix "default" {}
@@ -69,6 +74,19 @@ prometheus.scrape "acsp_auth" {
     basic_auth {
         username = "agent_user"
         password_file = "/etc/agent/agent_token"
+    }
+    forward_to = [prometheus.remote_write.default.receiver]
+}
+
+prometheus.scrape "acsp_backend" {
+    job_name = "acsp_backend"
+    targets = [
+        { "__address__" = "acsp-backend:8080" },
+    ]
+    metrics_path = "/actuator/prometheus"
+    basic_auth {
+        username = env("PROMETHEUS_USERNAME")
+        password = local.file.prometheus_password.content
     }
     forward_to = [prometheus.remote_write.default.receiver]
 }
