@@ -24,7 +24,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: ./AcspBackend
+        working-directory: ./Acsp-Backend
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
