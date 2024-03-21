@@ -1,0 +1,10 @@
+[build]
+builder = "DOCKERFILE"
+watchPatterns = ["/services/prometheus"]
+
+[deploy]
+numReplicas = 1
+healthcheckPath = "/hello"
+healthcheckTimeout = 300
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 3
