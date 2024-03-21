@@ -1,27 +1,37 @@
 name: CI across all ACSP modules
 
 on:
-    push:
-        branches: [main,develop]
-    pull_request:
-        branches: [main,develop]
-    workflow_dispatch:
+  push:
+    branches: [main,develop]
+  pull_request:
+    branches: [main,develop]
+  workflow_dispatch:
 jobs:
-    frontend:
-        name: Build and Test - ACSP Frontend
-        runs-on: ubuntu-latest
-        steps:
-            - name: Checkout Repository
-              uses: actions/checkout@v4
-    bot:
-        name: Build and Test - ACSP Bot
-        runs-on: ubuntu-latest
-        steps:
-            - name: Checkout Repository
-              uses: actions/checkout@v4
-    backend:
-        name: Build and Test - ACSP Backend
-        runs-on: ubuntu-latest
-        steps:
-            - name: Checkout Repository
-              uses: actions/checkout@v4
+  frontend:
+    name: Build and Test - ACSP Frontend
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+  bot:
+    name: Build and Test - ACSP Bot
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+  backend:
+    name: Build and Test - ACSP Backend
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./AcspBackend
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+      - name: Set up JDK 21
+        uses: actions/setup-java@v3
+        with:
+          java-version: 21
+          distribution: 'temurin'
+      - name: Build and Test with Maven
+        run: mvn -B clean test verify --file pom.xml
