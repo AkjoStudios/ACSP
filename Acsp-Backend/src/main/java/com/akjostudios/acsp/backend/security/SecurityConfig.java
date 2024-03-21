@@ -25,8 +25,11 @@ import org.springframework.security.core.userdetails.ReactiveUserDetailsService;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.server.DelegatingServerAuthenticationEntryPoint;
 import org.springframework.security.web.server.SecurityWebFilterChain;
+import org.springframework.security.web.server.authentication.HttpBasicServerAuthenticationEntryPoint;
 import org.springframework.security.web.server.util.matcher.PathPatternParserServerWebExchangeMatcher;
+import org.springframework.security.web.server.util.matcher.ServerWebExchangeMatchers;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
@@ -39,6 +42,9 @@ import java.util.List;
 @EnableWebFluxSecurity
 @EnableReactiveMethodSecurity
 public class SecurityConfig {
+    private static final String ACTUATOR_ROLE = "ACTUATOR";
+    private static final String PROMETHEUS_ROLE = "PROMETHEUS";
+
     private final SecurityProperties securityProperties;
     private final ExternalServiceProperties externalServiceProperties;
 
@@ -53,6 +59,9 @@ public class SecurityConfig {
                 .authorizeExchange(exchange -> exchange
                         .pathMatchers("/api/**").authenticated()
                         .anyExchange().permitAll()
+                ).exceptionHandling(exceptionHandlingSpec -> exceptionHandlingSpec
+                        .authenticationEntryPoint((exchange, e) -> handleException(exchange, e, HttpStatus.UNAUTHORIZED))
+                        .accessDeniedHandler((exchange, e) -> handleException(exchange, e, HttpStatus.FORBIDDEN))
                 ).httpBasic(ServerHttpSecurity.HttpBasicSpec::disable).build();
     }
 
@@ -65,11 +74,22 @@ public class SecurityConfig {
         return defaultSecurity(http)
                 .securityMatcher(new PathPatternParserServerWebExchangeMatcher("/actuator/**"))
                 .authorizeExchange(exchanges -> exchanges
-                        .matchers(EndpointRequest.to(PrometheusScrapeEndpoint.class)).hasRole("PROMETHEUS")
-                        .matchers(EndpointRequest.to(InfoEndpoint.class)).hasRole("ACTUATOR")
+                        .matchers(EndpointRequest.to(PrometheusScrapeEndpoint.class)).hasRole(PROMETHEUS_ROLE)
+                        .matchers(EndpointRequest.to(InfoEndpoint.class)).hasRole(ACTUATOR_ROLE)
+                        .pathMatchers("/actuator").hasRole(ACTUATOR_ROLE)
                         .anyExchange().permitAll()
                 ).httpBasic(httpBasic -> httpBasic
                         .authenticationManager(authenticationManager)
+                ).exceptionHandling(exceptionHandlingSpec -> exceptionHandlingSpec
+                        .authenticationEntryPoint((exchange1, ex1) -> new DelegatingServerAuthenticationEntryPoint(
+                                List.of(new DelegatingServerAuthenticationEntryPoint.DelegateEntry(
+                                        ServerWebExchangeMatchers.anyExchange(),
+                                        new HttpBasicServerAuthenticationEntryPoint()
+                                ), new DelegatingServerAuthenticationEntryPoint.DelegateEntry(
+                                        ServerWebExchangeMatchers.anyExchange(),
+                                        (exchange2, ex2) -> handleException(exchange2, ex2, HttpStatus.UNAUTHORIZED)
+                                ))
+                        ).commence(exchange1, ex1)).accessDeniedHandler(this::handleReauthentication)
                 ).build();
     }
 
@@ -88,19 +108,17 @@ public class SecurityConfig {
                             corsConfig.addAllowedMethod("*");
                             return corsConfig;
                         })
-                ).exceptionHandling(exceptionHandlingSpec -> exceptionHandlingSpec
-                        .authenticationEntryPoint((exchange, e) -> handleException(exchange, e, HttpStatus.UNAUTHORIZED))
-                        .accessDeniedHandler((exchange, e) -> handleException(exchange, e, HttpStatus.FORBIDDEN))
-                );
+                ).csrf(ServerHttpSecurity.CsrfSpec::disable);
     }
 
-    private Mono<Void> handleException(
+    private @NotNull Mono<Void> handleException(
             @NotNull ServerWebExchange exchange,
             @NotNull Throwable ex,
             @NotNull HttpStatus status
     ) {
         log.error("Security exception to {} with status {}: {}", exchange.getRequest().getPath(), status, ex.getMessage());
         exchange.getResponse().setStatusCode(status);
+
         try {
             return exchange.getResponse().writeWith(
                     Mono.just(exchange.getResponse().bufferFactory().wrap(
@@ -114,6 +132,16 @@ public class SecurityConfig {
         } catch (Exception e) {
             return Mono.error(e);
         }
+    }
+
+    private @NotNull Mono<Void> handleReauthentication(
+            @NotNull ServerWebExchange exchange,
+            @NotNull Throwable ex
+    ) {
+        log.info("Prompting user for reauthentication at {}", exchange.getRequest().getURI());
+        exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
+        exchange.getResponse().getHeaders().set("WWW-Authenticate", "Basic realm=\"Realm\"");
+        return exchange.getResponse().setComplete();
     }
 
     @Bean("basicAuthenticationManager")
@@ -131,11 +159,11 @@ public class SecurityConfig {
         return new MapReactiveUserDetailsService(List.of(
                 User.withUsername(securityProperties.getPrometheus().getUsername())
                         .password(passwordEncoder.encode(securityProperties.getPrometheus().getPassword()))
-                        .roles("PROMETHEUS")
+                        .roles(PROMETHEUS_ROLE)
                         .build(),
                 User.withUsername(securityProperties.getActuator().getUsername())
                         .password(passwordEncoder.encode(securityProperties.getActuator().getPassword()))
-                        .roles("ACTUATOR")
+                        .roles(ACTUATOR_ROLE)
                         .build()
         ));
     }
