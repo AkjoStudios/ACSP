@@ -1,5 +1,8 @@
 app:
   security:
+    actuator:
+      username: "actuator"
+      password: ${ACTUATOR_PASSWORD}
     prometheus:
       username: "prometheus"
       password: ${PROMETHEUS_PASSWORD}

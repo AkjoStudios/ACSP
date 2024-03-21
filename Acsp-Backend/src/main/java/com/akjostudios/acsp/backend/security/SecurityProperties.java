@@ -8,11 +8,12 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @Getter
 @Setter
 public class SecurityProperties {
-    private Prometheus prometheus;
+    private User actuator;
+    private User prometheus;
 
     @Getter
     @Setter
-    public static class Prometheus {
+    public static class User {
         private String username;
         private String password;
     }

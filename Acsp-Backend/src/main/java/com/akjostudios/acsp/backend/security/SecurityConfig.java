@@ -9,6 +9,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.actuate.autoconfigure.security.reactive.EndpointRequest;
+import org.springframework.boot.actuate.info.InfoEndpoint;
 import org.springframework.boot.actuate.metrics.export.prometheus.PrometheusScrapeEndpoint;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -29,6 +30,8 @@ import org.springframework.security.web.server.util.matcher.PathPatternParserSer
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
+
+import java.util.List;
 
 @Configuration
 @RequiredArgsConstructor
@@ -63,6 +66,7 @@ public class SecurityConfig {
                 .securityMatcher(new PathPatternParserServerWebExchangeMatcher("/actuator/**"))
                 .authorizeExchange(exchanges -> exchanges
                         .matchers(EndpointRequest.to(PrometheusScrapeEndpoint.class)).hasRole("PROMETHEUS")
+                        .matchers(EndpointRequest.to(InfoEndpoint.class)).hasRole("ACTUATOR")
                         .anyExchange().permitAll()
                 ).httpBasic(httpBasic -> httpBasic
                         .authenticationManager(authenticationManager)
@@ -114,18 +118,26 @@ public class SecurityConfig {
 
     @Bean("basicAuthenticationManager")
     public @NotNull ReactiveAuthenticationManager basicAuthenticationManager(
-            @NotNull @Qualifier("prometheusUserDetailsService") ReactiveUserDetailsService userDetailsService
-    ) { return new UserDetailsRepositoryReactiveAuthenticationManager(userDetailsService); }
+            @NotNull @Qualifier("actuatorUserDetailsService")
+            ReactiveUserDetailsService actuatorUserDetailsService
+    ) { return new UserDetailsRepositoryReactiveAuthenticationManager(
+            actuatorUserDetailsService
+    ); }
 
-    @Bean("prometheusUserDetailsService")
+    @Bean("actuatorUserDetailsService")
     public @NotNull ReactiveUserDetailsService userDetailsService(
             @NotNull PasswordEncoder passwordEncoder
     ) {
-        return new MapReactiveUserDetailsService(User
-                .withUsername(securityProperties.getPrometheus().getUsername())
-                .password(passwordEncoder.encode(securityProperties.getPrometheus().getPassword()))
-                .roles("PROMETHEUS")
-                .build());
+        return new MapReactiveUserDetailsService(List.of(
+                User.withUsername(securityProperties.getPrometheus().getUsername())
+                        .password(passwordEncoder.encode(securityProperties.getPrometheus().getPassword()))
+                        .roles("PROMETHEUS")
+                        .build(),
+                User.withUsername(securityProperties.getActuator().getUsername())
+                        .password(passwordEncoder.encode(securityProperties.getActuator().getPassword()))
+                        .roles("ACTUATOR")
+                        .build()
+        ));
     }
 
     @Bean
