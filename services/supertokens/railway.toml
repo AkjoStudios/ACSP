@@ -1,6 +1,6 @@
 [build]
 builder = "DOCKERFILE"
-watchPatterns = ["/services/prometheus"]
+watchPatterns = ["/services/supertokens"]
 
 [deploy]
 numReplicas = 1
