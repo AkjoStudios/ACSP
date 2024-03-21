@@ -54,6 +54,7 @@ public class SecurityConfig {
                 .cors(corsSpec -> corsSpec
                         .configurationSource(request -> {
                             CorsConfiguration corsConfig = new CorsConfiguration();
+                            corsConfig.addAllowedOrigin("*");
                             corsConfig.addAllowedHeader("*");
                             corsConfig.addAllowedMethod("*");
                             return corsConfig;
@@ -91,7 +92,7 @@ public class SecurityConfig {
         return new UserDetailsRepositoryReactiveAuthenticationManager(
                 new MapReactiveUserDetailsService(
                         User.withUsername(securityProperties.getPrometheus().getUsername())
-                                .password(passwordEncoder().encode(securityProperties.getPrometheus().getPassword()))
+                                .password("{noop}" + securityProperties.getPrometheus().getPassword())
                                 .roles("PROMETHEUS")
                                 .build()
                 )
