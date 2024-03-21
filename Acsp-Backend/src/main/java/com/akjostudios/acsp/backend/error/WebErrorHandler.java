@@ -28,6 +28,10 @@ public class WebErrorHandler implements WebExceptionHandler {
     ) {
         ServerHttpRequest request = exchange.getRequest();
 
+        if (request.getPath().value().equals("/favicon.ico")) {
+            return Mono.empty();
+        }
+
         int statusCode = HttpStatus.INTERNAL_SERVER_ERROR.value();
         if (ex instanceof ResponseStatusException responseStatusEx) {
             statusCode = responseStatusEx.getStatusCode().value();
