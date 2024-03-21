@@ -3,6 +3,8 @@ app:
     prometheus:
       username: "prometheus"
       password: ${PROMETHEUS_PASSWORD}
+  services:
+    auth-url: ${ACSP_AUTH_URL}
 spring:
   application:
     name: ACSP Backend
@@ -14,8 +16,6 @@ spring:
   output:
     ansi:
       enabled: always
-  mvc:
-    static-path-pattern: /static/**
 management:
   endpoint:
     health:
@@ -24,7 +24,7 @@ management:
         enabled: true
       group:
         readiness:
-          include: readinessState
+          include: readinessState, externalServices
   endpoints:
     web:
       exposure:

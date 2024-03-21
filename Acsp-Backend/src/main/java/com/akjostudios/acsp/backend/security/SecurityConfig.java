@@ -1,6 +1,7 @@
 package com.akjostudios.acsp.backend.security;
 
 import com.akjostudios.acsp.backend.error.WebErrorHandler;
+import com.akjostudios.acsp.backend.external.ExternalServiceProperties;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -36,6 +37,8 @@ import reactor.core.publisher.Mono;
 @EnableReactiveMethodSecurity
 public class SecurityConfig {
     private final SecurityProperties securityProperties;
+    private final ExternalServiceProperties externalServiceProperties;
+
     private final ObjectMapper objectMapper;
 
     @Bean
@@ -74,7 +77,9 @@ public class SecurityConfig {
                 .cors(corsSpec -> corsSpec
                         .configurationSource(request -> {
                             CorsConfiguration corsConfig = new CorsConfiguration();
-                            corsConfig.addAllowedOrigin("*");
+
+                            corsConfig.addAllowedOrigin(externalServiceProperties.getAuthUrl());
+
                             corsConfig.addAllowedHeader("*");
                             corsConfig.addAllowedMethod("*");
                             return corsConfig;

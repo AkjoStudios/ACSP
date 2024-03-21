@@ -13,6 +13,10 @@ export function getWebsiteDomain() {
     return process.env.APP_WEBSITE_URL ?? `http://localhost:${websitePort}`;
 }
 
+export function getBackendDomain() {
+    return process.env.ACSP_BACKEND_URL ?? "http://localhost:8080";
+}
+
 export const SuperTokensConfig: TypeInput = {
     framework: "express",
     supertokens: {

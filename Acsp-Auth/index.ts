@@ -5,7 +5,7 @@ import { middleware, errorHandler } from "supertokens-node/framework/express";
 import promBundle from "express-prom-bundle";
 import basicAuth from "express-basic-auth";
 
-import { getWebsiteDomain, SuperTokensConfig } from "./config";
+import { getWebsiteDomain, getBackendDomain, SuperTokensConfig } from "./config";
 
 
 supertokens.init(SuperTokensConfig)
@@ -28,7 +28,7 @@ app.use(metricsMiddleware);
 
 app.use(
     cors({
-        origin: getWebsiteDomain(),
+        origin: [getWebsiteDomain(), getBackendDomain()],
         allowedHeaders: ["content-type", ...supertokens.getAllCORSHeaders()],
         methods: ["GET", "PUT", "POST", "DELETE"],
         credentials: true,
