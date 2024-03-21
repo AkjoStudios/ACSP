@@ -32,36 +32,42 @@ prometheus.exporter.postgres "auth_db" {
 prometheus.scrape "process" {
   job_name = "process"
   targets = discovery.process.default.targets
+  scrape_interval = "15s"
   forward_to = [prometheus.remote_write.default.receiver]
 }
 
 prometheus.scrape "unix" {
   job_name = "unix"
   targets = prometheus.exporter.unix.default.targets
+  scrape_interval = "15s"
   forward_to = [prometheus.remote_write.default.receiver]
 }
 
 prometheus.scrape "agent" {
   job_name = "agent"
   targets = prometheus.exporter.self.agent.targets
+  scrape_interval = "15s"
   forward_to = [prometheus.remote_write.default.receiver]
 }
 
 prometheus.scrape "cadvisor" {
   job_name = "cadvisor"
   targets = prometheus.exporter.cadvisor.default.targets
+  scrape_interval = "15s"
   forward_to = [prometheus.remote_write.default.receiver]
 }
 
 prometheus.scrape "acsp_db" {
   job_name = "acsp_db"
   targets = prometheus.exporter.postgres.acsp_db.targets
+  scrape_interval = "15s"
   forward_to = [prometheus.remote_write.default.receiver]
 }
 
 prometheus.scrape "auth_db" {
   job_name = "auth_db"
   targets = prometheus.exporter.postgres.auth_db.targets
+  scrape_interval = "15s"
   forward_to = [prometheus.remote_write.default.receiver]
 }
 
@@ -75,6 +81,7 @@ prometheus.scrape "acsp_auth" {
         username = "agent_user"
         password_file = "/etc/agent/agent_token"
     }
+    scrape_interval = "30s"
     forward_to = [prometheus.remote_write.default.receiver]
 }
 
@@ -88,6 +95,7 @@ prometheus.scrape "acsp_backend" {
         username = "prometheus"
         password_file = "/etc/agent/prometheus_password"
     }
+    scrape_interval = "15s"
     forward_to = [prometheus.remote_write.default.receiver]
 }
 
@@ -101,6 +109,7 @@ prometheus.scrape "grafana" {
     username = "agent_user"
     password_file = "/etc/agent/agent_token"
   }
+  scrape_interval = "30s"
   forward_to = [prometheus.remote_write.default.receiver]
 }
 
