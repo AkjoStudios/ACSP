@@ -6,8 +6,6 @@ app:
     prometheus:
       username: "prometheus"
       password: ${PROMETHEUS_PASSWORD}
-  services:
-    auth-url: ${ACSP_AUTH_URL}
 spring:
   application:
     name: ACSP Backend
@@ -27,7 +25,7 @@ management:
         enabled: true
       group:
         readiness:
-          include: readinessState, externalServices
+          include: readinessState
   endpoints:
     web:
       exposure:
