@@ -1,10 +1,13 @@
 [build]
 builder = "DOCKERFILE"
+buildCommand = "null"
 watchPatterns = ["/services/grafana"]
 
 [deploy]
+startCommand = "null"
 numReplicas = 1
 healthcheckPath = "/api/health"
 healthcheckTimeout = 300
 restartPolicyType = "ON_FAILURE"
 restartPolicyMaxRetries = 3
+cronSchedule = "null"
