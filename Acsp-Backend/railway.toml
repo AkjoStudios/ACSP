@@ -1,13 +1,13 @@
 [build]
 builder = "DOCKERFILE"
-buildCommand = "null"
+buildCommand = ""
 watchPatterns = ["/Acsp-Backend"]
 
 [deploy]
-startCommand = "null"
+startCommand = ""
 numReplicas = 1
 healthcheckPath = "/actuator/health/liveness"
 healthcheckTimeout = 300
 restartPolicyType = "ON_FAILURE"
 restartPolicyMaxRetries = 3
-cronSchedule = "null"
+cronSchedule = ""
