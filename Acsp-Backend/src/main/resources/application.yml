@@ -1,7 +1,7 @@
 app:
   security:
     prometheus:
-      username: ${PROMETHEUS_USERNAME}
+      username: "prometheus"
       password: ${PROMETHEUS_PASSWORD}
 spring:
   application:
