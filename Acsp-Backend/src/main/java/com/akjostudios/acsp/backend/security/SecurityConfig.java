@@ -30,6 +30,7 @@ import reactor.core.publisher.Mono;
 @EnableWebFluxSecurity
 @EnableReactiveMethodSecurity
 public class SecurityConfig {
+    private final PasswordEncoder passwordEncoder;
     private final SecurityProperties securityProperties;
     private final ObjectMapper objectMapper;
 
@@ -91,7 +92,7 @@ public class SecurityConfig {
         return new UserDetailsRepositoryReactiveAuthenticationManager(
                 new MapReactiveUserDetailsService(
                         User.withUsername(securityProperties.getPrometheus().getUsername())
-                                .password(securityProperties.getPrometheus().getPassword())
+                                .password(passwordEncoder.encode(securityProperties.getPrometheus().getPassword()))
                                 .roles("PROMETHEUS")
                                 .build()
                 )
