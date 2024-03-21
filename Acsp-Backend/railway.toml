@@ -5,6 +5,6 @@ watchPatterns = ["/Acsp-Backend"]
 [deploy]
 numReplicas = 1
 healthcheckPath = "/actuator/health/liveness"
-healthcheckTimeout = 180
+healthcheckTimeout = 300
 restartPolicyType = "ON_FAILURE"
 restartPolicyMaxRetries = 3
