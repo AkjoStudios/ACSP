@@ -1,3 +1,4 @@
+import ThirdPartyEmailPassword from "supertokens-node/recipe/thirdpartyemailpassword";
 import {TypeInput} from "supertokens-node/types";
 import Session from "supertokens-node/recipe/session";
 import Dashboard from "supertokens-node/recipe/dashboard";
@@ -32,5 +33,8 @@ export const SuperTokensConfig: TypeInput = {
         Session.init(),
         Dashboard.init(),
         UserRoles.init(),
+        ThirdPartyEmailPassword.init({
+            providers: []
+        })
     ],
 }

@@ -13,6 +13,7 @@ import reactor.netty.http.client.HttpClient;
 @Configuration
 @RequiredArgsConstructor
 @EnableWebFlux
+@SuppressWarnings("java:S6830")
 public class ExternalServiceClientConfig {
     private final ExternalServiceProperties externalServiceProperties;
 
