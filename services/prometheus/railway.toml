@@ -1,13 +1,10 @@
 [build]
 builder = "DOCKERFILE"
-buildCommand = ""
 watchPatterns = ["/services/prometheus"]
 
 [deploy]
-startCommand = ""
 numReplicas = 1
 healthcheckPath = "/api/v1/status/runtimeinfo"
 healthcheckTimeout = 300
 restartPolicyType = "ON_FAILURE"
 restartPolicyMaxRetries = 3
-cronSchedule = ""
