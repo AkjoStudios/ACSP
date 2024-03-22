@@ -1,10 +1,10 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="Run ACSP Backend" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot">
+  <configuration default="false" name="Run ACSP Bot" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot">
     <option name="ALTERNATIVE_JRE_PATH" value="temurin-21" />
     <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="true" />
-    <module name="Acsp-Backend" />
-    <option name="SPRING_BOOT_MAIN_CLASS" value="com.akjostudios.acsp.backend.AcspBackendApp" />
-    <option name="WORKING_DIRECTORY" value="file://$PROJECT_DIR$/Acsp-Backend" />
+    <module name="Acsp-Bot" />
+    <option name="SPRING_BOOT_MAIN_CLASS" value="com.akjostudios.acsp.bot.AcspBotApp" />
+    <option name="WORKING_DIRECTORY" value="file://$PROJECT_DIR$/Acsp-Bot" />
     <extension name="net.ashald.envfile">
       <option name="IS_ENABLED" value="true" />
       <option name="IS_SUBST" value="false" />
@@ -13,7 +13,7 @@
       <option name="IS_ENABLE_EXPERIMENTAL_INTEGRATIONS" value="false" />
       <ENTRIES>
         <ENTRY IS_ENABLED="true" PARSER="runconfig" IS_EXECUTABLE="false" />
-        <ENTRY IS_ENABLED="true" PARSER="env" IS_EXECUTABLE="false" PATH="Acsp-Backend/.env" />
+        <ENTRY IS_ENABLED="true" PARSER="env" IS_EXECUTABLE="false" PATH="Acsp-Bot/.env" />
       </ENTRIES>
     </extension>
     <method v="2">

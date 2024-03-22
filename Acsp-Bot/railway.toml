@@ -1,0 +1,10 @@
+[build]
+builder = "DOCKERFILE"
+watchPatterns = ["/Acsp-Bot"]
+
+[deploy]
+numReplicas = 1
+healthcheckPath = "/actuator/health/liveness"
+healthcheckTimeout = 180
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 3

@@ -5,13 +5,9 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.akjostudios.acsp</groupId>
-    <artifactId>Acsp-Backend</artifactId>
+    <artifactId>Acsp-Bot</artifactId>
     <version>0.1.0</version>
     <packaging>jar</packaging>
-
-    <name>ACSP Backend</name>
-    <description>The backend service for ACSP.</description>
-    <inceptionYear>2024</inceptionYear>
 
     <properties>
         <maven.compiler.source>21</maven.compiler.source>
@@ -19,15 +15,15 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
-        <main.class>com.akjostudios.acsp.backend.AcspBackendApp</main.class>
+        <main.class>com.akjostudios.acsp.bot.AcspBotApp</main.class>
 
         <commons.lang.version>3.14.0</commons.lang.version>
         <jackson.version>2.17.0</jackson.version>
+        <jda.version>5.0.0-beta.21</jda.version>
         <jetbrains.annotations.version>24.1.0</jetbrains.annotations.version>
         <logback.version>1.5.3</logback.version>
         <lombok.version>1.18.30</lombok.version>
         <micrometer.prometheus.version>1.12.4</micrometer.prometheus.version>
-        <postgres.version>42.7.3</postgres.version>
         <purefun.version>4.2</purefun.version>
         <spring-boot.version>3.2.3</spring-boot.version>
     </properties>
@@ -61,6 +57,23 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-actuator</artifactId>
             <version>${spring-boot.version}</version>
+        </dependency>
+
+        <!-- JDA -->
+        <dependency>
+            <groupId>net.dv8tion</groupId>
+            <artifactId>JDA</artifactId>
+            <version>${jda.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>club.minnced</groupId>
+                    <artifactId>opus-java</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.slf4j</groupId>
+                    <artifactId>slf4j-api</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
         <!-- Jackson -->
@@ -105,11 +118,6 @@
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-classic</artifactId>
             <version>${logback.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.postgresql</groupId>
-            <artifactId>postgresql</artifactId>
-            <version>${postgres.version}</version>
         </dependency>
         <dependency>
             <groupId>io.micrometer</groupId>

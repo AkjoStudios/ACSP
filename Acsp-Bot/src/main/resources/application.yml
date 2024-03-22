@@ -1,0 +1,65 @@
+app:
+  security:
+    actuator:
+      username: "actuator"
+      password: ${ACTUATOR_PASSWORD}
+    prometheus:
+      username: "prometheus"
+      password: ${PROMETHEUS_PASSWORD}
+  config:
+    environment: ${BOT_ENVIRONMENT}
+    client-id: ${BOT_CLIENT_ID}
+    client-secret: ${BOT_CLIENT_SECRET}
+    bot-token: ${BOT_TOKEN}
+spring:
+  application:
+    name: ACSP Bot
+  output:
+    ansi:
+      enabled: always
+management:
+  endpoint:
+    health:
+      show-details: always
+      probes:
+        enabled: true
+      group:
+        readiness:
+          include: readinessState, bot
+  endpoints:
+    web:
+      exposure:
+        include: [ 'health', 'info', 'prometheus' ]
+  health:
+    diskspace:
+      enabled: false
+  metrics:
+    tags:
+      service: ${RAILWAY_SERVICE_NAME}
+      environment: ${RAILWAY_ENVIRONMENT_NAME}
+  info:
+    java:
+      enabled: true
+    env:
+      enabled: true
+    os:
+      enabled: true
+info:
+  railway:
+    project_name: ${RAILWAY_PROJECT_NAME}
+    environment_name: ${RAILWAY_ENVIRONMENT_NAME}
+    service_name: ${RAILWAY_SERVICE_NAME}
+    service_url: ${RAILWAY_PUBLIC_DOMAIN}
+    replica_id: ${RAILWAY_REPLICA_ID}
+    deployment_id: ${RAILWAY_DEPLOYMENT_ID}
+server:
+  port: 8081
+  address: 0.0.0.0
+  error:
+    whitelabel:
+      enabled: off
+logging:
+  level:
+    org.springframework.boot.web.embedded: OFF
+    org.springframework.boot.web.servlet.context: OFF
+    org.apache.catalina: OFF
