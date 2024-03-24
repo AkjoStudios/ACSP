@@ -31,9 +31,18 @@ public class ExternalServiceIndicator implements ReactiveHealthIndicator {
         return Flux.merge(
                 checkBackendService()
         ).collectList().map(healths -> {
-           Map<String, Object> details = healths.stream()
-                   .flatMap(health -> health.getDetails().entrySet().stream())
-                   .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (v1, v2) -> v2));
+            Map<String, Object> details = healths.stream()
+                    .collect(Collectors.toMap(
+                            health -> health.getDetails().getOrDefault(SERVICE_DETAIL, "unknown").toString(),
+                            health -> health.getDetails().entrySet().stream()
+                                    .filter(entry -> !entry.getKey().equals(SERVICE_DETAIL))
+                                    .collect(Collectors.toMap(
+                                            Map.Entry::getKey,
+                                            Map.Entry::getValue,
+                                            (existing, replacement) -> existing
+                                    )),
+                            (existing, replacement) -> existing
+                    ));
            return healths.stream()
                    .anyMatch(health -> health.getStatus().equals(Status.DOWN))
                    ? Health.down().withDetails(details).build()
