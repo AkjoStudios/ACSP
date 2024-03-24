@@ -1,6 +1,7 @@
 package com.akjostudios.acsp.bot.discord.internal;
 
 import com.akjostudios.acsp.bot.discord.api.AcspBot;
+import com.akjostudios.acsp.bot.discord.common.BotEnvironment;
 import com.akjostudios.acsp.bot.discord.impl.AcspBotImpl;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,7 +24,7 @@ public class BotHealthIndicator implements ReactiveHealthIndicator {
         Map<String, Object> details = Map.of(
                 "status", acspBot.getStatus().toString(),
                 "version", acspBot.getVersion().toString(),
-                "environment", AcspBotImpl.getEnvironment()
+                "environment", AcspBotImpl.getEnvironment().getOrElse(BotEnvironment.UNKNOWN)
         );
 
         return acspBot.getStatus().equals(JDA.Status.CONNECTED)

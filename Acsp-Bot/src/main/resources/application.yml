@@ -6,6 +6,8 @@ app:
     prometheus:
       username: "prometheus"
       password: ${PROMETHEUS_PASSWORD}
+  services:
+    backend-url: ${ACSP_BACKEND_URL}
   config:
     environment: ${BOT_ENVIRONMENT}
     client-id: ${BOT_CLIENT_ID}
@@ -25,7 +27,7 @@ management:
         enabled: true
       group:
         readiness:
-          include: readinessState, bot
+          include: readinessState, bot, externalServices
   endpoints:
     web:
       exposure:

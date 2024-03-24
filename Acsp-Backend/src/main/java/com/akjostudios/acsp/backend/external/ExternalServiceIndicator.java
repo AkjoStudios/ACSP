@@ -49,8 +49,8 @@ public class ExternalServiceIndicator implements ReactiveHealthIndicator {
                             clientResponse.statusCode().is2xxSuccessful() ? Health.up() : Health.down()
                     ).map(builder -> builder
                             .withDetail(SERVICE_DETAIL, SUPERTOKENS_SERVICE)
-                            .withDetail("code", clientResponse.statusCode().value()
-                    ));
+                            .withDetail("code", clientResponse.statusCode().value())
+                    );
 
                     if (!clientResponse.statusCode().is2xxSuccessful()) {
                         return healthBuilderMono.map(Health.Builder::build);
@@ -65,7 +65,7 @@ public class ExternalServiceIndicator implements ReactiveHealthIndicator {
                 }).onErrorResume(ex -> Mono.just(Health.down()
                         .withDetail(SERVICE_DETAIL, SUPERTOKENS_SERVICE)
                         .withDetail("message", "Unable to connect to supertokens service!")
-                        .withDetail("exception", ex.getMessage())
+                        .withDetail("exception", ex.getLocalizedMessage())
                         .build()
                 ));
     }

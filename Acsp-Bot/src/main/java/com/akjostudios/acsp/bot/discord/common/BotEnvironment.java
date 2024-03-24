@@ -7,5 +7,5 @@ import lombok.RequiredArgsConstructor;
 @Getter
 @SuppressWarnings("unused")
 public enum BotEnvironment {
-    LOCAL, DEV, PROD
+    UNKNOWN, LOCAL, DEV, PROD
 }
