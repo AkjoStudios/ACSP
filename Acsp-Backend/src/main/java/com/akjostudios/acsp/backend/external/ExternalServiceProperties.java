@@ -10,4 +10,5 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class ExternalServiceProperties {
     private String supertokensUrl;
     private String authApiKey;
+    private String botUrl;
 }

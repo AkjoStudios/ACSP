@@ -23,14 +23,19 @@ import java.util.stream.Collectors;
 public class ExternalServiceIndicator implements ReactiveHealthIndicator {
     private static final String SERVICE_DETAIL = "service";
     private static final String SUPERTOKENS_SERVICE = "supertokens";
+    private static final String BOT_SERVICE = "bot";
 
     @Qualifier("client.service.supertokens")
     private final WebClient superTokensClient;
 
+    @Qualifier("client.service.bot")
+    private final WebClient botClient;
+
     @Override
     public Mono<Health> health() {
         return Flux.merge(
-                checkSupertokensService()
+                checkSupertokensService(),
+                checkBotService()
         ).collectList().map(healths -> {
             Map<String, Object> details = healths.stream()
                     .collect(Collectors.toMap(
@@ -74,6 +79,22 @@ public class ExternalServiceIndicator implements ReactiveHealthIndicator {
                 }).onErrorResume(ex -> Mono.just(Health.down()
                         .withDetail(SERVICE_DETAIL, SUPERTOKENS_SERVICE)
                         .withDetail("message", "Unable to connect to supertokens service!")
+                        .withDetail("exception", ex.getLocalizedMessage())
+                        .build()
+                ));
+    }
+
+    private @NotNull Mono<Health> checkBotService() {
+        return botClient.get().uri("/actuator/health/liveness")
+                .exchangeToMono(clientResponse -> Mono.just(
+                        clientResponse.statusCode().is2xxSuccessful() ? Health.up() : Health.down()
+                ).map(builder -> builder
+                        .withDetail(SERVICE_DETAIL, BOT_SERVICE)
+                        .withDetail("code", clientResponse.statusCode().value())
+                        .build()
+                )).onErrorResume(ex -> Mono.just(Health.down()
+                        .withDetail(SERVICE_DETAIL, BOT_SERVICE)
+                        .withDetail("message", "Unable to connect to bot service!")
                         .withDetail("exception", ex.getLocalizedMessage())
                         .build()
                 ));

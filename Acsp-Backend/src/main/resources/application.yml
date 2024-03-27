@@ -9,6 +9,7 @@ app:
   services:
     supertokens-url: ${ACSP_SUPERTOKENS_URL}
     auth-api-key: ${AUTH_API_KEY}
+    bot-url: ${ACSP_BOT_URL}
 spring:
   application:
     name: ACSP Backend

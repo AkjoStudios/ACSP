@@ -33,4 +33,12 @@ public class ExternalServiceClientConfig {
                 .clientConnector(httpConnector())
                 .build();
     }
+
+    @Bean("client.service.bot")
+    public @NotNull WebClient botClient() {
+        return WebClient.builder()
+                .baseUrl(externalServiceProperties.getBotUrl())
+                .clientConnector(httpConnector())
+                .build();
+    }
 }
