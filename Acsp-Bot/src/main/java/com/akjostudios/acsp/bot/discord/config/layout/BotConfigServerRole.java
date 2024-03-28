@@ -4,5 +4,5 @@ import lombok.Getter;
 
 @Getter
 public enum BotConfigServerRole {
-    BOT, MEMBER, TEAM, ADMIN
+    EVERYONE, BOT, MEMBER, TEAM, ADMIN
 }
