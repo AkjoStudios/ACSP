@@ -1,9 +1,10 @@
 package com.akjostudios.acsp.backend.external;
 
 import com.akjostudios.acsp.backend.external.model.supertokens.SupertokenApiVersions;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.ReactiveHealthIndicator;
@@ -17,7 +18,6 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @Component("externalServices")
-@RequiredArgsConstructor
 @Slf4j
 @SuppressWarnings("java:S6830")
 public class ExternalServiceIndicator implements ReactiveHealthIndicator {
@@ -25,11 +25,18 @@ public class ExternalServiceIndicator implements ReactiveHealthIndicator {
     private static final String SUPERTOKENS_SERVICE = "supertokens";
     private static final String BOT_SERVICE = "bot";
 
-    @Qualifier("client.service.supertokens")
     private final WebClient superTokensClient;
-
-    @Qualifier("client.service.bot")
     private final WebClient botClient;
+
+    @Autowired
+    @Contract(pure = true)
+    public ExternalServiceIndicator(
+            @Qualifier("client.service.supertokens") WebClient superTokensClient,
+            @Qualifier("client.service.bot") WebClient botClient
+    ) {
+        this.superTokensClient = superTokensClient;
+        this.botClient = botClient;
+    }
 
     @Override
     public Mono<Health> health() {
