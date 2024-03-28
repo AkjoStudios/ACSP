@@ -16,18 +16,9 @@ import java.util.List;
 @RequiredArgsConstructor
 @Slf4j
 public class CommandListener implements BotListener<MessageReceivedEvent> {
-    private final DiscordMessageService discordMessageService;
-    private final BotErrorMessageService botErrorMessageService;
-
     @Override
     public void onEvent(BotEventType type, MessageReceivedEvent event) {
         if (event.getAuthor().isBot()) { return; }
-        botErrorMessageService.getErrorMessage(
-                "error.test.title",
-                "error.test.description",
-                List.of(),
-                List.of( event.getMessage().getContentRaw() )
-        ).map(discordMessageService::createMessage).map(event.getChannel()::sendMessage)
-                .ifPresent(RestAction::queue);
+        log.info("Message received: {}", event.getMessage().getContentRaw());
     }
 }
