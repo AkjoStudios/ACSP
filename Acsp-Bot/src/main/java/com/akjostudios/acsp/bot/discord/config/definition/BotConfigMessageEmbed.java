@@ -8,7 +8,6 @@ import lombok.ToString;
 import org.springframework.validation.annotation.Validated;
 
 import java.util.List;
-import java.util.Locale;
 
 @Getter
 @Setter
@@ -50,7 +49,6 @@ public class BotConfigMessageEmbed {
         @ToString
         public static class Wrapper {
             @NotBlank private String label;
-            @NotNull private Locale locale;
             @NotNull private Field field;
         }
     }

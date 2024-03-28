@@ -1,5 +1,6 @@
 package com.akjostudios.acsp.bot.discord.service;
 
+import com.akjostudios.acsp.bot.AcspBotApp;
 import com.akjostudios.acsp.bot.discord.config.definition.BotConfigMessage;
 import com.akjostudios.acsp.bot.discord.config.definition.BotConfigMessageEmbed;
 import lombok.RequiredArgsConstructor;
@@ -11,8 +12,6 @@ import org.springframework.stereotype.Service;
 
 import java.awt.*;
 import java.time.Instant;
-import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
 
 @Service
 @RequiredArgsConstructor
@@ -41,7 +40,7 @@ public class DiscordMessageService {
                 .setThumbnail(embed.getThumbnailUrl())
                 .setFooter(embed.getFooter().getText(), embed.getFooter().getIconUrl())
                 .setTimestamp(embed.getFooter().getTimestamp() != null
-                        ? DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm").withZone(ZoneId.systemDefault()).parse(
+                        ? AcspBotApp.DATE_TIME_FORMATTER.parse(
                                 embed.getFooter().getTimestamp(), Instant::from
                         ) : null
                 );

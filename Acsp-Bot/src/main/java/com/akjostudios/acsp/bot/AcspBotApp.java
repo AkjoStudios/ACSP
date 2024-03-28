@@ -12,6 +12,9 @@ import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ConfigurableApplicationContext;
 
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+
 @SpringBootApplication(exclude={
         DataSourceAutoConfiguration.class,
         HibernateJpaAutoConfiguration.class
@@ -19,7 +22,13 @@ import org.springframework.context.ConfigurableApplicationContext;
 @ConfigurationPropertiesScan
 @RequiredArgsConstructor
 @Slf4j
+@SuppressWarnings("unused")
 public class AcspBotApp {
+    public static final String BOT_NAME = "ACSP Bot";
+    public static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter
+            .ofPattern("yyyy-MM-dd HH:mm:ss")
+            .withZone(ZoneId.systemDefault());
+
     private final ApplicationContext context;
     private final AcspBot acspBot;
 

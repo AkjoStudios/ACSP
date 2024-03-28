@@ -16,7 +16,7 @@ import java.util.Map;
 @Service
 @RequiredArgsConstructor
 @SuppressWarnings("unused")
-public class BotConfigLayoutService {
+public class BotLayoutService {
     private final BotConfigProperties properties;
 
     public @NotNull Option<BotConfigServer> getServerLayout() {
