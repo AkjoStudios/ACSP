@@ -18,7 +18,7 @@
     </extension>
     <method v="2">
       <option name="Make" enabled="true" />
-      <option name="Maven.BeforeRunTask" enabled="true" file="$PROJECT_DIR$/Acsp-Backend/pom.xml" goal="clean package spring-boot:repackage" />
+      <option name="Maven.BeforeRunTask" enabled="true" file="P:\Projects\ACSP\Acsp-Bot/pom.xml" goal="clean package spring-boot:repackage " />
     </method>
   </configuration>
 </component>

@@ -2,7 +2,8 @@ package com.akjostudios.acsp.bot.discord.impl;
 
 import com.akjostudios.acsp.bot.discord.api.AcspBot;
 import com.akjostudios.acsp.bot.discord.common.BotEnvironment;
-import com.akjostudios.acsp.bot.discord.internal.BotConfigProperties;
+import com.akjostudios.acsp.bot.discord.common.listener.CommonListener;
+import com.akjostudios.acsp.bot.discord.config.BotConfigProperties;
 import com.github.tonivade.purefun.type.Option;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -28,7 +29,8 @@ public class AcspBotImpl implements AcspBot {
     @Autowired
     @SuppressWarnings("java:S3010")
     public AcspBotImpl(
-            @NotNull BotConfigProperties properties
+            @NotNull BotConfigProperties properties,
+            @NotNull CommonListener commonListener
     ) {
         environment = Option.of(properties.getEnvironment());
         log.info("Starting ACSP Discord Bot in environment '{}'.", properties.getEnvironment().name());
@@ -36,6 +38,8 @@ public class AcspBotImpl implements AcspBot {
         JDABuilder builder = JDABuilder.createDefault(properties.getBotToken())
                 .setEnabledIntents(EnumSet.allOf(GatewayIntent.class))
                 .setMemberCachePolicy(MemberCachePolicy.ALL);
+
+        builder.addEventListeners(commonListener);
 
         botInstance = builder.build();
     }
