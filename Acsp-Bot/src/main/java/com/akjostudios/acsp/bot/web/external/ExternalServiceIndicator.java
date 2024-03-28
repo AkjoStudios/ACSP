@@ -1,8 +1,9 @@
 package com.akjostudios.acsp.bot.web.external;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.ReactiveHealthIndicator;
@@ -16,15 +17,21 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @Component("externalServices")
-@RequiredArgsConstructor
 @Slf4j
 @SuppressWarnings("java:S6830")
 public class ExternalServiceIndicator implements ReactiveHealthIndicator {
     private static final String SERVICE_DETAIL = "service";
     private static final String BACKEND_SERVICE = "backend";
 
-    @Qualifier("client.service.backend")
     private final WebClient backendClient;
+
+    @Autowired
+    @Contract(pure = true)
+    public ExternalServiceIndicator(
+            @Qualifier("client.service.backend") WebClient backendClient
+    ) {
+        this.backendClient = backendClient;
+    }
 
     @Override
     public Mono<Health> health() {
