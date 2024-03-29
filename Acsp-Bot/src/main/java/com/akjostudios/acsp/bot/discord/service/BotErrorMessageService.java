@@ -5,9 +5,11 @@ import com.akjostudios.acsp.bot.discord.config.definition.BotConfigMessage;
 import com.github.tonivade.purefun.type.Option;
 import com.github.tonivade.purefun.type.Try;
 import lombok.RequiredArgsConstructor;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.Locale;
 
 @Service
@@ -16,35 +18,53 @@ import java.util.Locale;
 public class BotErrorMessageService {
     private final BotDefinitionService botDefinitionService;
 
-    public Try<BotConfigMessage> getErrorMessage(
-            String errorTitle,
-            String errorDescription
+    public @NotNull Try<BotConfigMessage> getErrorMessage(
+            @NotNull String errorTitle,
+            @NotNull String errorDescription
     ) {
-        return getErrorMessage(errorTitle, errorDescription, Option.none());
+        return getErrorMessage(errorTitle, errorDescription, List.of(), Option.none());
     }
 
-    public Try<BotConfigMessage> getErrorMessage(
-            String errorTitle,
-            String errorDescription,
-            Option<Locale> locale
+    public @NotNull Try<BotConfigMessage> getErrorMessage(
+            @NotNull String errorTitle,
+            @NotNull String errorDescription,
+            @NotNull Option<Locale> locale
+    ) {
+        return getErrorMessage(errorTitle, errorDescription, List.of(), locale);
+    }
+
+    public @NotNull Try<BotConfigMessage> getErrorMessage(
+            @NotNull String errorTitle,
+            @NotNull String errorDescription,
+            @NotNull List<String> placeholders
+    ) {
+        return getErrorMessage(errorTitle, errorDescription, placeholders, Option.none());
+    }
+
+    public @NotNull Try<BotConfigMessage> getErrorMessage(
+            @NotNull String errorTitle,
+            @NotNull String errorDescription,
+            @NotNull List<String> placeholders,
+            @NotNull Option<Locale> locale
     ) {
         return botDefinitionService.getMessageDefinition(
                 "error", locale,
+                placeholders,
                 errorTitle, errorDescription,
                 AcspBotApp.BOT_NAME,
                 AcspBotApp.DATE_TIME_FORMATTER.format(Instant.now())
         );
     }
 
-    public Try<BotConfigMessage> getInternalErrorMessage(
-            String errorMessage
+    public @NotNull Try<BotConfigMessage> getInternalErrorMessage(
+            @NotNull String errorMessage
     ) {
         return getInternalErrorMessage(errorMessage, Option.none());
     }
 
-    public Try<BotConfigMessage> getInternalErrorMessage(
-            String errorMessage,
-            Option<Locale> locale
+    public @NotNull Try<BotConfigMessage> getInternalErrorMessage(
+            @NotNull String errorMessage,
+            @NotNull Option<Locale> locale
     ) {
         return botDefinitionService.getMessageDefinition(
                 "internal-error", locale,

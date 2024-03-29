@@ -8,6 +8,7 @@ import org.jetbrains.annotations.Nullable;
 import org.springframework.context.support.ResourceBundleMessageSource;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -23,13 +24,15 @@ public class BotStringsService {
     public @NotNull Option<String> getString(
             String message,
             @NotNull Option<Locale> locale,
+            @NotNull List<@NotNull String> labelPlaceholders,
             String@NotNull... placeholders
     ) {
         if (message == null) { return Option.none(); }
-        return replacePlaceholder(replaceLabel(message, locale), replacePlaceholderLabel(locale, placeholders));
+        return replacePlaceholder(replaceLabel(message, locale), replaceLabelPlaceholders(locale, placeholders))
+                .flatMap(result -> replacePlaceholder(result, labelPlaceholders.toArray(String[]::new)));
     }
 
-    public @NotNull String[] replacePlaceholderLabel(
+    public @NotNull String[] replaceLabelPlaceholders(
             @NotNull Option<Locale> locale,
             String@NotNull... placeholders
     ) {

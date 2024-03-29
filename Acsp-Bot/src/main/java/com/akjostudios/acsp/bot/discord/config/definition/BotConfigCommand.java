@@ -44,6 +44,8 @@ public class BotConfigCommand {
         @NotBlank private String name;
         @NotNull private boolean enabled;
         private String description;
+        private List<Argument> arguments;
+        @NotEmpty private List<PermissionDeclaration> permissions;
     }
 
     @Getter
