@@ -5,14 +5,15 @@ import com.akjostudios.acsp.bot.discord.config.definition.BotConfigMessage;
 import com.akjostudios.acsp.bot.discord.config.layout.BotConfigServerChannel;
 import com.akjostudios.acsp.bot.discord.service.BotDefinitionService;
 import com.akjostudios.acsp.bot.discord.service.BotErrorMessageService;
-import com.akjostudios.acsp.bot.discord.service.BotLayoutService;
+import com.akjostudios.acsp.bot.discord.service.BotPrimitiveService;
 import com.akjostudios.acsp.bot.discord.service.DiscordMessageService;
 import com.github.tonivade.purefun.type.Option;
 import com.github.tonivade.purefun.type.Try;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
-import net.dv8tion.jda.api.entities.User;
+import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.requests.RestAction;
 import net.dv8tion.jda.api.requests.restaction.MessageCreateAction;
@@ -24,25 +25,24 @@ import java.util.List;
 @SuppressWarnings({"unused", "UnusedReturnValue"})
 public class CommandContext {
     @Getter private final String name;
-    @Getter private final List<String> args;
 
     private final MessageReceivedEvent event;
 
     private BotDefinitionService botDefinitionService;
     private DiscordMessageService discordMessageService;
     private BotErrorMessageService errorMessageService;
-    private BotLayoutService botLayoutService;
+    private BotPrimitiveService botPrimitiveService;
 
     public void initialize(
             BotDefinitionService botDefinitionService,
             DiscordMessageService discordMessageService,
             BotErrorMessageService errorMessageService,
-            BotLayoutService botLayoutService
+            BotPrimitiveService botPrimitiveService
     ) {
         this.botDefinitionService = botDefinitionService;
         this.discordMessageService = discordMessageService;
         this.errorMessageService = errorMessageService;
-        this.botLayoutService = botLayoutService;
+        this.botPrimitiveService = botPrimitiveService;
     }
 
     public @NotNull Option<BotConfigCommand> getDefinition() {
@@ -75,19 +75,38 @@ public class CommandContext {
             @NotNull String errorMessage
     ) { return errorMessageService.getInternalErrorMessage(errorMessage); }
 
+    public @NotNull Try<MessageCreateAction> answer(String message) {
+        return Try.of(() -> discordMessageService.createMessage(message))
+                .map(event.getChannel()::sendMessage)
+                .onSuccess(RestAction::queue);
+    }
+
     public @NotNull Try<MessageCreateAction> answer(@NotNull Try<BotConfigMessage> message) {
         return message.map(discordMessageService::createMessage)
                 .map(event.getChannel()::sendMessage)
                 .onSuccess(RestAction::queue);
     }
 
+    public @NotNull Try<MessageCreateAction> sendMessage(String message, @NotNull BotConfigServerChannel channel) {
+        return botPrimitiveService.getChannel(event, channel).toTry().flatMap(
+                textChannel -> Try.of(
+                        () -> discordMessageService.createMessage(message)
+                ).map(textChannel::sendMessage)
+        ).onSuccess(RestAction::queue);
+    }
+
     public @NotNull Try<MessageCreateAction> sendMessage(@NotNull Try<BotConfigMessage> message, @NotNull BotConfigServerChannel channel) {
-        return botLayoutService.getServerLayout()
-                .flatMap(layout -> botLayoutService.getChannelId(layout, channel))
-                .map(channelId -> event.getJDA().getTextChannelById(channelId))
-                .toTry().flatMap(
-                        textChannel -> message.map(discordMessageService::createMessage).map(textChannel::sendMessage)
-                ).onSuccess(RestAction::queue);
+        return botPrimitiveService.getChannel(event, channel).toTry().flatMap(
+                textChannel -> message.map(discordMessageService::createMessage).map(textChannel::sendMessage)
+        ).onSuccess(RestAction::queue);
+    }
+
+    public @NotNull Try<MessageCreateAction> sendPrivateMessage(@NotNull String message) {
+        return event.getAuthor().openPrivateChannel().map(
+                privateChannel -> Try.of(() -> discordMessageService.createMessage(message))
+                        .map(privateChannel::sendMessage)
+                        .onSuccess(RestAction::queue)
+        ).complete();
     }
 
     public @NotNull Try<MessageCreateAction> sendPrivateMessage(@NotNull Try<BotConfigMessage> message) {
@@ -98,7 +117,9 @@ public class CommandContext {
         ).complete();
     }
 
-    public @NotNull User getOriginalAuthor() { return event.getAuthor(); }
+    public @NotNull Member getOriginalAuthor() { return Option.of(event.getMember()).getOrElseThrow(); }
 
     public @NotNull Message getOriginalMessage() { return event.getMessage(); }
+
+    public @NotNull TextChannel getOriginalChannel() { return event.getChannel().asTextChannel(); }
 }

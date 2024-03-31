@@ -4,15 +4,13 @@ import com.akjostudios.acsp.bot.discord.common.BotEventType;
 import com.akjostudios.acsp.bot.discord.common.command.BotCommand;
 import com.akjostudios.acsp.bot.discord.common.command.CommandContext;
 import com.akjostudios.acsp.bot.discord.common.listener.BotListener;
-import com.akjostudios.acsp.bot.discord.service.BotDefinitionService;
-import com.akjostudios.acsp.bot.discord.service.BotErrorMessageService;
-import com.akjostudios.acsp.bot.discord.service.BotLayoutService;
-import com.akjostudios.acsp.bot.discord.service.DiscordMessageService;
+import com.akjostudios.acsp.bot.discord.config.definition.BotConfigCommand;
+import com.akjostudios.acsp.bot.discord.service.*;
 import com.github.tonivade.purefun.type.Option;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
-import net.dv8tion.jda.api.requests.RestAction;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -20,11 +18,13 @@ import java.util.List;
 @Component
 @RequiredArgsConstructor
 @Slf4j
+@SuppressWarnings("java:S1192")
 public class CommandListener implements BotListener<MessageReceivedEvent> {
     private final DiscordMessageService discordMessageService;
     private final BotErrorMessageService errorMessageService;
     private final BotDefinitionService botDefinitionService;
-    private final BotLayoutService botLayoutService;
+    private final BotPrimitiveService botPrimitiveService;
+    private final BotCommandPermissionService botCommandPermissionService;
 
     private final List<BotCommand> commands;
 
@@ -42,38 +42,68 @@ public class CommandListener implements BotListener<MessageReceivedEvent> {
         if (commandParts.isEmpty()) { return; }
 
         String commandName = commandParts.getFirst();
-        List<String> commandArgs = commandParts.subList(1, commandParts.size());
 
-        CommandContext context = new CommandContext(commandName, commandArgs, event);
-        context.initialize(botDefinitionService, discordMessageService, errorMessageService, botLayoutService);
+        CommandContext context = new CommandContext(commandName, event);
+        context.initialize(botDefinitionService, discordMessageService, errorMessageService, botPrimitiveService);
 
-        if (context.getDefinition().isEmpty()) {
-            log.warn("User '{}' tried to use unavailable command '{}'!", event.getAuthor().getName(), commandName);
+        if (!checkAvailability(context)) { return; }
+        if (!checkPermissions(context)) { return; }
 
-            errorMessageService.getErrorMessage(
+        runCommand(context);
+    }
+
+    private boolean checkAvailability(@NotNull CommandContext ctx) {
+        if (ctx.getDefinition().isEmpty()) {
+            log.warn("User '{}' tried to use unavailable command '{}'!",
+                    ctx.getOriginalAuthor().getUser().getName(),
+                    ctx.getName()
+            );
+            ctx.answer(ctx.getErrorMessage(
                     "$error.unknown_command.title$",
                     "$error.unknown_command.description$",
-                    List.of(commandName)
-            ).map(discordMessageService::createMessage)
-                    .map(event.getChannel()::sendMessage)
-                    .onSuccess(RestAction::queue)
-                    .onFailure(ex -> log.error("Failed to send error message!", ex));
-            return;
+                    List.of(ctx.getName())
+            )).onFailure(ex -> log.error("Failed to send error message!", ex));
+            return false;
         }
+        return true;
+    }
 
-        Option.from(commands.stream().filter(command -> command.getName().equals(context.getName())).findFirst())
-                .ifPresent(command -> command.execute(context))
+    private boolean checkPermissions(@NotNull CommandContext ctx) {
+        return ctx.getDefinition().map(BotConfigCommand::getPermissions)
+                .map(botCommandPermissionService::getPermissions)
+                .map(permissions -> botCommandPermissionService.validatePermissions(
+                        permissions,
+                        ctx.getOriginalAuthor(),
+                        ctx.getOriginalChannel()
+                )).map(validation -> validation.fold(
+                        error -> {
+                            log.warn("User '{}' tried to use command '{}' but does not have the required permissions!",
+                                    ctx.getOriginalAuthor().getUser().getName(),
+                                    ctx.getName()
+                            );
+                            ctx.answer(ctx.getErrorMessage(
+                                    "$error.permission_denied.title$",
+                                    "$error.permission_denied.description$",
+                                    List.of(ctx.getName(), validation.getError())
+                            )).onFailure(ex -> log.error("Failed to send error message!", ex));
+                            return false;
+                        }, success -> true
+                )).getOrElse(false);
+    }
+
+    private void runCommand(@NotNull CommandContext ctx) {
+        Option.from(commands.stream().filter(command -> command.getName().equals(ctx.getName())).findFirst())
+                .ifPresent(command -> command.execute(ctx))
                 .ifEmpty(() -> {
-                    log.warn("User '{}' tried to execute command '{}' but it was not found!", event.getAuthor().getName(), commandName);
-
-                    errorMessageService.getErrorMessage(
+                    log.warn("User '{}' tried to execute command '{}' but no implementation was found!",
+                            ctx.getOriginalAuthor().getUser().getName(),
+                            ctx.getName()
+                    );
+                    ctx.answer(ctx.getErrorMessage(
                             "$error.unimplemented_command.title$",
                             "$error.unimplemented_command.description$",
-                            List.of(commandName)
-                    ).map(discordMessageService::createMessage)
-                            .map(event.getChannel()::sendMessage)
-                            .onSuccess(RestAction::queue)
-                            .onFailure(ex -> log.error("Failed to send error message!", ex));
+                            List.of(ctx.getName())
+                    )).onFailure(ex -> log.error("Failed to send error message!", ex));
                 });
     }
 }

@@ -79,7 +79,7 @@ public class BotConfigCommand {
         private BotConfigServerChannelCategory category;
 
         public enum Type {
-            SIMPLE, CATEGORY, EXCLUSION, ALL
+            SIMPLE, CATEGORY, SIMPLE_EXCLUSION, CATEGORY_EXCLUSION, ALL
         }
     }
 

@@ -29,7 +29,8 @@ public class BotStringsService {
     ) {
         if (message == null) { return Option.none(); }
         return replacePlaceholder(replaceLabel(message, locale), replaceLabelPlaceholders(locale, placeholders))
-                .flatMap(result -> replacePlaceholder(result, labelPlaceholders.toArray(String[]::new)));
+                .flatMap(result -> replacePlaceholder(result, labelPlaceholders.toArray(String[]::new)))
+                .map(result -> replaceLabel(result, locale));
     }
 
     public @NotNull String[] replaceLabelPlaceholders(

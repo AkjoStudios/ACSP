@@ -54,7 +54,6 @@ public class CommonListener implements EventListener {
             @NotNull GenericEvent event,
             @NotNull BotEventType eventType
     ) {
-        log.info("Invoking listener {} for event type {}.", listener.getClass().getSimpleName(), eventType);
         try { listener.onEvent(eventType, (T) event); } catch (Exception ex) {
             log.error("Error invoking listener {} for event type {}.", listener.getClass().getSimpleName(), eventType, ex);
         }

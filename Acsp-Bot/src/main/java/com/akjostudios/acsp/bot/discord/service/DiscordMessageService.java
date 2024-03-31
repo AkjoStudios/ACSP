@@ -8,6 +8,7 @@ import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder;
 import net.dv8tion.jda.api.utils.messages.MessageCreateData;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Service;
 
 import java.awt.*;
@@ -17,7 +18,11 @@ import java.time.Instant;
 @RequiredArgsConstructor
 @SuppressWarnings("unused")
 public class DiscordMessageService {
-    public MessageCreateData createMessage(BotConfigMessage message) {
+    public @NotNull MessageCreateData createMessage(String message) {
+        return new MessageCreateBuilder().setContent(message).build();
+    }
+
+    public @NotNull MessageCreateData createMessage(BotConfigMessage message) {
         MessageCreateBuilder builder = new MessageCreateBuilder();
 
         if (message == null) {
@@ -30,7 +35,7 @@ public class DiscordMessageService {
         return builder.build();
     }
 
-    private MessageEmbed toMessageEmbed(BotConfigMessageEmbed embed) {
+    private @NotNull MessageEmbed toMessageEmbed(@NotNull BotConfigMessageEmbed embed) {
         EmbedBuilder embedBuilder = new EmbedBuilder()
                 .setAuthor(embed.getAuthor().getName(), embed.getAuthor().getUrl(), embed.getAuthor().getIconUrl())
                 .setTitle(embed.getTitle(), embed.getUrl())
