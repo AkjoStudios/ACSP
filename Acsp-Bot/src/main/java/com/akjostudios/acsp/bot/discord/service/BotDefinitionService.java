@@ -48,6 +48,7 @@ public class BotDefinitionService {
         return getMessageDefinition(label, Option.none(), labelPlaceholders, placeholders);
     }
 
+    @SuppressWarnings("java:S3776")
     public @NotNull Try<BotConfigMessage> getMessageDefinition(
             @NotNull String label,
             @NotNull Option<Locale> locale,
@@ -63,39 +64,41 @@ public class BotDefinitionService {
             BotConfigMessage result = new BotConfigMessage();
             result.setContent(botStringsService.getString(message.getContent(), locale, labelPlaceholders, placeholders).getOrElse(""));
             result.setEmbeds(new ArrayList<>());
-            for (BotConfigMessageEmbed embed : message.getEmbeds()) {
-                BotConfigMessageEmbed resultEmbed = new BotConfigMessageEmbed();
-                if (embed.getAuthor() != null) {
-                    BotConfigMessageEmbed.Author author = new BotConfigMessageEmbed.Author();
-                    author.setName(botStringsService.getString(embed.getAuthor().getName(), locale, labelPlaceholders, placeholders).getOrElse(""));
-                    author.setUrl(botStringsService.getString(embed.getAuthor().getUrl(), locale, labelPlaceholders, placeholders).getOrElseNull());
-                    author.setIconUrl(botStringsService.getString(embed.getAuthor().getIconUrl(), locale, labelPlaceholders, placeholders).getOrElseNull());
-                    resultEmbed.setAuthor(author);
-                }
-                resultEmbed.setTitle(botStringsService.getString(embed.getTitle(), locale, labelPlaceholders, placeholders).getOrElse(""));
-                resultEmbed.setDescription(botStringsService.getString(embed.getDescription(), locale, labelPlaceholders, placeholders).getOrElseNull());
-                resultEmbed.setUrl(botStringsService.getString(embed.getUrl(), locale, labelPlaceholders, placeholders).getOrElseNull());
-                resultEmbed.setColor(embed.getColor());
-                resultEmbed.setFields(new ArrayList<>());
-                if (embed.getFields() != null) {
-                    for (BotConfigMessageEmbed.Field field : embed.getFields()) {
-                        BotConfigMessageEmbed.Field resultField = new BotConfigMessageEmbed.Field();
-                        resultField.setName(botStringsService.getString(field.getName(), locale, labelPlaceholders, placeholders).getOrElse(""));
-                        resultField.setValue(botStringsService.getString(field.getValue(), locale, labelPlaceholders, placeholders).getOrElse(""));
-                        resultField.setInline(field.isInline());
-                        resultEmbed.getFields().add(resultField);
+            if (message.getEmbeds() != null) {
+                for (BotConfigMessageEmbed embed : message.getEmbeds()) {
+                    BotConfigMessageEmbed resultEmbed = new BotConfigMessageEmbed();
+                    if (embed.getAuthor() != null) {
+                        BotConfigMessageEmbed.Author author = new BotConfigMessageEmbed.Author();
+                        author.setName(botStringsService.getString(embed.getAuthor().getName(), locale, labelPlaceholders, placeholders).getOrElse(""));
+                        author.setUrl(botStringsService.getString(embed.getAuthor().getUrl(), locale, labelPlaceholders, placeholders).getOrElseNull());
+                        author.setIconUrl(botStringsService.getString(embed.getAuthor().getIconUrl(), locale, labelPlaceholders, placeholders).getOrElseNull());
+                        resultEmbed.setAuthor(author);
                     }
+                    resultEmbed.setTitle(botStringsService.getString(embed.getTitle(), locale, labelPlaceholders, placeholders).getOrElse(""));
+                    resultEmbed.setDescription(botStringsService.getString(embed.getDescription(), locale, labelPlaceholders, placeholders).getOrElseNull());
+                    resultEmbed.setUrl(botStringsService.getString(embed.getUrl(), locale, labelPlaceholders, placeholders).getOrElseNull());
+                    resultEmbed.setColor(embed.getColor());
+                    resultEmbed.setFields(new ArrayList<>());
+                    if (embed.getFields() != null) {
+                        for (BotConfigMessageEmbed.Field field : embed.getFields()) {
+                            BotConfigMessageEmbed.Field resultField = new BotConfigMessageEmbed.Field();
+                            resultField.setName(botStringsService.getString(field.getName(), locale, labelPlaceholders, placeholders).getOrElse(""));
+                            resultField.setValue(botStringsService.getString(field.getValue(), locale, labelPlaceholders, placeholders).getOrElse(""));
+                            resultField.setInline(field.isInline());
+                            resultEmbed.getFields().add(resultField);
+                        }
+                    }
+                    resultEmbed.setImageUrl(botStringsService.getString(embed.getImageUrl(), locale, labelPlaceholders, placeholders).getOrElseNull());
+                    resultEmbed.setThumbnailUrl(botStringsService.getString(embed.getThumbnailUrl(), locale, labelPlaceholders, placeholders).getOrElseNull());
+                    if (embed.getFooter() != null) {
+                        BotConfigMessageEmbed.Footer footer = new BotConfigMessageEmbed.Footer();
+                        footer.setText(botStringsService.getString(embed.getFooter().getText(), locale, labelPlaceholders, placeholders).getOrElse(""));
+                        footer.setTimestamp(botStringsService.getString(embed.getFooter().getTimestamp(), locale, labelPlaceholders, placeholders).getOrElseNull());
+                        footer.setIconUrl(botStringsService.getString(embed.getFooter().getIconUrl(), locale, labelPlaceholders, placeholders).getOrElseNull());
+                        resultEmbed.setFooter(footer);
+                    }
+                    result.getEmbeds().add(resultEmbed);
                 }
-                resultEmbed.setImageUrl(botStringsService.getString(embed.getImageUrl(), locale, labelPlaceholders, placeholders).getOrElseNull());
-                resultEmbed.setThumbnailUrl(botStringsService.getString(embed.getThumbnailUrl(), locale, labelPlaceholders, placeholders).getOrElseNull());
-                if (embed.getFooter() != null) {
-                    BotConfigMessageEmbed.Footer footer = new BotConfigMessageEmbed.Footer();
-                    footer.setText(botStringsService.getString(embed.getFooter().getText(), locale, labelPlaceholders, placeholders).getOrElse(""));
-                    footer.setTimestamp(botStringsService.getString(embed.getFooter().getTimestamp(), locale, labelPlaceholders, placeholders).getOrElseNull());
-                    footer.setIconUrl(botStringsService.getString(embed.getFooter().getIconUrl(), locale, labelPlaceholders, placeholders).getOrElseNull());
-                    resultEmbed.setFooter(footer);
-                }
-                result.getEmbeds().add(resultEmbed);
             }
 
             return result;

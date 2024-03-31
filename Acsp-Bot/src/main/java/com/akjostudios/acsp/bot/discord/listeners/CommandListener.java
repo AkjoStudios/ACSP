@@ -6,6 +6,7 @@ import com.akjostudios.acsp.bot.discord.common.command.CommandContext;
 import com.akjostudios.acsp.bot.discord.common.listener.BotListener;
 import com.akjostudios.acsp.bot.discord.service.BotDefinitionService;
 import com.akjostudios.acsp.bot.discord.service.BotErrorMessageService;
+import com.akjostudios.acsp.bot.discord.service.BotLayoutService;
 import com.akjostudios.acsp.bot.discord.service.DiscordMessageService;
 import com.github.tonivade.purefun.type.Option;
 import lombok.RequiredArgsConstructor;
@@ -23,6 +24,7 @@ public class CommandListener implements BotListener<MessageReceivedEvent> {
     private final DiscordMessageService discordMessageService;
     private final BotErrorMessageService errorMessageService;
     private final BotDefinitionService botDefinitionService;
+    private final BotLayoutService botLayoutService;
 
     private final List<BotCommand> commands;
 
@@ -43,7 +45,7 @@ public class CommandListener implements BotListener<MessageReceivedEvent> {
         List<String> commandArgs = commandParts.subList(1, commandParts.size());
 
         CommandContext context = new CommandContext(commandName, commandArgs, event);
-        context.initialize(botDefinitionService, discordMessageService, errorMessageService);
+        context.initialize(botDefinitionService, discordMessageService, errorMessageService, botLayoutService);
 
         if (context.getDefinition().isEmpty()) {
             log.warn("User '{}' tried to use unavailable command '{}'!", event.getAuthor().getName(), commandName);
