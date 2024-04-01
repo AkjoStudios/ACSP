@@ -11,6 +11,7 @@ import com.akjostudios.acsp.bot.discord.service.*;
 import com.github.tonivade.purefun.Function1;
 import com.github.tonivade.purefun.type.Option;
 import com.github.tonivade.purefun.type.Validation;
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
@@ -33,6 +34,11 @@ public class CommandListener implements BotListener<MessageReceivedEvent> {
     private final BotCommandArgumentService botCommandArgumentService;
 
     private final List<BotCommand> commands;
+
+    @PostConstruct
+    public void init() {
+        log.info("CommandListener initialized with commands: {}", commands.stream().map(BotCommand::getName).toList());
+    }
 
     @Override
     public void onEvent(@NotNull BotEventType type, @NotNull MessageReceivedEvent event) {
