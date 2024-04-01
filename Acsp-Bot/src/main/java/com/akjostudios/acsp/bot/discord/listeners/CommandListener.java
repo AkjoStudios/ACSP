@@ -2,11 +2,14 @@ package com.akjostudios.acsp.bot.discord.listeners;
 
 import com.akjostudios.acsp.bot.discord.common.BotEventType;
 import com.akjostudios.acsp.bot.discord.common.command.BotCommand;
+import com.akjostudios.acsp.bot.discord.common.command.BotCommandPermission;
 import com.akjostudios.acsp.bot.discord.common.command.CommandContext;
 import com.akjostudios.acsp.bot.discord.common.listener.BotListener;
 import com.akjostudios.acsp.bot.discord.config.definition.BotConfigCommand;
 import com.akjostudios.acsp.bot.discord.service.*;
+import com.github.tonivade.purefun.Function1;
 import com.github.tonivade.purefun.type.Option;
+import com.github.tonivade.purefun.type.Validation;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
@@ -41,10 +44,17 @@ public class CommandListener implements BotListener<MessageReceivedEvent> {
         List<String> commandParts = List.of(commandStr.split(" "));
         if (commandParts.isEmpty()) { return; }
 
-        String commandName = commandParts.getFirst();
-
-        CommandContext context = new CommandContext(commandName, event);
-        context.initialize(botDefinitionService, discordMessageService, errorMessageService, botPrimitiveService);
+        CommandContext context = new CommandContext(
+                commandParts.getFirst(),
+                getSubcommand(commandParts),
+                event
+        );
+        context.initialize(
+                botDefinitionService,
+                discordMessageService,
+                errorMessageService,
+                botPrimitiveService
+        );
 
         if (!checkAvailability(context)) { return; }
         if (!checkPermissions(context)) { return; }
@@ -52,8 +62,13 @@ public class CommandListener implements BotListener<MessageReceivedEvent> {
         runCommand(context);
     }
 
+    private @NotNull Option<String> getSubcommand(@NotNull List<String> commandParts) {
+        if (commandParts.size() < 2) { return Option.none(); }
+        return Option.some(commandParts.get(1));
+    }
+
     private boolean checkAvailability(@NotNull CommandContext ctx) {
-        if (ctx.getDefinition().isEmpty()) {
+        if (!ctx.getDefinition().isEmpty()) {
             log.warn("User '{}' tried to use unavailable command '{}'!",
                     ctx.getOriginalAuthor().getUser().getName(),
                     ctx.getName()
@@ -69,13 +84,8 @@ public class CommandListener implements BotListener<MessageReceivedEvent> {
     }
 
     private boolean checkPermissions(@NotNull CommandContext ctx) {
-        return ctx.getDefinition().map(BotConfigCommand::getPermissions)
-                .map(botCommandPermissionService::getPermissions)
-                .map(permissions -> botCommandPermissionService.validatePermissions(
-                        permissions,
-                        ctx.getOriginalAuthor(),
-                        ctx.getOriginalChannel()
-                )).map(validation -> validation.fold(
+        boolean commandPermitted = checkPermissions(ctx, ctx.getDefinition()
+                .map(BotConfigCommand::getPermissions), validation -> validation.fold(
                         error -> {
                             log.warn("User '{}' tried to use command '{}' but does not have the required permissions!",
                                     ctx.getOriginalAuthor().getUser().getName(),
@@ -83,12 +93,49 @@ public class CommandListener implements BotListener<MessageReceivedEvent> {
                             );
                             ctx.answer(ctx.getErrorMessage(
                                     "$error.permission_denied.title$",
-                                    "$error.permission_denied.description$",
-                                    List.of(ctx.getName(), validation.getError())
+                                    "$error.command.permission_denied.description$",
+                                    List.of(
+                                            ctx.getName(),
+                                            validation.getError()
+                                    )
                             )).onFailure(ex -> log.error("Failed to send error message!", ex));
                             return false;
                         }, success -> true
-                )).getOrElse(false);
+                ));
+        boolean subcommandPermitted = checkPermissions(ctx, ctx.getSubcommandDefinition()
+                .map(BotConfigCommand.Subcommand::getPermissions), validation -> validation.fold(
+                        error -> {
+                            log.warn("User '{}' tried to use subcommand '{}' of command '{}' but does not have the required permissions!",
+                                    ctx.getOriginalAuthor().getUser().getName(),
+                                    ctx.getSubcommandDefinition().map(BotConfigCommand.Subcommand::getName).getOrElse("???"),
+                                    ctx.getName()
+                            );
+                            ctx.answer(ctx.getErrorMessage(
+                                    "$error.permission_denied.title$",
+                                    "$error.subcommand.permission_denied.description$",
+                                    List.of(
+                                            ctx.getName(),
+                                            ctx.getSubcommandDefinition().map(BotConfigCommand.Subcommand::getName).getOrElse("???"),
+                                            validation.getError()
+                                    )
+                            )).onFailure(ex -> log.error("Failed to send error message!", ex));
+                            return false;
+                        }, success -> true
+                ));
+        return commandPermitted && subcommandPermitted;
+    }
+
+    private boolean checkPermissions(
+            @NotNull CommandContext ctx,
+            @NotNull Option<List<BotConfigCommand.PermissionDeclaration>> permissionsList,
+            @NotNull Function1<Validation<String, List<BotCommandPermission>>, Boolean> permissionCheck
+    ) {
+        return permissionsList.map(botCommandPermissionService::getPermissions)
+                .map(permissions -> botCommandPermissionService.validatePermissions(
+                        permissions,
+                        ctx.getOriginalAuthor(),
+                        ctx.getOriginalChannel()
+                )).map(permissionCheck).getOrElse(false);
     }
 
     private void runCommand(@NotNull CommandContext ctx) {

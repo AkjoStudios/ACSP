@@ -26,6 +26,8 @@ import java.util.List;
 public class CommandContext {
     @Getter private final String name;
 
+    private final Option<String> subcommand;
+
     private final MessageReceivedEvent event;
 
     private BotDefinitionService botDefinitionService;
@@ -33,6 +35,9 @@ public class CommandContext {
     private BotErrorMessageService errorMessageService;
     private BotPrimitiveService botPrimitiveService;
 
+    /**
+     * @apiNote Should not be called by the command implementation.
+     */
     public void initialize(
             BotDefinitionService botDefinitionService,
             DiscordMessageService discordMessageService,
@@ -46,7 +51,18 @@ public class CommandContext {
     }
 
     public @NotNull Option<BotConfigCommand> getDefinition() {
-        return botDefinitionService.getCommandDefinition(name);
+        return botDefinitionService.getCommandDefinition(name)
+                .filter(BotConfigCommand::isEnabled);
+    }
+
+    public @NotNull Option<BotConfigCommand.Subcommand> getSubcommandDefinition() {
+        return getDefinition().map(BotConfigCommand::getSubcommands)
+                .filter(BotConfigCommand.Subcommands::isAvailable)
+                .map(BotConfigCommand.Subcommands::getCommands)
+                .flatMap(subcommands -> Option.from(subcommands.stream()
+                        .filter(subcommandP -> subcommandP.getName().equals(subcommand.getOrElseNull()))
+                        .findFirst())
+                );
     }
 
     public @NotNull Try<BotConfigMessage> getMessage(
