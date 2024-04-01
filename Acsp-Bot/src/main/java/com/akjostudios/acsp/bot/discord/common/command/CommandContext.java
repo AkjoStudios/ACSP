@@ -11,6 +11,7 @@ import com.github.tonivade.purefun.type.Option;
 import com.github.tonivade.purefun.type.Try;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
@@ -27,9 +28,14 @@ public class CommandContext {
     @Getter private final String name;
 
     private final Option<String> subcommand;
-    private final List<String> arguments;
 
     private final MessageReceivedEvent event;
+
+    /**
+     * @apiNote Should not be called by the command implementation.
+     */
+    @Setter
+    private List<BotCommandArgument<?>> arguments;
 
     private BotDefinitionService botDefinitionService;
     private DiscordMessageService discordMessageService;
@@ -64,6 +70,33 @@ public class CommandContext {
                         .filter(subcommandP -> subcommandP.getName().equals(subcommand.getOrElseNull()))
                         .findFirst())
                 );
+    }
+
+    public @NotNull List<BotConfigCommand.Argument> getArgumentDefinitions() {
+        return (subcommand.isPresent()
+                ? getSubcommandDefinition().map(BotConfigCommand.Subcommand::getArguments)
+                : getDefinition().map(BotConfigCommand::getArguments)).getOrElse(List.of());
+    }
+
+    @SuppressWarnings("unchecked")
+    public <T> @NotNull T getArgument(@NotNull String id) {
+        return Try.of(() -> (T) Option.from(arguments.stream()
+                .filter(argument -> argument.id().equals(id))
+                .findFirst()).toTry().mapError(
+                        ex -> new IllegalArgumentException("Failed to find argument with id " + id + "!")
+                ).map(BotCommandArgument::value).getOrElseThrow()).getOrElseThrow();
+    }
+
+    @SuppressWarnings("unchecked")
+    public <T> @NotNull T getArgument(@NotNull String id, @NotNull Class<T> type) {
+        return Option.from(arguments.stream()
+                .filter(argument -> argument.id().equals(id))
+                .findFirst()).toTry().mapError(
+                        ex -> new IllegalArgumentException("Failed to find argument with id " + id + "!")
+                ).filterOrElse(
+                        argument -> argument.type().equals(type),
+                        () -> Try.failure(new Throwable("Argument type mismatch on argument with id " + id + "!"))
+                ).map(argument -> (T) argument.value()).getOrElseThrow();
     }
 
     public @NotNull Try<BotConfigMessage> getMessage(

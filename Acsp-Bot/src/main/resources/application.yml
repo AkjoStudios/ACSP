@@ -73,6 +73,20 @@ app:
                   text: "$footer.text.1$" # contains $1
                   timestamp: "$2"
                   icon-url: "https://cdn.discordapp.com/avatars/1220705902622150666/71317fc3ccdc919c1a47d078161fc4f0.webp?size=256"
+        - label: "argument-validation-report"
+          message:
+            embeds:
+              - author:
+                  name: "$error.author.name$"
+                  icon-url: "https://cdn-icons-png.flaticon.com/512/2569/2569174.png"
+                title: "$error.argument_validation_report.title$"
+                description: "$error.argument_validation_report.description$" # contains $0
+                color: "#202225"
+                fields: [] # see field "argument-validation.error"
+                footer:
+                  text: "$footer.text.1$" # contains $1
+                  timestamp: "$2"
+                  icon-url: "https://cdn.discordapp.com/avatars/1220705902622150666/71317fc3ccdc919c1a47d078161fc4f0.webp?size=256"
       commands:
         - name: "begin"
           enabled: true
@@ -131,6 +145,12 @@ app:
               roles:
                 - type: simple
                   role: admin
+      fields:
+        - label: "argument-validation.error"
+          field:
+            name: "Argument $0"
+            value: "$1"
+            inline: false
 spring:
   application:
     name: ACSP Bot

@@ -3,6 +3,8 @@ package com.akjostudios.acsp.bot.discord.service;
 import com.akjostudios.acsp.bot.AcspBotApp;
 import com.akjostudios.acsp.bot.discord.config.definition.BotConfigMessage;
 import com.akjostudios.acsp.bot.discord.config.definition.BotConfigMessageEmbed;
+import com.github.tonivade.purefun.type.Option;
+import com.github.tonivade.purefun.type.Try;
 import lombok.RequiredArgsConstructor;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.MessageEmbed;
@@ -13,6 +15,7 @@ import org.springframework.stereotype.Service;
 
 import java.awt.*;
 import java.time.Instant;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -33,6 +36,16 @@ public class DiscordMessageService {
         builder.setEmbeds(message.getEmbeds().stream().map(this::toMessageEmbed).toList());
 
         return builder.build();
+    }
+
+    public @NotNull Try<BotConfigMessage> injectFields(
+            @NotNull Try<BotConfigMessage> message,
+            Option<Integer> index,
+            List<Option<BotConfigMessageEmbed.Field>> fields
+    ) {
+        return message.onSuccess(msg -> msg.getEmbeds().get(index.getOrElse(0)).getFields().addAll(
+                fields.stream().filter(Option::isPresent).map(Option::getOrElseThrow).toList()
+        ));
     }
 
     private @NotNull MessageEmbed toMessageEmbed(@NotNull BotConfigMessageEmbed embed) {

@@ -47,7 +47,7 @@ public class BotCommandPermissionService {
         boolean channelDenied = permissions.stream()
                 .map(BotCommandPermission::channel)
                 .noneMatch(perm -> botPrimitiveService.getChannelId(perm).equals(channel.getIdLong()));
-        if (channelDenied) return Validation.invalid("$errors.missing_permissions.reason.channel$");
+        if (channelDenied) return Validation.invalid("$error.missing_permissions.reason.channel$");
 
         boolean hasPermission = permissions.stream()
                 .filter(perm -> botPrimitiveService.getChannelId(perm.channel()).equals(channel.getIdLong()))
@@ -56,7 +56,7 @@ public class BotCommandPermissionService {
 
         return hasPermission
                 ? Validation.valid(permissions)
-                : Validation.invalid("$errors.missing_permissions.reason.role$");
+                : Validation.invalid("$error.missing_permissions.reason.role$");
     }
 
     private @NotNull EnumSet<BotConfigServerRole> getRolesFromDefinitions(

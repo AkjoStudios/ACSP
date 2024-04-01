@@ -2,6 +2,7 @@ package com.akjostudios.acsp.bot.discord.listeners;
 
 import com.akjostudios.acsp.bot.discord.common.BotEventType;
 import com.akjostudios.acsp.bot.discord.common.command.BotCommand;
+import com.akjostudios.acsp.bot.discord.common.command.BotCommandArgument;
 import com.akjostudios.acsp.bot.discord.common.command.BotCommandPermission;
 import com.akjostudios.acsp.bot.discord.common.command.CommandContext;
 import com.akjostudios.acsp.bot.discord.common.listener.BotListener;
@@ -17,6 +18,7 @@ import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.Map;
 
 @Component
 @RequiredArgsConstructor
@@ -28,11 +30,12 @@ public class CommandListener implements BotListener<MessageReceivedEvent> {
     private final BotDefinitionService botDefinitionService;
     private final BotPrimitiveService botPrimitiveService;
     private final BotCommandPermissionService botCommandPermissionService;
+    private final BotCommandArgumentService botCommandArgumentService;
 
     private final List<BotCommand> commands;
 
     @Override
-    public void onEvent(BotEventType type, MessageReceivedEvent event) {
+    public void onEvent(@NotNull BotEventType type, @NotNull MessageReceivedEvent event) {
         if (event.getAuthor().isBot()) { return; }
         if (!event.isFromGuild()) { return; }
 
@@ -48,7 +51,6 @@ public class CommandListener implements BotListener<MessageReceivedEvent> {
         CommandContext context = new CommandContext(
                 commandParts.getFirst(),
                 subcommand,
-                getArguments(commandParts, subcommand),
                 event
         );
         context.initialize(
@@ -59,9 +61,9 @@ public class CommandListener implements BotListener<MessageReceivedEvent> {
         );
 
         if (!checkAvailability(context)) { return; }
+        if (!checkSubcommandRequired(context)) { return; }
         if (!checkPermissions(context)) { return; }
-
-        // Parse arguments
+        if (!parseArguments(context, commandParts, subcommand)) { return; }
 
         runCommand(context);
     }
@@ -75,8 +77,8 @@ public class CommandListener implements BotListener<MessageReceivedEvent> {
             @NotNull List<String> commandParts,
             @NotNull Option<String> subcommand
     ) {
-        return subcommand.map(sub -> commandParts.subList(2, commandParts.size()))
-                .getOrElse(() -> commandParts.subList(1, commandParts.size()));
+        if (subcommand.isEmpty()) { return commandParts.subList(1, commandParts.size()); }
+        return commandParts.subList(2, commandParts.size());
     }
 
     private boolean checkAvailability(@NotNull CommandContext ctx) {
@@ -93,6 +95,25 @@ public class CommandListener implements BotListener<MessageReceivedEvent> {
             return false;
         }
         return true;
+    }
+
+    @SuppressWarnings("java:S5411")
+    private boolean checkSubcommandRequired(@NotNull CommandContext ctx) {
+        return ctx.getDefinition()
+                .map(BotConfigCommand::getSubcommands)
+                .map(BotConfigCommand.Subcommands::isRequired)
+                .map(required -> { if (required && ctx.getSubcommandDefinition().isEmpty()) {
+                    log.warn("User '{}' tried to use command '{}' without a required subcommand!",
+                            ctx.getOriginalAuthor().getUser().getName(),
+                            ctx.getName()
+                    );
+                    ctx.answer(ctx.getErrorMessage(
+                            "$error.subcommand_required.title$",
+                            "$error.subcommand_required.description$",
+                            List.of(ctx.getName())
+                    )).onFailure(ex -> log.error("Failed to send error message!", ex));
+                    return false;
+                } else { return true; }}).getOrElse(true);
     }
 
     private boolean checkPermissions(@NotNull CommandContext ctx) {
@@ -148,6 +169,33 @@ public class CommandListener implements BotListener<MessageReceivedEvent> {
                         ctx.getOriginalAuthor(),
                         ctx.getOriginalChannel()
                 )).map(permissionCheck).getOrElse(false);
+    }
+
+    private boolean parseArguments(
+            @NotNull CommandContext context,
+            @NotNull List<String> commandParts,
+            @NotNull Option<String> subcommand
+    ) {
+        List<String> givenArguments = getArguments(commandParts, subcommand);
+        Validation<BotCommandArgumentService.ArgumentParseError, Map<String, String>> parsedArguments =
+                botCommandArgumentService.parseArguments(context, givenArguments);
+        if (parsedArguments.isInvalid()) {
+            context.answer(botCommandArgumentService.getCommandErrorMessage(parsedArguments.getError()))
+                    .onFailure(ex -> log.error("Failed to send error message!", ex));
+            return false;
+        }
+        List<BotCommandArgument<?>> arguments = botCommandArgumentService.convertArguments(
+                context, parsedArguments.getOrElseThrow()
+        );
+        List<Validation<BotCommandArgumentService.ArgumentValidationError, BotCommandArgument<?>>> validations =
+                botCommandArgumentService.validateArguments(context, arguments);
+        if (validations.stream().anyMatch(Validation::isInvalid)) {
+            context.answer(botCommandArgumentService.getValidationReport(context, validations, Option.none()))
+                    .onFailure(ex -> log.error("Failed to send error message!", ex));
+            return false;
+        }
+        context.setArguments(arguments);
+        return true;
     }
 
     private void runCommand(@NotNull CommandContext ctx) {

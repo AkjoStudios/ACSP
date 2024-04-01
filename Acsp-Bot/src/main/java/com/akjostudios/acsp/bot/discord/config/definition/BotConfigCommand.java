@@ -54,7 +54,7 @@ public class BotConfigCommand {
     @Validated
     public static class Argument {
         @NotBlank private String id;
-        @NotBlank private BotConfigCommandArgumentType type;
+        @NotNull private BotConfigCommandArgumentType type;
         @NotNull private boolean required;
         private String description;
         private Map<@NotBlank String, @NotNull Object> validation;
