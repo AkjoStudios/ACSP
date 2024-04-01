@@ -30,7 +30,7 @@ public class ReadyListener implements BotListener<ReadyEvent> {
         Option.of(() -> discordMessageService.createMessage(
                 "Bot is now ready and running in " + currentEnvironment + " mode!"
         )).flatMap(data -> botPrimitiveService.getChannel(
-                event, BotConfigServerChannel.ADMIN_CHAT
+                event, BotConfigServerChannel.AUDIT_LOG
         ).map(channel -> channel.sendMessage(data))).ifPresent(RestAction::queue);
     }
 }
