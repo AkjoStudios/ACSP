@@ -27,6 +27,7 @@ public class CommandContext {
     @Getter private final String name;
 
     private final Option<String> subcommand;
+    private final List<String> arguments;
 
     private final MessageReceivedEvent event;
 

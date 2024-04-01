@@ -43,10 +43,12 @@ public class CommandListener implements BotListener<MessageReceivedEvent> {
 
         List<String> commandParts = List.of(commandStr.split(" "));
         if (commandParts.isEmpty()) { return; }
+        Option<String> subcommand = getSubcommand(commandParts);
 
         CommandContext context = new CommandContext(
                 commandParts.getFirst(),
-                getSubcommand(commandParts),
+                subcommand,
+                getArguments(commandParts, subcommand),
                 event
         );
         context.initialize(
@@ -59,12 +61,22 @@ public class CommandListener implements BotListener<MessageReceivedEvent> {
         if (!checkAvailability(context)) { return; }
         if (!checkPermissions(context)) { return; }
 
+        // Parse arguments
+
         runCommand(context);
     }
 
     private @NotNull Option<String> getSubcommand(@NotNull List<String> commandParts) {
         if (commandParts.size() < 2) { return Option.none(); }
         return Option.some(commandParts.get(1));
+    }
+
+    private @NotNull List<String> getArguments(
+            @NotNull List<String> commandParts,
+            @NotNull Option<String> subcommand
+    ) {
+        return subcommand.map(sub -> commandParts.subList(2, commandParts.size()))
+                .getOrElse(() -> commandParts.subList(1, commandParts.size()));
     }
 
     private boolean checkAvailability(@NotNull CommandContext ctx) {
