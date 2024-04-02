@@ -12,28 +12,40 @@ public final class BotCommandArgumentConverters {
 
     public static class StringConverter implements BotCommandArgumentConverter<String> {
         @Override
-        public @NotNull Validation<BotConfigCommandArgumentType, String> convert(@NotNull String value) {
+        public @NotNull Validation<BotCommandArgumentConversionError, String> convert(
+                @NotNull String name,
+                @NotNull String value,
+                @NotNull String jumpUrl
+        ) {
             return Validation.valid(value);
         }
     }
 
     public static class IntegerConverter implements BotCommandArgumentConverter<Integer> {
         @Override
-        public @NotNull Validation<BotConfigCommandArgumentType, Integer> convert(@NotNull String value) {
+        public @NotNull Validation<BotCommandArgumentConversionError, Integer> convert(
+                @NotNull String name,
+                @NotNull String value,
+                @NotNull String jumpUrl
+        ) {
             return Try.of(() -> Integer.parseInt(value))
                     .toEither()
-                    .mapLeft(throwable -> BotConfigCommandArgumentType.INTEGER)
-                    .toValidation();
+                    .mapLeft(throwable -> new BotCommandArgumentConversionError(
+                            name,
+                            value,
+                            BotConfigCommandArgumentType.INTEGER,
+                            jumpUrl
+                    )).toValidation();
         }
     }
 
-    @SuppressWarnings("java:S1452")
-    public static @NotNull BotCommandArgumentConverterProvider<?, ?> from(
+    @SuppressWarnings({"java:S1452", "unchecked"})
+    public static <T> @NotNull BotCommandArgumentConverter<T> from(
             @NotNull BotConfigCommandArgumentType type
     ) {
-        return switch (type) {
-            case STRING -> BotCommandArgumentConverterProvider.STRING;
-            case INTEGER -> BotCommandArgumentConverterProvider.INTEGER;
+        return (BotCommandArgumentConverter<T>) switch (type) {
+            case STRING -> BotCommandArgumentConverterProvider.STRING.provide();
+            case INTEGER -> BotCommandArgumentConverterProvider.INTEGER.provide();
             default -> throw new IllegalArgumentException("Unsupported argument type: " + type);
         };
     }

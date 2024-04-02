@@ -3,8 +3,9 @@ package com.akjostudios.acsp.bot.discord.service;
 import com.akjostudios.acsp.bot.AcspBotApp;
 import com.akjostudios.acsp.bot.discord.common.command.CommandContext;
 import com.akjostudios.acsp.bot.discord.common.command.argument.BotCommandArgument;
+import com.akjostudios.acsp.bot.discord.common.command.argument.BotCommandArgumentConversionError;
+import com.akjostudios.acsp.bot.discord.common.command.argument.BotCommandArgumentConverters;
 import com.akjostudios.acsp.bot.discord.config.definition.BotConfigCommand;
-import com.akjostudios.acsp.bot.discord.config.definition.BotConfigCommandArgumentType;
 import com.akjostudios.acsp.bot.discord.config.definition.BotConfigMessage;
 import com.github.tonivade.purefun.type.Option;
 import com.github.tonivade.purefun.type.Try;
@@ -217,7 +218,7 @@ public class BotCommandArgumentService {
     }
 
     @SuppressWarnings("java:S1452")
-    public @NotNull List<Validation<BotConfigCommandArgumentType, BotCommandArgument<?>>> convertArguments(
+    public @NotNull List<Validation<BotCommandArgumentConversionError, BotCommandArgument<?>>> convertArguments(
             @NotNull CommandContext ctx,
             @NotNull Map<String, String> arguments
     ) {
@@ -226,12 +227,22 @@ public class BotCommandArgumentService {
                 .toList();
     }
 
-    private @NotNull Validation<BotConfigCommandArgumentType, BotCommandArgument<?>> convertArgument(
+    @SuppressWarnings("unchecked")
+    private @NotNull Validation<BotCommandArgumentConversionError, BotCommandArgument<?>> convertArgument(
             @NotNull CommandContext ctx,
             @NotNull String argumentName,
             @NotNull String argumentValue
     ) {
-        return Validation.valid(new BotCommandArgument<>(argumentName, String.class, argumentValue));
+        return BotCommandArgumentConverters.from(
+                ctx.getArgumentDefinitions().stream()
+                        .filter(definition -> definition.getId().equals(argumentName))
+                        .findFirst()
+                        .map(BotConfigCommand.Argument::getType)
+                        .orElseThrow()
+        ).convert(argumentName, argumentValue, ctx.getJumpUrl()).map(value -> {
+            Class<Object> valueClass = (Class<Object>) value.getClass();
+            return new BotCommandArgument<>(argumentName, valueClass, value);
+        });
     }
 
     @SuppressWarnings("java:S1452")
@@ -253,7 +264,7 @@ public class BotCommandArgumentService {
 
     public @NotNull Try<BotConfigMessage> getValidationReport(
             @NotNull CommandContext ctx,
-            @NotNull List<Validation<ArgumentValidationError, BotCommandArgument<?>>> validations,
+            @NotNull List<ArgumentValidationError> validations,
             @NotNull Option<Locale> locale
     ) {
         return discordMessageService.injectFields(
@@ -264,8 +275,6 @@ public class BotCommandArgumentService {
                         AcspBotApp.BOT_NAME,
                         AcspBotApp.DATE_TIME_FORMATTER.format(Instant.now())
                 ), Option.none(), validations.stream()
-                        .filter(Validation::isInvalid)
-                        .map(Validation::getError)
                         .map(error -> botDefinitionService.getFieldDefinition(
                                 "argument-validation.error",
                                 locale,

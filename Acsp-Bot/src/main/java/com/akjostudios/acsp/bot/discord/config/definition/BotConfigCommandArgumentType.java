@@ -30,10 +30,10 @@ public enum BotConfigCommandArgumentType {
     UNKNOWN;
 
     public @NotNull String getTranslationKey() {
-        return "$bot.command.argument.type." + name().toLowerCase() + "$";
+        return "$command.arguments.type." + name().toLowerCase() + "$";
     }
 
     public @NotNull String getTooltipKey() {
-        return "$bot.command.argument.type." + name().toLowerCase() + ".tooltip$";
+        return "$command.arguments.type." + name().toLowerCase() + ".tooltip$";
     }
 }

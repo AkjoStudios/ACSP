@@ -5,9 +5,9 @@ import com.akjostudios.acsp.bot.discord.common.command.BotCommand;
 import com.akjostudios.acsp.bot.discord.common.command.BotCommandPermission;
 import com.akjostudios.acsp.bot.discord.common.command.CommandContext;
 import com.akjostudios.acsp.bot.discord.common.command.argument.BotCommandArgument;
+import com.akjostudios.acsp.bot.discord.common.command.argument.BotCommandArgumentConversionError;
 import com.akjostudios.acsp.bot.discord.common.listener.BotListener;
 import com.akjostudios.acsp.bot.discord.config.definition.BotConfigCommand;
-import com.akjostudios.acsp.bot.discord.config.definition.BotConfigCommandArgumentType;
 import com.akjostudios.acsp.bot.discord.service.*;
 import com.github.tonivade.purefun.Function1;
 import com.github.tonivade.purefun.type.Option;
@@ -19,9 +19,9 @@ import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
@@ -183,34 +183,51 @@ public class CommandListener implements BotListener<MessageReceivedEvent> {
 
     @SuppressWarnings("java:S6204")
     private boolean parseArguments(
-            @NotNull CommandContext context,
+            @NotNull CommandContext ctx,
             @NotNull List<String> commandParts,
             @NotNull Option<String> subcommand
     ) {
         List<String> givenArguments = getArguments(commandParts, subcommand);
         Validation<BotCommandArgumentService.ArgumentParseError, Map<String, String>> parsedArguments =
-                botCommandArgumentService.parseArguments(context, givenArguments);
+                botCommandArgumentService.parseArguments(ctx, givenArguments);
         if (parsedArguments.isInvalid()) {
-            context.answer(
-                    context.isSubcommand()
+            ctx.answer(
+                    ctx.isSubcommand()
                             ? botCommandArgumentService.getSubcommandErrorMessage(parsedArguments.getError())
                             : botCommandArgumentService.getCommandErrorMessage(parsedArguments.getError())
             ).onFailure(ex -> log.error("Failed to send error message!", ex));
             return false;
         }
-        List<Validation<BotConfigCommandArgumentType, BotCommandArgument<?>>> arguments =
-                botCommandArgumentService.convertArguments(context, parsedArguments.getOrElseThrow());
-        List<Validation<BotCommandArgumentService.ArgumentValidationError, BotCommandArgument<?>>> validations =
-                botCommandArgumentService.validateArguments(context, arguments.stream()
-                        .map(Validation::get)
-                        .collect(Collectors.toList())
-                );
-        if (validations.stream().anyMatch(Validation::isInvalid)) {
-            context.answer(botCommandArgumentService.getValidationReport(context, validations, Option.none()))
-                    .onFailure(ex -> log.error("Failed to send error message!", ex));
+
+        List<BotCommandArgument<?>> convertedArguments = new ArrayList<>();
+        List<BotCommandArgumentConversionError> conversionErrors = new ArrayList<>();
+        List<BotCommandArgumentService.ArgumentValidationError> validationErrors = new ArrayList<>();
+
+        botCommandArgumentService.convertArguments(ctx, parsedArguments.getOrElseThrow())
+                .forEach(validation -> validation.fold(
+                        conversionErrors::add,
+                        convertedArguments::add
+                ));
+        botCommandArgumentService.validateArguments(
+                ctx, convertedArguments
+        ).forEach(validation -> validation.fold(
+                validationErrors::add,
+                success -> success
+        ));
+
+        validationErrors.addAll(conversionErrors.stream()
+                .map(BotCommandArgumentConversionError::toValidationError)
+                .toList()
+        );
+
+        if (!validationErrors.isEmpty()) {
+            ctx.answer(botCommandArgumentService.getValidationReport(
+                    ctx, validationErrors, Option.none()
+            ));
             return false;
         }
-        context.setArguments(arguments.stream().map(Validation::get).toList());
+
+        ctx.setArguments(convertedArguments);
         return true;
     }
 
