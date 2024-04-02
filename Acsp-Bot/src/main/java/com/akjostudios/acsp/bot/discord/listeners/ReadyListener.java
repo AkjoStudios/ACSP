@@ -3,6 +3,7 @@ package com.akjostudios.acsp.bot.discord.listeners;
 import com.akjostudios.acsp.bot.discord.common.BotEnvironment;
 import com.akjostudios.acsp.bot.discord.common.BotEventType;
 import com.akjostudios.acsp.bot.discord.common.listener.BotListener;
+import com.akjostudios.acsp.bot.discord.config.BotConfigProperties;
 import com.akjostudios.acsp.bot.discord.config.layout.BotConfigServerChannel;
 import com.akjostudios.acsp.bot.discord.impl.AcspBotImpl;
 import com.akjostudios.acsp.bot.discord.service.BotPrimitiveService;
@@ -21,6 +22,7 @@ import org.springframework.stereotype.Component;
 public class ReadyListener implements BotListener<ReadyEvent> {
     private final DiscordMessageService discordMessageService;
     private final BotPrimitiveService botPrimitiveService;
+    private final BotConfigProperties botConfigProperties;
 
     @Override
     public void onEvent(@NotNull BotEventType type, @NotNull ReadyEvent event) {
@@ -28,7 +30,7 @@ public class ReadyListener implements BotListener<ReadyEvent> {
 
         BotEnvironment currentEnvironment = AcspBotImpl.getEnvironment().getOrElse(BotEnvironment.UNKNOWN);
         Option.of(() -> discordMessageService.createMessage(
-                "Bot is now ready and running in " + currentEnvironment + " mode!"
+                "`" + botConfigProperties.getDeploymentId() + "` Bot is now ready and running in " + currentEnvironment + " mode!"
         )).flatMap(data -> botPrimitiveService.getChannel(
                 event, BotConfigServerChannel.AUDIT_LOG
         ).map(channel -> channel.sendMessage(data))).ifPresent(RestAction::queue);

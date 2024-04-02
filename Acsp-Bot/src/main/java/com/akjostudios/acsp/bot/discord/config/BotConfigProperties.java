@@ -20,6 +20,7 @@ import java.util.Map;
 @Validated
 public class BotConfigProperties {
     @NotNull private BotEnvironment environment;
+    @NotNull private String deploymentId;
 
     @NotBlank private String clientId;
     @NotBlank private String clientSecret;

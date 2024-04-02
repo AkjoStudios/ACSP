@@ -33,6 +33,7 @@ public class AcspBotImpl implements AcspBot {
 
     private final DiscordMessageService discordMessageService;
     private final BotPrimitiveService botPrimitiveService;
+    private final BotConfigProperties botConfigProperties;
 
     @Autowired
     @SuppressWarnings("java:S3010")
@@ -40,7 +41,8 @@ public class AcspBotImpl implements AcspBot {
             @NotNull BotConfigProperties properties,
             @NotNull CommonListener commonListener,
             @NotNull DiscordMessageService discordMessageService,
-            @NotNull BotPrimitiveService botPrimitiveService
+            @NotNull BotPrimitiveService botPrimitiveService,
+            @NotNull BotConfigProperties botConfigProperties
     ) {
         environment = Option.of(properties.getEnvironment());
         log.info("Starting ACSP Discord Bot in environment '{}'.", properties.getEnvironment().name());
@@ -56,6 +58,7 @@ public class AcspBotImpl implements AcspBot {
 
         this.discordMessageService = discordMessageService;
         this.botPrimitiveService = botPrimitiveService;
+        this.botConfigProperties = botConfigProperties;
     }
 
     @Override
@@ -74,7 +77,7 @@ public class AcspBotImpl implements AcspBot {
         log.info("Shutting down ACSP Discord Bot...");
 
         Option.of(() -> discordMessageService.createMessage(
-                "Bot is now shutting down in " + environment.getOrElse(BotEnvironment.UNKNOWN) + " mode!"
+                "`" + botConfigProperties.getDeploymentId() + "`Bot is now shutting down in " + environment.getOrElse(BotEnvironment.UNKNOWN) + " mode!"
         )).flatMap(data -> botPrimitiveService.getChannel(
                 botInstance, BotConfigServerChannel.AUDIT_LOG
         ).map(channel -> channel.sendMessage(data))).ifPresent(RestAction::queue);

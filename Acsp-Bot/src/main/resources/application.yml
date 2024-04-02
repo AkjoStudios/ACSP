@@ -13,6 +13,7 @@ app:
     client-id: ${BOT_CLIENT_ID}
     client-secret: ${BOT_CLIENT_SECRET}
     bot-token: ${BOT_TOKEN}
+    deployment-id: ${RAILWAY_DEPLOYMENT_ID}
     layout:
       test:
         id: 1170398575302295663
