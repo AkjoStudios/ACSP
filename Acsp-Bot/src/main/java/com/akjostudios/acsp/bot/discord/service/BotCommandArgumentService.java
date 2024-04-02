@@ -1,9 +1,9 @@
 package com.akjostudios.acsp.bot.discord.service;
 
-
 import com.akjostudios.acsp.bot.AcspBotApp;
 import com.akjostudios.acsp.bot.discord.common.command.BotCommandArgument;
 import com.akjostudios.acsp.bot.discord.common.command.CommandContext;
+import com.akjostudios.acsp.bot.discord.config.definition.BotConfigCommand;
 import com.akjostudios.acsp.bot.discord.config.definition.BotConfigMessage;
 import com.github.tonivade.purefun.type.Option;
 import com.github.tonivade.purefun.type.Try;
@@ -14,9 +14,12 @@ import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 
 @Service
 @RequiredArgsConstructor
@@ -27,12 +30,147 @@ public class BotCommandArgumentService {
     private final BotDefinitionService botDefinitionService;
     private final BotStringsService botStringsService;
 
+    @SuppressWarnings({"java:S3358", "java:S3776"})
     public @NotNull Validation<ArgumentParseError, Map<String, String>> parseArguments(
             @NotNull CommandContext ctx,
             @NotNull List<String> arguments
     ) {
+        Map<String, String> result = new HashMap<>();
 
-        return Validation.valid(Map.of());
+        if (arguments.isEmpty()) { return Validation.valid(result); }
+
+        Map<Integer, Boolean> indexTypeMap = new HashMap<>(); // index, isNamed
+        AtomicInteger index = new AtomicInteger(0);
+        AtomicReference<ArgumentParseError> error = new AtomicReference<>();
+        List<BotConfigCommand.Argument> argumentDefinitions = ctx.getArgumentDefinitions();
+
+        if (arguments.size() > argumentDefinitions.size()) {
+            error.set(argumentDefinitions.isEmpty() ? new ArgumentParseError(
+                    ArgumentParseErrorType.TOO_MANY_ARGUMENTS_NONE,
+                    ctx.isSubcommand() ? List.of(
+                            ctx.getSubcommandName().getOrElse("???"),
+                            ctx.getName()
+                    ) : List.of(
+                            ctx.getName()
+                    )
+            ) : new ArgumentParseError(
+                    ArgumentParseErrorType.TOO_MANY_ARGUMENTS,
+                    ctx.isSubcommand() ? List.of(
+                            ctx.getSubcommandName().getOrElse("???"),
+                            ctx.getName(),
+                            String.valueOf(argumentDefinitions.size())
+                    ) : List.of(
+                            ctx.getName(),
+                            String.valueOf(argumentDefinitions.size())
+                    )
+            ));
+        } else {
+            arguments.forEach(argument -> {
+                if (indexTypeMap.containsValue(true) && !argument.contains("=")) {
+                    error.set(new ArgumentParseError(
+                            ArgumentParseErrorType.INVALID_ORDER,
+                            List.of()
+                    ));
+                    return;
+                }
+
+                boolean isNamed = argument.contains("=");
+                Validation<ArgumentParseError, Map.Entry<String, String>> parsedArgument = isNamed
+                        ? getNamedArgument(ctx, argument, argumentDefinitions) // invalid_named_argument / unknown_argument
+                        : getIndexedArgument(ctx, argument, argumentDefinitions, index); // unknown_argument
+
+                if (parsedArgument.isInvalid()) {
+                    error.set(parsedArgument.getError());
+                    return;
+                }
+
+                Map.Entry<String, String> entry = parsedArgument.get();
+                if (result.containsKey(entry.getKey())) {
+                    error.set(new ArgumentParseError(
+                            ArgumentParseErrorType.DUPLICATE_ARGUMENT,
+                            ctx.isSubcommand() ? List.of(
+                                    entry.getKey(),
+                                    ctx.getSubcommandName().getOrElse("???"),
+                                    ctx.getName()
+                            ) : List.of(
+                                    entry.getKey(),
+                                    ctx.getName()
+                            )
+                    ));
+                    return;
+                }
+
+                result.put(entry.getKey(), entry.getValue());
+                indexTypeMap.put(index.get(), isNamed);
+                index.getAndIncrement();
+            });
+        }
+
+        return error.get() != null ?
+                Validation.invalid(error.get()) :
+                Validation.valid(result);
+    }
+
+    private @NotNull Validation<ArgumentParseError, Map.Entry<String, String>> getNamedArgument(
+            @NotNull CommandContext ctx,
+            @NotNull String argument,
+            @NotNull List<BotConfigCommand.Argument> argumentDefinitions
+    ) {
+        String[] split = argument.split("=", 2);
+        String name = split[0];
+
+        if (name.isBlank()) {
+            return Validation.invalid(new ArgumentParseError(
+                    ArgumentParseErrorType.INVALID_NAMED_ARGUMENT,
+                    ctx.isSubcommand() ? List.of(
+                            argument,
+                            ctx.getSubcommandName().getOrElse("???"),
+                            ctx.getName()
+                    ) : List.of(
+                            argument,
+                            ctx.getName()
+                    )
+            ));
+        }
+        if (argumentDefinitions.stream().noneMatch(definition -> definition.getId().equals(name))) {
+            return Validation.invalid(new ArgumentParseError(
+                    ArgumentParseErrorType.UNKNOWN_ARGUMENT,
+                    ctx.isSubcommand() ? List.of(
+                            name,
+                            ctx.getSubcommandName().getOrElse("???"),
+                            ctx.getName()
+                    ) : List.of(
+                            name,
+                            ctx.getName()
+                    )
+            ));
+        }
+
+        return Validation.valid(Map.entry(name, split[1]));
+    }
+
+    private @NotNull Validation<ArgumentParseError, Map.Entry<String, String>> getIndexedArgument(
+            @NotNull CommandContext ctx,
+            @NotNull String argument,
+            @NotNull List<BotConfigCommand.Argument> argumentDefinitions,
+            @NotNull AtomicInteger index
+    ) {
+        if (index.get() >= argumentDefinitions.size()) {
+            return Validation.invalid(new ArgumentParseError(
+                    ArgumentParseErrorType.UNKNOWN_ARGUMENT,
+                    ctx.isSubcommand() ? List.of(
+                            argument,
+                            ctx.getSubcommandName().getOrElse("???"),
+                            ctx.getName()
+                    ) : List.of(
+                            argument,
+                            ctx.getName()
+                    )
+            ));
+        }
+
+        BotConfigCommand.Argument definition = argumentDefinitions.get(index.get());
+        return Validation.valid(Map.entry(definition.getId(), argument));
     }
 
     @SuppressWarnings("java:S1452")
@@ -83,33 +221,22 @@ public class BotCommandArgumentService {
     public @NotNull Try<BotConfigMessage> getCommandErrorMessage(
             @NotNull ArgumentParseError error
     ) {
-        return getCommandErrorMessage(error.errorType().getCommandKey(), error.placeholders());
+        return getErrorMessage(error.errorType().getCommandKey(), error.placeholders());
     }
 
     public @NotNull Try<BotConfigMessage> getSubcommandErrorMessage(
             @NotNull ArgumentParseError error
     ) {
-        return getSubcommandErrorMessage(error.errorType().getSubcommandKey(), error.placeholders());
+        return getErrorMessage(error.errorType().getSubcommandKey(), error.placeholders());
     }
 
-    private @NotNull Try<BotConfigMessage> getCommandErrorMessage(
+    private @NotNull Try<BotConfigMessage> getErrorMessage(
            @NotNull String key,
            @NotNull List<String> placeholders
     ) {
         return errorMessageService.getErrorMessage(
-                "$error.command." + key + ".title$",
-                "$error.command." + key + ".description$",
-                placeholders
-        );
-    }
-
-    private @NotNull Try<BotConfigMessage> getSubcommandErrorMessage(
-            @NotNull String key,
-            @NotNull List<String> placeholders
-    ) {
-        return errorMessageService.getErrorMessage(
-                "$error.subcommand." + key + ".title$",
-                "$error.subcommand." + key + ".description$",
+                "$error." + key + ".title$",
+                "$error." + key + ".description$",
                 placeholders
         );
     }
@@ -121,6 +248,7 @@ public class BotCommandArgumentService {
         TOO_MANY_ARGUMENTS("command.too_many_arguments", "subcommand.too_many_arguments"),
         TOO_MANY_ARGUMENTS_NONE("command.too_many_arguments_none", "subcommand.too_many_arguments_none"),
         REQUIRED_ARGUMENT_MISSING("command.required_argument_missing", "subcommand.required_argument_missing"),
+        INVALID_NAMED_ARGUMENT("command.invalid_named_argument", "subcommand.invalid_named_argument"),
         UNKNOWN_ARGUMENT("command.unknown_argument", "subcommand.unknown_argument"),
         DUPLICATE_ARGUMENT("command.duplicate_argument", "subcommand.duplicate_argument"),
         OTHER("command.other", "subcommand.other");

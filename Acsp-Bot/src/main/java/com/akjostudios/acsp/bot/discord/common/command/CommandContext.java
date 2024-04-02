@@ -72,8 +72,13 @@ public class CommandContext {
                 );
     }
 
+    public boolean isSubcommand() { return subcommand.isPresent(); }
+    public Option<String> getSubcommandName() {
+        return getSubcommandDefinition().map(BotConfigCommand.Subcommand::getName);
+    }
+
     public @NotNull List<BotConfigCommand.Argument> getArgumentDefinitions() {
-        return (subcommand.isPresent()
+        return (isSubcommand()
                 ? getSubcommandDefinition().map(BotConfigCommand.Subcommand::getArguments)
                 : getDefinition().map(BotConfigCommand::getArguments)).getOrElse(List.of());
     }

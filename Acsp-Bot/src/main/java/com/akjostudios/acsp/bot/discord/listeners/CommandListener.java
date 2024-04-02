@@ -52,31 +52,33 @@ public class CommandListener implements BotListener<MessageReceivedEvent> {
 
         List<String> commandParts = List.of(commandStr.split(" "));
         if (commandParts.isEmpty()) { return; }
-        Option<String> subcommand = getSubcommand(commandParts);
 
-        CommandContext context = new CommandContext(
-                commandParts.getFirst(),
-                subcommand,
-                event
-        );
-        context.initialize(
-                botDefinitionService,
-                discordMessageService,
-                errorMessageService,
-                botPrimitiveService
-        );
+        String commandName = commandParts.getFirst();
+        Option<String> subcommand = getSubcommand(commandName, commandParts);
+
+        CommandContext context = new CommandContext(commandName, subcommand, event);
+        context.initialize(botDefinitionService, discordMessageService, errorMessageService, botPrimitiveService);
 
         if (!checkAvailability(context)) { return; }
         if (!checkSubcommandRequired(context)) { return; }
         if (!checkPermissions(context)) { return; }
-        if (!parseArguments(context, commandParts, subcommand)) { return; }
+        if (!parseArguments(context, commandParts, context.getSubcommandName())) { return; }
 
         runCommand(context);
     }
 
-    private @NotNull Option<String> getSubcommand(@NotNull List<String> commandParts) {
+    private @NotNull Option<String> getSubcommand(@NotNull String commandName, @NotNull List<String> commandParts) {
         if (commandParts.size() < 2) { return Option.none(); }
-        return Option.some(commandParts.get(1));
+
+        return botDefinitionService.getCommandDefinition(commandName)
+                .filter(BotConfigCommand::isEnabled)
+                .map(BotConfigCommand::getSubcommands)
+                .filter(BotConfigCommand.Subcommands::isAvailable)
+                .map(BotConfigCommand.Subcommands::getCommands)
+                .flatMap(subcommands -> Option.from(subcommands.stream()
+                        .filter(subcommandP -> subcommandP.getName().equals(commandParts.get(1)))
+                        .findFirst())
+                ).map(BotConfigCommand.Subcommand::getName);
     }
 
     private @NotNull List<String> getArguments(
@@ -88,7 +90,7 @@ public class CommandListener implements BotListener<MessageReceivedEvent> {
     }
 
     private boolean checkAvailability(@NotNull CommandContext ctx) {
-        if (!ctx.getDefinition().isEmpty()) {
+        if (ctx.getDefinition().isEmpty()) {
             log.warn("User '{}' tried to use unavailable command '{}'!",
                     ctx.getOriginalAuthor().getUser().getName(),
                     ctx.getName()
@@ -146,7 +148,7 @@ public class CommandListener implements BotListener<MessageReceivedEvent> {
                         error -> {
                             log.warn("User '{}' tried to use subcommand '{}' of command '{}' but does not have the required permissions!",
                                     ctx.getOriginalAuthor().getUser().getName(),
-                                    ctx.getSubcommandDefinition().map(BotConfigCommand.Subcommand::getName).getOrElse("???"),
+                                    ctx.getSubcommandName().getOrElse("???"),
                                     ctx.getName()
                             );
                             ctx.answer(ctx.getErrorMessage(
@@ -154,7 +156,7 @@ public class CommandListener implements BotListener<MessageReceivedEvent> {
                                     "$error.subcommand.permission_denied.description$",
                                     List.of(
                                             ctx.getName(),
-                                            ctx.getSubcommandDefinition().map(BotConfigCommand.Subcommand::getName).getOrElse("???"),
+                                            ctx.getSubcommandName().getOrElse("???"),
                                             validation.getError()
                                     )
                             )).onFailure(ex -> log.error("Failed to send error message!", ex));
@@ -174,7 +176,7 @@ public class CommandListener implements BotListener<MessageReceivedEvent> {
                         permissions,
                         ctx.getOriginalAuthor(),
                         ctx.getOriginalChannel()
-                )).map(permissionCheck).getOrElse(false);
+                )).map(permissionCheck).getOrElse(true);
     }
 
     private boolean parseArguments(
@@ -186,8 +188,11 @@ public class CommandListener implements BotListener<MessageReceivedEvent> {
         Validation<BotCommandArgumentService.ArgumentParseError, Map<String, String>> parsedArguments =
                 botCommandArgumentService.parseArguments(context, givenArguments);
         if (parsedArguments.isInvalid()) {
-            context.answer(botCommandArgumentService.getCommandErrorMessage(parsedArguments.getError()))
-                    .onFailure(ex -> log.error("Failed to send error message!", ex));
+            context.answer(
+                    context.isSubcommand()
+                            ? botCommandArgumentService.getSubcommandErrorMessage(parsedArguments.getError())
+                            : botCommandArgumentService.getCommandErrorMessage(parsedArguments.getError())
+            ).onFailure(ex -> log.error("Failed to send error message!", ex));
             return false;
         }
         List<BotCommandArgument<?>> arguments = botCommandArgumentService.convertArguments(
