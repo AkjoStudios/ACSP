@@ -105,6 +105,9 @@ public class CommandContext {
                 ).map(argument -> (T) argument.value()).getOrElseThrow();
     }
 
+    @SuppressWarnings("java:S1452")
+    public @NotNull List<? extends BotCommandArgument<?>> getArguments() { return arguments; }
+
     public @NotNull Try<BotConfigMessage> getMessage(
             @NotNull String label,
             String@NotNull... placeholders

@@ -7,6 +7,7 @@ import com.akjostudios.acsp.bot.discord.common.command.CommandContext;
 import com.akjostudios.acsp.bot.discord.common.command.argument.BotCommandArgument;
 import com.akjostudios.acsp.bot.discord.common.listener.BotListener;
 import com.akjostudios.acsp.bot.discord.config.definition.BotConfigCommand;
+import com.akjostudios.acsp.bot.discord.config.definition.BotConfigCommandArgumentType;
 import com.akjostudios.acsp.bot.discord.service.*;
 import com.github.tonivade.purefun.Function1;
 import com.github.tonivade.purefun.type.Option;
@@ -20,6 +21,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
@@ -179,6 +181,7 @@ public class CommandListener implements BotListener<MessageReceivedEvent> {
                 )).map(permissionCheck).getOrElse(true);
     }
 
+    @SuppressWarnings("java:S6204")
     private boolean parseArguments(
             @NotNull CommandContext context,
             @NotNull List<String> commandParts,
@@ -195,10 +198,13 @@ public class CommandListener implements BotListener<MessageReceivedEvent> {
             ).onFailure(ex -> log.error("Failed to send error message!", ex));
             return false;
         }
-        List<Validation<BotCommandArgumentService.ArgumentValidationError, BotCommandArgument<?>>> arguments =
+        List<Validation<BotConfigCommandArgumentType, BotCommandArgument<?>>> arguments =
                 botCommandArgumentService.convertArguments(context, parsedArguments.getOrElseThrow());
         List<Validation<BotCommandArgumentService.ArgumentValidationError, BotCommandArgument<?>>> validations =
-                botCommandArgumentService.validateArguments(context, arguments);
+                botCommandArgumentService.validateArguments(context, arguments.stream()
+                        .map(Validation::get)
+                        .collect(Collectors.toList())
+                );
         if (validations.stream().anyMatch(Validation::isInvalid)) {
             context.answer(botCommandArgumentService.getValidationReport(context, validations, Option.none()))
                     .onFailure(ex -> log.error("Failed to send error message!", ex));

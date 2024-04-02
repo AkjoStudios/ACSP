@@ -4,6 +4,7 @@ import com.akjostudios.acsp.bot.AcspBotApp;
 import com.akjostudios.acsp.bot.discord.common.command.CommandContext;
 import com.akjostudios.acsp.bot.discord.common.command.argument.BotCommandArgument;
 import com.akjostudios.acsp.bot.discord.config.definition.BotConfigCommand;
+import com.akjostudios.acsp.bot.discord.config.definition.BotConfigCommandArgumentType;
 import com.akjostudios.acsp.bot.discord.config.definition.BotConfigMessage;
 import com.github.tonivade.purefun.type.Option;
 import com.github.tonivade.purefun.type.Try;
@@ -216,7 +217,7 @@ public class BotCommandArgumentService {
     }
 
     @SuppressWarnings("java:S1452")
-    public @NotNull List<Validation<ArgumentValidationError, BotCommandArgument<?>>> convertArguments(
+    public @NotNull List<Validation<BotConfigCommandArgumentType, BotCommandArgument<?>>> convertArguments(
             @NotNull CommandContext ctx,
             @NotNull Map<String, String> arguments
     ) {
@@ -225,7 +226,7 @@ public class BotCommandArgumentService {
                 .toList();
     }
 
-    private @NotNull Validation<ArgumentValidationError, BotCommandArgument<?>> convertArgument(
+    private @NotNull Validation<BotConfigCommandArgumentType, BotCommandArgument<?>> convertArgument(
             @NotNull CommandContext ctx,
             @NotNull String argumentName,
             @NotNull String argumentValue
@@ -236,9 +237,18 @@ public class BotCommandArgumentService {
     @SuppressWarnings("java:S1452")
     public @NotNull List<Validation<ArgumentValidationError, BotCommandArgument<?>>> validateArguments(
             @NotNull CommandContext ctx,
-            @NotNull List<Validation<ArgumentValidationError, BotCommandArgument<?>>> conversions
+            @NotNull List<BotCommandArgument<?>> conversions
     ) {
-        return List.of();
+        return conversions.stream()
+                .map(argument -> validateArgument(ctx, argument))
+                .toList();
+    }
+
+    private @NotNull Validation<ArgumentValidationError, BotCommandArgument<?>> validateArgument(
+            @NotNull CommandContext ctx,
+            @NotNull BotCommandArgument<?> argument
+    ) {
+        return Validation.valid(argument);
     }
 
     public @NotNull Try<BotConfigMessage> getValidationReport(
