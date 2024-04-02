@@ -28,11 +28,13 @@ public class ReadyListener implements BotListener<ReadyEvent> {
     public void onEvent(@NotNull BotEventType type, @NotNull ReadyEvent event) {
         log.info("Bot is now ready!");
 
-        BotEnvironment currentEnvironment = AcspBotImpl.getEnvironment().getOrElse(BotEnvironment.UNKNOWN);
-        Option.of(() -> discordMessageService.createMessage(
-                "`" + botConfigProperties.getDeploymentId() + "` Bot is now ready and running in " + currentEnvironment + " mode!"
-        )).flatMap(data -> botPrimitiveService.getChannel(
-                event, BotConfigServerChannel.AUDIT_LOG
-        ).map(channel -> channel.sendMessage(data))).ifPresent(RestAction::queue);
+        if (!botConfigProperties.getDeploymentId().equals("none")) {
+            BotEnvironment currentEnvironment = AcspBotImpl.getEnvironment().getOrElse(BotEnvironment.UNKNOWN);
+            Option.of(() -> discordMessageService.createMessage(
+                    "`" + botConfigProperties.getDeploymentId() + "` Bot is now ready and running in " + currentEnvironment + " mode!"
+            )).flatMap(data -> botPrimitiveService.getChannel(
+                    event, BotConfigServerChannel.AUDIT_LOG
+            ).map(channel -> channel.sendMessage(data))).ifPresent(RestAction::queue);
+        }
     }
 }

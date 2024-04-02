@@ -76,11 +76,13 @@ public class AcspBotImpl implements AcspBot {
     public void shutdown(@NotNull ConfigurableApplicationContext context) {
         log.info("Shutting down ACSP Discord Bot...");
 
-        Option.of(() -> discordMessageService.createMessage(
-                "`" + botConfigProperties.getDeploymentId() + "`Bot is now shutting down in " + environment.getOrElse(BotEnvironment.UNKNOWN) + " mode!"
-        )).flatMap(data -> botPrimitiveService.getChannel(
-                botInstance, BotConfigServerChannel.AUDIT_LOG
-        ).map(channel -> channel.sendMessage(data))).ifPresent(RestAction::queue);
+        if (!botConfigProperties.getDeploymentId().equals("none")) {
+            Option.of(() -> discordMessageService.createMessage(
+                    "`" + botConfigProperties.getDeploymentId() + "`Bot is now shutting down in " + environment.getOrElse(BotEnvironment.UNKNOWN) + " mode!"
+            )).flatMap(data -> botPrimitiveService.getChannel(
+                    botInstance, BotConfigServerChannel.AUDIT_LOG
+            ).map(channel -> channel.sendMessage(data))).ifPresent(RestAction::queue);
+        }
 
         try (context) { botInstance.shutdown(); } catch (Exception ex) {
             log.error("Failed to shutdown ACSP Discord Bot!", ex);
