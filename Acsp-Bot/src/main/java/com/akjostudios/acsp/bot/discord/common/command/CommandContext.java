@@ -78,9 +78,9 @@ public class CommandContext {
     }
 
     public @NotNull List<BotConfigCommand.Argument> getArgumentDefinitions() {
-        return (isSubcommand()
-                ? getSubcommandDefinition().map(BotConfigCommand.Subcommand::getArguments)
-                : getDefinition().map(BotConfigCommand::getArguments)).getOrElse(List.of());
+        return isSubcommand()
+                ? getSubcommandDefinition().flatMap(subcommandP -> Option.of(subcommandP::getArguments)).getOrElse(List.of())
+                : getDefinition().flatMap(subcommandP -> Option.of(subcommandP::getArguments)).getOrElse(List.of());
     }
 
     @SuppressWarnings("unchecked")
