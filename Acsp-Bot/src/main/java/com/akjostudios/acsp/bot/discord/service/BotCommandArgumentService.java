@@ -41,8 +41,6 @@ public class BotCommandArgumentService {
     ) {
         Map<String, String> result = new HashMap<>();
 
-        if (arguments.isEmpty()) { return Validation.valid(result); }
-
         Map<Integer, Boolean> indexTypeMap = new HashMap<>();
         AtomicInteger index = new AtomicInteger(0);
         List<BotConfigCommand.Argument> argumentDefinitions = ctx.getArgumentDefinitions();
