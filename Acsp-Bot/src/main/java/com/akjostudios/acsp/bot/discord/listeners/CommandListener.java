@@ -3,9 +3,11 @@ package com.akjostudios.acsp.bot.discord.listeners;
 import com.akjostudios.acsp.bot.discord.common.BotEventType;
 import com.akjostudios.acsp.bot.discord.common.command.BotCommand;
 import com.akjostudios.acsp.bot.discord.common.command.BotCommandPermission;
-import com.akjostudios.acsp.bot.discord.common.command.CommandContext;
+import com.akjostudios.acsp.bot.discord.common.command.BotCommandContext;
 import com.akjostudios.acsp.bot.discord.common.command.argument.BotCommandArgument;
-import com.akjostudios.acsp.bot.discord.common.command.argument.BotCommandArgumentConversionError;
+import com.akjostudios.acsp.bot.discord.common.command.argument.conversion.BotCommandArgumentConversionError;
+import com.akjostudios.acsp.bot.discord.common.command.argument.parsing.BotCommandArgumentParseError;
+import com.akjostudios.acsp.bot.discord.common.command.argument.validation.BotCommandArgumentValidationError;
 import com.akjostudios.acsp.bot.discord.common.listener.BotListener;
 import com.akjostudios.acsp.bot.discord.config.definition.BotConfigCommand;
 import com.akjostudios.acsp.bot.discord.service.*;
@@ -58,7 +60,7 @@ public class CommandListener implements BotListener<MessageReceivedEvent> {
         String commandName = commandParts.getFirst();
         Option<String> subcommand = getSubcommand(commandName, commandParts);
 
-        CommandContext context = new CommandContext(commandName, subcommand, event);
+        BotCommandContext context = new BotCommandContext(commandName, subcommand, event);
         context.initialize(botDefinitionService, discordMessageService, errorMessageService, botPrimitiveService);
 
         if (!checkAvailability(context)) { return; }
@@ -91,7 +93,7 @@ public class CommandListener implements BotListener<MessageReceivedEvent> {
         return commandParts.subList(2, commandParts.size());
     }
 
-    private boolean checkAvailability(@NotNull CommandContext ctx) {
+    private boolean checkAvailability(@NotNull BotCommandContext ctx) {
         if (ctx.getDefinition().isEmpty()) {
             log.warn("User '{}' tried to use unavailable command '{}'!",
                     ctx.getOriginalAuthor().getUser().getName(),
@@ -108,7 +110,7 @@ public class CommandListener implements BotListener<MessageReceivedEvent> {
     }
 
     @SuppressWarnings("java:S5411")
-    private boolean checkSubcommandRequired(@NotNull CommandContext ctx) {
+    private boolean checkSubcommandRequired(@NotNull BotCommandContext ctx) {
         return ctx.getDefinition()
                 .map(BotConfigCommand::getSubcommands)
                 .map(BotConfigCommand.Subcommands::isRequired)
@@ -126,7 +128,7 @@ public class CommandListener implements BotListener<MessageReceivedEvent> {
                 } else { return true; }}).getOrElse(true);
     }
 
-    private boolean checkPermissions(@NotNull CommandContext ctx) {
+    private boolean checkPermissions(@NotNull BotCommandContext ctx) {
         boolean commandPermitted = checkPermissions(ctx, ctx.getDefinition()
                 .map(BotConfigCommand::getPermissions), validation -> validation.fold(
                         error -> {
@@ -169,7 +171,7 @@ public class CommandListener implements BotListener<MessageReceivedEvent> {
     }
 
     private boolean checkPermissions(
-            @NotNull CommandContext ctx,
+            @NotNull BotCommandContext ctx,
             @NotNull Option<List<BotConfigCommand.PermissionDeclaration>> permissionsList,
             @NotNull Function1<Validation<String, List<BotCommandPermission>>, Boolean> permissionCheck
     ) {
@@ -183,12 +185,12 @@ public class CommandListener implements BotListener<MessageReceivedEvent> {
 
     @SuppressWarnings("java:S6204")
     private boolean parseArguments(
-            @NotNull CommandContext ctx,
+            @NotNull BotCommandContext ctx,
             @NotNull List<String> commandParts,
             @NotNull Option<String> subcommand
     ) {
         List<String> givenArguments = getArguments(commandParts, subcommand);
-        Validation<BotCommandArgumentService.ArgumentParseError, Map<String, String>> parsedArguments =
+        Validation<BotCommandArgumentParseError, Map<String, String>> parsedArguments =
                 botCommandArgumentService.parseArguments(ctx, givenArguments);
         if (parsedArguments.isInvalid()) {
             ctx.answer(
@@ -201,7 +203,7 @@ public class CommandListener implements BotListener<MessageReceivedEvent> {
 
         List<BotCommandArgument<?>> convertedArguments = new ArrayList<>();
         List<BotCommandArgumentConversionError> conversionErrors = new ArrayList<>();
-        List<BotCommandArgumentService.ArgumentValidationError> validationErrors = new ArrayList<>();
+        List<BotCommandArgumentValidationError> validationErrors = new ArrayList<>();
 
         botCommandArgumentService.convertArguments(ctx, parsedArguments.getOrElseThrow())
                 .forEach(validation -> validation.fold(
@@ -231,7 +233,7 @@ public class CommandListener implements BotListener<MessageReceivedEvent> {
         return true;
     }
 
-    private void runCommand(@NotNull CommandContext ctx) {
+    private void runCommand(@NotNull BotCommandContext ctx) {
         Option.from(commands.stream().filter(command -> command.getName().equals(ctx.getName())).findFirst())
                 .ifPresent(command -> command.execute(ctx))
                 .ifEmpty(() -> {

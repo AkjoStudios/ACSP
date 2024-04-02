@@ -15,7 +15,12 @@ import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
+import net.dv8tion.jda.api.entities.Role;
+import net.dv8tion.jda.api.entities.User;
+import net.dv8tion.jda.api.entities.channel.concrete.Category;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
+import net.dv8tion.jda.api.entities.channel.concrete.VoiceChannel;
+import net.dv8tion.jda.api.entities.emoji.Emoji;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.requests.RestAction;
 import net.dv8tion.jda.api.requests.restaction.MessageCreateAction;
@@ -25,7 +30,7 @@ import java.util.List;
 
 @RequiredArgsConstructor
 @SuppressWarnings({"unused", "UnusedReturnValue", "java:S4968"})
-public class CommandContext {
+public class BotCommandContext {
     @Getter private final String name;
 
     private final Option<String> subcommand;
@@ -85,28 +90,13 @@ public class CommandContext {
     }
 
     @SuppressWarnings("unchecked")
-    public <T> @NotNull T getArgument(@NotNull String id) {
-        return Try.of(() -> (T) Option.from(arguments.stream()
-                .filter(argument -> argument.id().equals(id))
-                .findFirst()).toTry().mapError(
-                        ex -> new IllegalArgumentException("Failed to find argument with id " + id + "!")
-                ).map(BotCommandArgument::value).getOrElseThrow()).getOrElseThrow();
-    }
-
-    @SuppressWarnings("unchecked")
-    public <T> @NotNull T getArgument(@NotNull String id, @NotNull Class<T> type) {
+    public <T> @NotNull T getArgument(@NotNull String id, @NotNull T defaultValue) {
         return Option.from(arguments.stream()
                 .filter(argument -> argument.id().equals(id))
-                .findFirst()).toTry().mapError(
-                        ex -> new IllegalArgumentException("Failed to find argument with id " + id + "!")
-                ).filterOrElse(
-                        argument -> argument.type().equals(type),
-                        () -> Try.failure(new Throwable("Argument type mismatch on argument with id " + id + "!"))
-                ).map(argument -> (T) argument.value()).getOrElseThrow();
+                .findFirst())
+                .map(argument -> (T) argument.value())
+                .getOrElse(defaultValue);
     }
-
-    @SuppressWarnings("java:S1452")
-    public @NotNull List<? extends BotCommandArgument<?>> getArguments() { return arguments; }
 
     public @NotNull Try<BotConfigMessage> getMessage(
             @NotNull String label,
@@ -183,4 +173,32 @@ public class CommandContext {
     public @NotNull TextChannel getOriginalChannel() { return event.getChannel().asTextChannel(); }
 
     public @NotNull String getJumpUrl() { return event.getMessage().getJumpUrl(); }
+
+    public @NotNull Option<User> getUser(@NotNull String userId) {
+        return botPrimitiveService.getUser(event, userId);
+    }
+
+    public @NotNull Option<Member> getMember(@NotNull String userId) {
+        return botPrimitiveService.getMember(event, userId);
+    }
+
+    public @NotNull Option<Role> getRole(@NotNull String roleId) {
+        return botPrimitiveService.getRole(event, roleId);
+    }
+
+    public @NotNull Option<TextChannel> getTextChannel(@NotNull String channelId) {
+        return botPrimitiveService.getTextChannel(event, channelId);
+    }
+
+    public @NotNull Option<VoiceChannel> getVoiceChannel(@NotNull String channelId) {
+        return botPrimitiveService.getVoiceChannel(event, channelId);
+    }
+
+    public @NotNull Option<Category> getCategory(@NotNull String categoryId) {
+        return botPrimitiveService.getCategory(event, categoryId);
+    }
+
+    public @NotNull Option<Emoji> getEmoji(@NotNull String emojiId) {
+        return botPrimitiveService.getEmoji(event, emojiId);
+    }
 }

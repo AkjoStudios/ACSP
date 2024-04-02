@@ -5,9 +5,11 @@ import com.akjostudios.acsp.bot.discord.config.layout.BotConfigServerRole;
 import com.github.tonivade.purefun.type.Option;
 import lombok.RequiredArgsConstructor;
 import net.dv8tion.jda.api.JDA;
-import net.dv8tion.jda.api.entities.Member;
-import net.dv8tion.jda.api.entities.Role;
+import net.dv8tion.jda.api.entities.*;
+import net.dv8tion.jda.api.entities.channel.concrete.Category;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
+import net.dv8tion.jda.api.entities.channel.concrete.VoiceChannel;
+import net.dv8tion.jda.api.entities.emoji.Emoji;
 import net.dv8tion.jda.api.events.Event;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Service;
@@ -62,4 +64,78 @@ public class BotPrimitiveService {
                 .map(roleP -> member.getRoles().contains(roleP))
                 .getOrElse(false);
     }
+
+    private Guild getGuild(
+            @NotNull JDA botInstance
+    ) { return botLayoutService.getServerLayout().flatMap(layout -> Option.of(botInstance.getGuildById(layout.getId()))).getOrElseThrow(); }
+
+    public Option<User> getUser(
+            @NotNull JDA botInstance,
+            @NotNull String userId
+    ) { return Option.of(botInstance.getUserById(userId)); }
+
+    public Option<User> getUser(
+            @NotNull Event event,
+            @NotNull String userId
+    ) { return getUser(event.getJDA(), userId); }
+
+    public Option<Member> getMember(
+            @NotNull JDA botInstance,
+            @NotNull String memberId
+    ) { return Option.of(getGuild(botInstance).getMemberById(memberId)); }
+
+    public Option<Member> getMember(
+            @NotNull Event event,
+            @NotNull String memberId
+    ) { return getMember(event.getJDA(), memberId); }
+
+    public Option<Role> getRole(
+            @NotNull JDA botInstance,
+            @NotNull String roleId
+    ) { return Option.of(botInstance.getRoleById(roleId)); }
+
+    public Option<Role> getRole(
+            @NotNull Event event,
+            @NotNull String roleId
+    ) { return getRole(event.getJDA(), roleId); }
+
+    public Option<TextChannel> getTextChannel(
+            @NotNull JDA botInstance,
+            @NotNull String channelId
+    ) { return Option.of(botInstance.getTextChannelById(channelId)); }
+
+    public Option<TextChannel> getTextChannel(
+            @NotNull Event event,
+            @NotNull String channelId
+    ) { return getTextChannel(event.getJDA(), channelId); }
+
+    public Option<VoiceChannel> getVoiceChannel(
+            @NotNull JDA botInstance,
+            @NotNull String channelId
+    ) { return Option.of(botInstance.getVoiceChannelById(channelId)); }
+
+    public Option<VoiceChannel> getVoiceChannel(
+            @NotNull Event event,
+            @NotNull String channelId
+    ) { return getVoiceChannel(event.getJDA(), channelId); }
+
+    public Option<Category> getCategory(
+            @NotNull JDA botInstance,
+            @NotNull String categoryId
+    ) { return Option.of(botInstance.getCategoryById(categoryId)); }
+
+    public Option<Category> getCategory(
+            @NotNull Event event,
+            @NotNull String categoryId
+    ) { return getCategory(event.getJDA(), categoryId); }
+
+    public Option<Emoji> getEmoji(
+            @NotNull JDA botInstance,
+            @NotNull String emojiId
+    ) { return Option.of(botInstance.getEmojiById(emojiId)); }
+
+    public Option<Emoji> getEmoji(
+            @NotNull Event event,
+            @NotNull String emojiId
+    ) { return getEmoji(event.getJDA(), emojiId); }
 }

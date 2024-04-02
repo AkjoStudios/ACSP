@@ -110,13 +110,9 @@ app:
             required: false
           arguments:
             - id: "delay"
-              type: integer
+              type: duration
               description: "$command.shutdown.argument.delay.description$"
               required: false
-              validation:
-                min: 0
-                max: 3600
-                default: 0
           permissions:
             - channels:
                 - type: category
@@ -132,13 +128,9 @@ app:
             required: false
           arguments:
             - id: "delay"
-              type: integer
+              type: duration
               description: "$command.restart.argument.delay.description$"
               required: false
-              validation:
-                min: 0
-                max: 3600
-                default: 0
           permissions:
             - channels:
                 - type: category

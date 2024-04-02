@@ -1,14 +1,14 @@
 package com.akjostudios.acsp.bot.discord.command;
 
 import com.akjostudios.acsp.bot.discord.common.command.BotCommand;
-import com.akjostudios.acsp.bot.discord.common.command.CommandContext;
+import com.akjostudios.acsp.bot.discord.common.command.BotCommandContext;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Component;
 
 @Component
 public class ShutdownCommand implements BotCommand {
     @Override
-    public void execute(@NotNull CommandContext ctx) { /* Unimplemented */ }
+    public void execute(@NotNull BotCommandContext ctx) { /* Unimplemented */ }
 
     @Override
     public String getName() { return "shutdown"; }
