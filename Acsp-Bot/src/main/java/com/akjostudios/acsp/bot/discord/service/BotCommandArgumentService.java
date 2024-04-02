@@ -1,8 +1,8 @@
 package com.akjostudios.acsp.bot.discord.service;
 
 import com.akjostudios.acsp.bot.AcspBotApp;
-import com.akjostudios.acsp.bot.discord.common.command.BotCommandArgument;
 import com.akjostudios.acsp.bot.discord.common.command.CommandContext;
+import com.akjostudios.acsp.bot.discord.common.command.argument.BotCommandArgument;
 import com.akjostudios.acsp.bot.discord.config.definition.BotConfigCommand;
 import com.akjostudios.acsp.bot.discord.config.definition.BotConfigMessage;
 import com.github.tonivade.purefun.type.Option;
@@ -216,17 +216,27 @@ public class BotCommandArgumentService {
     }
 
     @SuppressWarnings("java:S1452")
-    public @NotNull List<BotCommandArgument<?>> convertArguments(
+    public @NotNull List<Validation<ArgumentValidationError, BotCommandArgument<?>>> convertArguments(
             @NotNull CommandContext ctx,
             @NotNull Map<String, String> arguments
     ) {
-        return List.of();
+        return arguments.entrySet().stream()
+                .map(entry -> convertArgument(ctx, entry.getKey(), entry.getValue()))
+                .toList();
+    }
+
+    private @NotNull Validation<ArgumentValidationError, BotCommandArgument<?>> convertArgument(
+            @NotNull CommandContext ctx,
+            @NotNull String argumentName,
+            @NotNull String argumentValue
+    ) {
+        return Validation.valid(new BotCommandArgument<>(argumentName, String.class, argumentValue));
     }
 
     @SuppressWarnings("java:S1452")
     public @NotNull List<Validation<ArgumentValidationError, BotCommandArgument<?>>> validateArguments(
             @NotNull CommandContext ctx,
-            @NotNull List<BotCommandArgument<?>> arguments
+            @NotNull List<Validation<ArgumentValidationError, BotCommandArgument<?>>> conversions
     ) {
         return List.of();
     }

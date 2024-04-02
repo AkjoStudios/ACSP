@@ -2,9 +2,9 @@ package com.akjostudios.acsp.bot.discord.listeners;
 
 import com.akjostudios.acsp.bot.discord.common.BotEventType;
 import com.akjostudios.acsp.bot.discord.common.command.BotCommand;
-import com.akjostudios.acsp.bot.discord.common.command.BotCommandArgument;
 import com.akjostudios.acsp.bot.discord.common.command.BotCommandPermission;
 import com.akjostudios.acsp.bot.discord.common.command.CommandContext;
+import com.akjostudios.acsp.bot.discord.common.command.argument.BotCommandArgument;
 import com.akjostudios.acsp.bot.discord.common.listener.BotListener;
 import com.akjostudios.acsp.bot.discord.config.definition.BotConfigCommand;
 import com.akjostudios.acsp.bot.discord.service.*;
@@ -195,9 +195,8 @@ public class CommandListener implements BotListener<MessageReceivedEvent> {
             ).onFailure(ex -> log.error("Failed to send error message!", ex));
             return false;
         }
-        List<BotCommandArgument<?>> arguments = botCommandArgumentService.convertArguments(
-                context, parsedArguments.getOrElseThrow()
-        );
+        List<Validation<BotCommandArgumentService.ArgumentValidationError, BotCommandArgument<?>>> arguments =
+                botCommandArgumentService.convertArguments(context, parsedArguments.getOrElseThrow());
         List<Validation<BotCommandArgumentService.ArgumentValidationError, BotCommandArgument<?>>> validations =
                 botCommandArgumentService.validateArguments(context, arguments);
         if (validations.stream().anyMatch(Validation::isInvalid)) {
@@ -205,7 +204,7 @@ public class CommandListener implements BotListener<MessageReceivedEvent> {
                     .onFailure(ex -> log.error("Failed to send error message!", ex));
             return false;
         }
-        context.setArguments(arguments);
+        context.setArguments(arguments.stream().map(Validation::get).toList());
         return true;
     }
 

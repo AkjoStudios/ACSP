@@ -1,8 +1,10 @@
 package com.akjostudios.acsp.bot.discord.config.definition;
 
 import lombok.Getter;
+import org.jetbrains.annotations.NotNull;
 
 @Getter
+@SuppressWarnings("unused")
 public enum BotConfigCommandArgumentType {
     STRING,
     BYTE,
@@ -24,5 +26,14 @@ public enum BotConfigCommandArgumentType {
     TIME,
     DURATION,
     URL,
-    COLOR
+    COLOR,
+    UNKNOWN;
+
+    public @NotNull String getTranslationKey() {
+        return "$bot.command.argument.type." + name().toLowerCase() + "$";
+    }
+
+    public @NotNull String getTooltipKey() {
+        return "$bot.command.argument.type." + name().toLowerCase() + ".tooltip$";
+    }
 }

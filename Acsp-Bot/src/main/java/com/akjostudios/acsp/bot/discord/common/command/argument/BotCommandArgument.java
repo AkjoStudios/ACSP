@@ -1,4 +1,4 @@
-package com.akjostudios.acsp.bot.discord.common.command;
+package com.akjostudios.acsp.bot.discord.common.command.argument;
 
 public record BotCommandArgument<T>(
         String id,

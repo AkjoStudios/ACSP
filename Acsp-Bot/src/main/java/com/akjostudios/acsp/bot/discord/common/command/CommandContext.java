@@ -1,5 +1,6 @@
 package com.akjostudios.acsp.bot.discord.common.command;
 
+import com.akjostudios.acsp.bot.discord.common.command.argument.BotCommandArgument;
 import com.akjostudios.acsp.bot.discord.config.definition.BotConfigCommand;
 import com.akjostudios.acsp.bot.discord.config.definition.BotConfigMessage;
 import com.akjostudios.acsp.bot.discord.config.layout.BotConfigServerChannel;
@@ -23,7 +24,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.List;
 
 @RequiredArgsConstructor
-@SuppressWarnings({"unused", "UnusedReturnValue"})
+@SuppressWarnings({"unused", "UnusedReturnValue", "java:S4968"})
 public class CommandContext {
     @Getter private final String name;
 
@@ -35,7 +36,7 @@ public class CommandContext {
      * @apiNote Should not be called by the command implementation.
      */
     @Setter
-    private List<BotCommandArgument<?>> arguments;
+    private List<? extends BotCommandArgument<?>> arguments;
 
     private BotDefinitionService botDefinitionService;
     private DiscordMessageService discordMessageService;
@@ -177,4 +178,6 @@ public class CommandContext {
     public @NotNull Message getOriginalMessage() { return event.getMessage(); }
 
     public @NotNull TextChannel getOriginalChannel() { return event.getChannel().asTextChannel(); }
+
+    public @NotNull String getJumpUrl() { return event.getMessage().getJumpUrl(); }
 }
