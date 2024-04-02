@@ -6,7 +6,6 @@ import com.akjostudios.acsp.bot.discord.config.definition.BotConfigCommandArgume
 import com.github.tonivade.purefun.type.Option;
 import com.github.tonivade.purefun.type.Try;
 import com.github.tonivade.purefun.type.Validation;
-import lombok.extern.slf4j.Slf4j;
 import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.entities.channel.concrete.*;
 import net.dv8tion.jda.api.entities.emoji.Emoji;
@@ -22,7 +21,6 @@ import java.time.chrono.ChronoZonedDateTime;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-@Slf4j
 public final class BotCommandArgumentConverters {
     @Contract(pure = true)
     private BotCommandArgumentConverters() {}

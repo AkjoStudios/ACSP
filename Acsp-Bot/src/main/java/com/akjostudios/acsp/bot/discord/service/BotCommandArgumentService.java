@@ -8,6 +8,7 @@ import com.akjostudios.acsp.bot.discord.common.command.argument.conversion.BotCo
 import com.akjostudios.acsp.bot.discord.common.command.argument.parsing.BotCommandArgumentParseError;
 import com.akjostudios.acsp.bot.discord.common.command.argument.parsing.BotCommandArgumentParseErrorType;
 import com.akjostudios.acsp.bot.discord.common.command.argument.validation.BotCommandArgumentValidationError;
+import com.akjostudios.acsp.bot.discord.common.command.argument.validation.BotCommandArgumentValidators;
 import com.akjostudios.acsp.bot.discord.config.definition.BotConfigCommand;
 import com.akjostudios.acsp.bot.discord.config.definition.BotConfigMessage;
 import com.github.tonivade.purefun.type.Option;
@@ -257,11 +258,25 @@ public class BotCommandArgumentService {
                 .toList();
     }
 
+    @SuppressWarnings({"unchecked", "java:S117"})
     private @NotNull Validation<BotCommandArgumentValidationError, BotCommandArgument<?>> validateArgument(
             @NotNull BotCommandContext ctx,
             @NotNull BotCommandArgument<?> argument
     ) {
-        return Validation.valid(argument);
+        return BotCommandArgumentValidators.from(
+                ctx.getArgumentDefinitions().stream()
+                        .filter(definition -> definition.getId().equals(argument.id()))
+                        .findFirst()
+                        .map(BotConfigCommand.Argument::getType)
+                        .orElseThrow()
+        ).validate(ctx,
+                (BotCommandArgument<Object>) argument,
+                ctx.getArgumentDefinitions().stream()
+                        .filter(definition -> definition.getId().equals(argument.id()))
+                        .findFirst()
+                        .map(BotConfigCommand.Argument::getValidation)
+                        .orElse(Map.of())
+        ).map(__ -> argument);
     }
 
     public @NotNull Try<BotConfigMessage> getValidationReport(
