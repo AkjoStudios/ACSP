@@ -89,55 +89,23 @@ app:
                   timestamp: "$2"
                   icon-url: "https://cdn.discordapp.com/avatars/1220705902622150666/71317fc3ccdc919c1a47d078161fc4f0.webp?size=256"
       commands:
-        - name: "begin"
+        - name: "help"
           enabled: true
-          description: "$command.begin.description$"
+          description: "$command.help.description$"
           subcommands:
             available: false
             required: false
+          arguments:
+            - id: "command"
+              type: string
+              description: "$command.help.argument.command.description$"
+              required: false
           permissions:
             - channels:
-                - type: category
-                  category: begin
+                - type: all
               roles:
                 - type: simple
                   role: everyone
-        - name: "shutdown"
-          enabled: true
-          description: "$command.shutdown.description$"
-          subcommands:
-            available: false
-            required: false
-          arguments:
-            - id: "delay"
-              type: duration
-              description: "$command.shutdown.argument.delay.description$"
-              required: false
-          permissions:
-            - channels:
-                - type: category
-                  category: admin
-              roles:
-                - type: simple
-                  role: admin
-        - name: "restart"
-          enabled: true
-          description: "$command.restart.description$"
-          subcommands:
-            available: false
-            required: false
-          arguments:
-            - id: "delay"
-              type: duration
-              description: "$command.restart.argument.delay.description$"
-              required: false
-          permissions:
-            - channels:
-                - type: category
-                  category: admin
-              roles:
-                - type: simple
-                  role: admin
       fields:
         - label: "argument-validation.error"
           field:

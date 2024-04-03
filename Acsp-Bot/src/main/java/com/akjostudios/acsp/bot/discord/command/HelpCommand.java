@@ -6,10 +6,10 @@ import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Component;
 
 @Component
-public class ShutdownCommand implements BotCommand {
+public class HelpCommand implements BotCommand {
     @Override
     public void execute(@NotNull BotCommandContext ctx) { /* Unimplemented */ }
 
     @Override
-    public String getName() { return "shutdown"; }
+    public String getName() { return "help"; }
 }

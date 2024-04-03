@@ -29,6 +29,7 @@ import java.util.EnumSet;
 @Slf4j
 public class AcspBotImpl implements AcspBot {
     @Getter private static Option<BotEnvironment> environment = Option.none();
+
     private final JDA botInstance;
 
     private final DiscordMessageService discordMessageService;

@@ -2,8 +2,8 @@ package com.akjostudios.acsp.bot.discord.listeners;
 
 import com.akjostudios.acsp.bot.discord.common.BotEventType;
 import com.akjostudios.acsp.bot.discord.common.command.BotCommand;
-import com.akjostudios.acsp.bot.discord.common.command.BotCommandPermission;
 import com.akjostudios.acsp.bot.discord.common.command.BotCommandContext;
+import com.akjostudios.acsp.bot.discord.common.command.BotCommandPermission;
 import com.akjostudios.acsp.bot.discord.common.command.argument.BotCommandArgument;
 import com.akjostudios.acsp.bot.discord.common.command.argument.conversion.BotCommandArgumentConversionError;
 import com.akjostudios.acsp.bot.discord.common.command.argument.parsing.BotCommandArgumentParseError;

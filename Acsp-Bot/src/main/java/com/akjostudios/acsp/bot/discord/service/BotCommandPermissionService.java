@@ -52,13 +52,14 @@ public class BotCommandPermissionService {
         boolean hasPermission = permissions.stream()
                 .filter(perm -> botPrimitiveService.getChannelId(perm.channel()).equals(channel.getIdLong()))
                 .map(BotCommandPermission::roles).flatMap(EnumSet::stream)
-                .anyMatch(role -> role.equals(BotConfigServerRole.EVERYONE) || botPrimitiveService.memberHasRole(member, role));
+                .anyMatch(role -> botPrimitiveService.memberHasRole(member, role));
 
         return hasPermission
                 ? Validation.valid(permissions)
                 : Validation.invalid("$error.missing_permissions.reason.role$");
     }
 
+    @SuppressWarnings("java:S1301")
     private @NotNull EnumSet<BotConfigServerRole> getRolesFromDefinitions(
             @NotNull List<BotConfigCommand.RolePermission> roleDefinitions
     ) {
@@ -67,7 +68,6 @@ public class BotCommandPermissionService {
             switch (permission.getType()) {
                 case SIMPLE -> result.add(permission.getRole());
                 case EXCLUSION -> result.remove(permission.getRole());
-                case ALL -> result.addAll(EnumSet.allOf(BotConfigServerRole.class));
             }
         });
         return result;

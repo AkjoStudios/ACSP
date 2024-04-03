@@ -89,10 +89,10 @@ public class BotConfigCommand {
     @Validated
     public static class RolePermission {
         @NotNull private Type type;
-        private BotConfigServerRole role;
+        @NotNull private BotConfigServerRole role;
 
         public enum Type {
-            SIMPLE, EXCLUSION, ALL
+            SIMPLE, EXCLUSION
         }
     }
 }

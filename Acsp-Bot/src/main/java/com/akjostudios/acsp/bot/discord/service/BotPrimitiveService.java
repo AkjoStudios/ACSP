@@ -5,7 +5,10 @@ import com.akjostudios.acsp.bot.discord.config.layout.BotConfigServerRole;
 import com.github.tonivade.purefun.type.Option;
 import lombok.RequiredArgsConstructor;
 import net.dv8tion.jda.api.JDA;
-import net.dv8tion.jda.api.entities.*;
+import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.Member;
+import net.dv8tion.jda.api.entities.Role;
+import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.entities.channel.concrete.Category;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.entities.channel.concrete.VoiceChannel;
@@ -60,6 +63,7 @@ public class BotPrimitiveService {
             @NotNull Member member,
             @NotNull BotConfigServerRole role
     ) {
+        if (role == BotConfigServerRole.EVERYONE) { return true; }
         return getRole(member.getJDA(), role)
                 .map(roleP -> member.getRoles().contains(roleP))
                 .getOrElse(false);

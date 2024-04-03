@@ -2,7 +2,7 @@ package com.akjostudios.acsp.bot.discord.service;
 
 import com.akjostudios.acsp.bot.AcspBotApp;
 import com.akjostudios.acsp.bot.discord.common.command.BotCommandContext;
-import com.akjostudios.acsp.bot.discord.common.command.argument.*;
+import com.akjostudios.acsp.bot.discord.common.command.argument.BotCommandArgument;
 import com.akjostudios.acsp.bot.discord.common.command.argument.conversion.BotCommandArgumentConversionError;
 import com.akjostudios.acsp.bot.discord.common.command.argument.conversion.BotCommandArgumentConverters;
 import com.akjostudios.acsp.bot.discord.common.command.argument.parsing.BotCommandArgumentParseError;

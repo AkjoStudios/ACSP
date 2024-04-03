@@ -68,6 +68,11 @@ public class BotCommandContext {
                 .filter(BotConfigCommand::isEnabled);
     }
 
+    public @NotNull Option<BotConfigCommand> getDefinition(String command) {
+        return botDefinitionService.getCommandDefinition(command)
+                .filter(BotConfigCommand::isEnabled);
+    }
+
     public @NotNull Option<BotConfigCommand.Subcommand> getSubcommandDefinition() {
         return getDefinition().map(BotConfigCommand::getSubcommands)
                 .filter(BotConfigCommand.Subcommands::isAvailable)
