@@ -5,7 +5,6 @@ import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.entities.channel.concrete.Category;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
-import net.dv8tion.jda.api.entities.channel.concrete.VoiceChannel;
 import net.dv8tion.jda.api.entities.emoji.Emoji;
 import org.jetbrains.annotations.NotNull;
 
@@ -27,8 +26,7 @@ public interface BotCommandArgumentValidatorProvider<T, V extends BotCommandArgu
     @NotNull BotCommandArgumentValidatorProvider<User, BotCommandArgumentValidators.UserValidator> USER = BotCommandArgumentValidators.UserValidator::new;
     @NotNull BotCommandArgumentValidatorProvider<Member, BotCommandArgumentValidators.MemberValidator> MEMBER = BotCommandArgumentValidators.MemberValidator::new;
     @NotNull BotCommandArgumentValidatorProvider<Role, BotCommandArgumentValidators.RoleValidator> ROLE = BotCommandArgumentValidators.RoleValidator::new;
-    @NotNull BotCommandArgumentValidatorProvider<TextChannel, BotCommandArgumentValidators.TextChannelValidator> TEXT_CHANNEL = BotCommandArgumentValidators.TextChannelValidator::new;
-    @NotNull BotCommandArgumentValidatorProvider<VoiceChannel, BotCommandArgumentValidators.VoiceChannelValidator> VOICE_CHANNEL = BotCommandArgumentValidators.VoiceChannelValidator::new;
+    @NotNull BotCommandArgumentValidatorProvider<TextChannel, BotCommandArgumentValidators.ChannelValidator> CHANNEL = BotCommandArgumentValidators.ChannelValidator::new;
     @NotNull BotCommandArgumentValidatorProvider<Category, BotCommandArgumentValidators.CategoryValidator> CATEGORY = BotCommandArgumentValidators.CategoryValidator::new;
     @NotNull BotCommandArgumentValidatorProvider<Emoji, BotCommandArgumentValidators.EmojiValidator> EMOJI = BotCommandArgumentValidators.EmojiValidator::new;
     @NotNull BotCommandArgumentValidatorProvider<Instant, BotCommandArgumentValidators.TimeValidator> TIME = BotCommandArgumentValidators.TimeValidator::new;

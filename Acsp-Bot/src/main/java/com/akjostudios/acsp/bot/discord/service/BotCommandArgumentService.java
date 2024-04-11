@@ -247,7 +247,7 @@ public class BotCommandArgumentService {
     }
 
     @SuppressWarnings("java:S1452")
-    public @NotNull List<Validation<BotCommandArgumentValidationError, BotCommandArgument<?>>> validateArguments(
+    public @NotNull List<Validation<List<BotCommandArgumentValidationError>, BotCommandArgument<?>>> validateArguments(
             @NotNull BotCommandContext ctx,
             @NotNull List<BotCommandArgument<?>> conversions
     ) {
@@ -257,7 +257,7 @@ public class BotCommandArgumentService {
     }
 
     @SuppressWarnings({"unchecked", "java:S117"})
-    private @NotNull Validation<BotCommandArgumentValidationError, BotCommandArgument<?>> validateArgument(
+    private @NotNull Validation<List<BotCommandArgumentValidationError>, BotCommandArgument<?>> validateArgument(
             @NotNull BotCommandContext ctx,
             @NotNull BotCommandArgument<?> argument
     ) {

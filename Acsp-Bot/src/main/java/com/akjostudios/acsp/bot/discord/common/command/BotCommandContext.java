@@ -4,10 +4,10 @@ import com.akjostudios.acsp.bot.discord.common.command.argument.BotCommandArgume
 import com.akjostudios.acsp.bot.discord.config.definition.BotConfigCommand;
 import com.akjostudios.acsp.bot.discord.config.definition.BotConfigMessage;
 import com.akjostudios.acsp.bot.discord.config.layout.BotConfigServerChannel;
-import com.akjostudios.acsp.bot.discord.service.BotDefinitionService;
-import com.akjostudios.acsp.bot.discord.service.BotErrorMessageService;
-import com.akjostudios.acsp.bot.discord.service.BotPrimitiveService;
-import com.akjostudios.acsp.bot.discord.service.DiscordMessageService;
+import com.akjostudios.acsp.bot.discord.config.layout.BotConfigServerChannelCategory;
+import com.akjostudios.acsp.bot.discord.config.layout.BotConfigServerRole;
+import com.akjostudios.acsp.bot.discord.service.*;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.tonivade.purefun.type.Option;
 import com.github.tonivade.purefun.type.Try;
 import lombok.Getter;
@@ -27,6 +27,8 @@ import net.dv8tion.jda.api.requests.restaction.MessageCreateAction;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 @SuppressWarnings({"unused", "UnusedReturnValue", "java:S4968"})
@@ -47,6 +49,8 @@ public class BotCommandContext {
     private DiscordMessageService discordMessageService;
     private BotErrorMessageService errorMessageService;
     private BotPrimitiveService botPrimitiveService;
+    private BotLayoutService botLayoutService;
+    private ObjectMapper objectMapper;
 
     /**
      * @apiNote Should not be called by the command implementation.
@@ -55,12 +59,16 @@ public class BotCommandContext {
             BotDefinitionService botDefinitionService,
             DiscordMessageService discordMessageService,
             BotErrorMessageService errorMessageService,
-            BotPrimitiveService botPrimitiveService
+            BotPrimitiveService botPrimitiveService,
+            BotLayoutService botLayoutService,
+            ObjectMapper objectMapper
     ) {
         this.botDefinitionService = botDefinitionService;
         this.discordMessageService = discordMessageService;
         this.errorMessageService = errorMessageService;
         this.botPrimitiveService = botPrimitiveService;
+        this.botLayoutService = botLayoutService;
+        this.objectMapper = objectMapper;
     }
 
     public @NotNull Option<BotConfigCommand> getDefinition() {
@@ -171,13 +179,43 @@ public class BotCommandContext {
         ).complete();
     }
 
-    public @NotNull Member getOriginalAuthor() { return Option.of(event.getMember()).getOrElseThrow(); }
+    public boolean memberHasRole(
+            @NotNull Member member,
+            @NotNull BotConfigServerRole role
+    ) {
+        return botPrimitiveService.memberHasRole(member, role);
+    }
 
-    public @NotNull Message getOriginalMessage() { return event.getMessage(); }
+    public Map<BotConfigServerRole, Boolean> memberMatchesRoles(
+            @NotNull Member member,
+            @NotNull List<BotConfigCommand.RolePermission> requiredRoles
+    ) {
+        return requiredRoles.stream()
+                .map(rolePermission -> Map.entry(rolePermission.getRole(), switch (rolePermission.getType()) {
+                    case SIMPLE -> memberHasRole(member, rolePermission.getRole());
+                    case EXCLUSION -> !memberHasRole(member, rolePermission.getRole());
+                })).collect(Collectors.toMap(
+                        Map.Entry::getKey,
+                        Map.Entry::getValue,
+                        (existing, replacement) -> existing && replacement
+                ));
+    }
 
-    public @NotNull TextChannel getOriginalChannel() { return event.getChannel().asTextChannel(); }
+    public @NotNull Member getOriginalAuthor() {
+        return Option.of(event.getMember()).getOrElseThrow();
+    }
 
-    public @NotNull String getJumpUrl() { return event.getMessage().getJumpUrl(); }
+    public @NotNull Message getOriginalMessage() {
+        return event.getMessage();
+    }
+
+    public @NotNull TextChannel getOriginalChannel() {
+        return event.getChannel().asTextChannel();
+    }
+
+    public @NotNull String getJumpUrl() {
+        return event.getMessage().getJumpUrl();
+    }
 
     public @NotNull Option<User> getUser(@NotNull String userId) {
         return botPrimitiveService.getUser(event, userId);
@@ -205,5 +243,21 @@ public class BotCommandContext {
 
     public @NotNull Option<Emoji> getEmoji(@NotNull String emojiId) {
         return botPrimitiveService.getEmoji(event, emojiId);
+    }
+
+    public @NotNull Option<BotConfigServerRole> getServerRole(@NotNull Long roleId) {
+        return botLayoutService.getServerLayout().flatMap(server -> botLayoutService.getRole(server, roleId));
+    }
+
+    public @NotNull Option<BotConfigServerChannel> getServerChannel(@NotNull Long channelId) {
+        return botLayoutService.getServerLayout().flatMap(server -> botLayoutService.getChannel(server, channelId));
+    }
+
+    public @NotNull Option<BotConfigServerChannelCategory> getServerCategory(@NotNull Long categoryId) {
+        return botLayoutService.getServerLayout().flatMap(server -> botLayoutService.getCategory(server, categoryId));
+    }
+
+    public @NotNull ObjectMapper getMapper() {
+        return objectMapper;
     }
 }

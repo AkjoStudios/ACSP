@@ -26,7 +26,7 @@ public class CommonListener implements EventListener {
                         (Class<? extends GenericEvent>) ((ParameterizedType) botListener.getClass().getGenericInterfaces()[0]).getActualTypeArguments()[0]
                 ));
         listeners.forEach((eventClass, botListenerList) -> log.info(
-                "Found {} listeners for event type {}.",
+                "Found {} listener(s) for event type {}.",
                 botListenerList.size(),
                 BotEventType.getByClass(eventClass).getOrElse(BotEventType.OTHER)
         ));

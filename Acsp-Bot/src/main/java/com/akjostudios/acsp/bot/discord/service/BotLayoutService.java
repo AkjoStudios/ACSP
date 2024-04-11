@@ -4,6 +4,7 @@ import com.akjostudios.acsp.bot.discord.common.BotEnvironment;
 import com.akjostudios.acsp.bot.discord.config.BotConfigProperties;
 import com.akjostudios.acsp.bot.discord.config.layout.BotConfigServer;
 import com.akjostudios.acsp.bot.discord.config.layout.BotConfigServerChannel;
+import com.akjostudios.acsp.bot.discord.config.layout.BotConfigServerChannelCategory;
 import com.akjostudios.acsp.bot.discord.config.layout.BotConfigServerRole;
 import com.akjostudios.acsp.bot.discord.impl.AcspBotImpl;
 import com.github.tonivade.purefun.type.Option;
@@ -45,6 +46,46 @@ public class BotLayoutService {
         return Option.from(server.getChannels().entrySet().stream()
                 .filter(entry -> entry.getKey().equals(channel))
                 .map(Map.Entry::getValue)
+                .findFirst());
+    }
+
+    public @NotNull Option<Long> getCategoryId(
+            @NotNull BotConfigServer server,
+            @NotNull BotConfigServerChannelCategory category
+    ) {
+        return Option.from(server.getCategories().entrySet().stream()
+                .filter(entry -> entry.getKey().equals(category))
+                .map(Map.Entry::getValue)
+                .findFirst());
+    }
+
+    public @NotNull Option<BotConfigServerRole> getRole(
+            @NotNull BotConfigServer server,
+            @NotNull Long roleId
+    ) {
+        return Option.from(server.getRoles().entrySet().stream()
+                .filter(entry -> entry.getValue().equals(roleId))
+                .map(Map.Entry::getKey)
+                .findFirst());
+    }
+
+    public @NotNull Option<BotConfigServerChannel> getChannel(
+            @NotNull BotConfigServer server,
+            @NotNull Long channelId
+    ) {
+        return Option.from(server.getChannels().entrySet().stream()
+                .filter(entry -> entry.getValue().equals(channelId))
+                .map(Map.Entry::getKey)
+                .findFirst());
+    }
+
+    public @NotNull Option<BotConfigServerChannelCategory> getCategory(
+            @NotNull BotConfigServer server,
+            @NotNull Long categoryId
+    ) {
+        return Option.from(server.getCategories().entrySet().stream()
+                .filter(entry -> entry.getValue().equals(categoryId))
+                .map(Map.Entry::getKey)
                 .findFirst());
     }
 }

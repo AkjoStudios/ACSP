@@ -5,7 +5,6 @@ import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.entities.channel.concrete.Category;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
-import net.dv8tion.jda.api.entities.channel.concrete.VoiceChannel;
 import net.dv8tion.jda.api.entities.emoji.Emoji;
 import org.jetbrains.annotations.NotNull;
 
@@ -27,8 +26,7 @@ public interface BotCommandArgumentConverterProvider<T, C extends BotCommandArgu
     @NotNull BotCommandArgumentConverterProvider<User, BotCommandArgumentConverters.UserConverter> USER = BotCommandArgumentConverters.UserConverter::new;
     @NotNull BotCommandArgumentConverterProvider<Member, BotCommandArgumentConverters.MemberConverter> MEMBER = BotCommandArgumentConverters.MemberConverter::new;
     @NotNull BotCommandArgumentConverterProvider<Role, BotCommandArgumentConverters.RoleConverter> ROLE = BotCommandArgumentConverters.RoleConverter::new;
-    @NotNull BotCommandArgumentConverterProvider<TextChannel, BotCommandArgumentConverters.TextChannelConverter> TEXT_CHANNEL = BotCommandArgumentConverters.TextChannelConverter::new;
-    @NotNull BotCommandArgumentConverterProvider<VoiceChannel, BotCommandArgumentConverters.VoiceChannelConverter> VOICE_CHANNEL = BotCommandArgumentConverters.VoiceChannelConverter::new;
+    @NotNull BotCommandArgumentConverterProvider<TextChannel, BotCommandArgumentConverters.ChannelConverter> TEXT_CHANNEL = BotCommandArgumentConverters.ChannelConverter::new;
     @NotNull BotCommandArgumentConverterProvider<Category, BotCommandArgumentConverters.CategoryConverter> CATEGORY = BotCommandArgumentConverters.CategoryConverter::new;
     @NotNull BotCommandArgumentConverterProvider<Emoji, BotCommandArgumentConverters.EmojiConverter> EMOJI = BotCommandArgumentConverters.EmojiConverter::new;
     @NotNull BotCommandArgumentConverterProvider<Instant, BotCommandArgumentConverters.TimeConverter> TIME = BotCommandArgumentConverters.TimeConverter::new;

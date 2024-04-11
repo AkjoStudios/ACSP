@@ -17,7 +17,7 @@ public record BotCommandArgumentConversionError(
     public BotCommandArgumentValidationError toValidationError() {
         return new BotCommandArgumentValidationError(
                 name,
-                "$error.command_argument_parsing_report.reason.invalid_type$",
+                "$error.command_argument_validation_report.reason.invalid_type$",
                 List.of(
                         type.getTranslationKey(),
                         jumpUrl,

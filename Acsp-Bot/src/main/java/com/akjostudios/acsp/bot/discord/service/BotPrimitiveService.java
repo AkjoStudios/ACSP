@@ -1,6 +1,7 @@
 package com.akjostudios.acsp.bot.discord.service;
 
 import com.akjostudios.acsp.bot.discord.config.layout.BotConfigServerChannel;
+import com.akjostudios.acsp.bot.discord.config.layout.BotConfigServerChannelCategory;
 import com.akjostudios.acsp.bot.discord.config.layout.BotConfigServerRole;
 import com.github.tonivade.purefun.type.Option;
 import lombok.RequiredArgsConstructor;
@@ -31,6 +32,14 @@ public class BotPrimitiveService {
             @NotNull BotConfigServerChannel channel
     ) { return botLayoutService.getServerLayout().flatMap(layout -> botLayoutService.getChannelId(layout, channel)); }
 
+    public Long getCategoryId(
+            @NotNull BotConfigServerChannelCategory category
+    ) { return botLayoutService.getServerLayout().flatMap(layout -> botLayoutService.getCategoryId(layout, category)).getOrElse(-1L); }
+
+    public Option<Long> getCategoryIdOption(
+            @NotNull BotConfigServerChannelCategory category
+    ) { return botLayoutService.getServerLayout().flatMap(layout -> botLayoutService.getCategoryId(layout, category)); }
+
     public @NotNull Option<TextChannel> getChannel(
             @NotNull JDA botInstance,
             @NotNull BotConfigServerChannel channel
@@ -40,6 +49,16 @@ public class BotPrimitiveService {
             @NotNull Event event,
             @NotNull BotConfigServerChannel channel
     ) { return getChannel(event.getJDA(), channel); }
+
+    public @NotNull Option<Category> getCategory(
+            @NotNull JDA botInstance,
+            @NotNull BotConfigServerChannelCategory category
+    ) { return getCategoryIdOption(category).map(botInstance::getCategoryById); }
+
+    public @NotNull Option<Category> getCategory(
+            @NotNull Event event,
+            @NotNull BotConfigServerChannelCategory category
+    ) { return getCategory(event.getJDA(), category); }
 
     public Long getRoleId(
             @NotNull BotConfigServerRole role

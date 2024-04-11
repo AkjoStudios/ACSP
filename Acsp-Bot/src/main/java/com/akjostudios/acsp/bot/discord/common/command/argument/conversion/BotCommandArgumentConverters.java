@@ -1,9 +1,8 @@
 package com.akjostudios.acsp.bot.discord.common.command.argument.conversion;
 
-import com.akjostudios.acsp.bot.AcspBotApp;
 import com.akjostudios.acsp.bot.discord.common.command.BotCommandContext;
 import com.akjostudios.acsp.bot.discord.config.definition.BotConfigCommandArgumentType;
-import com.github.tonivade.purefun.type.Option;
+import com.akjostudios.acsp.bot.util.DurationUtils;
 import com.github.tonivade.purefun.type.Try;
 import com.github.tonivade.purefun.type.Validation;
 import net.dv8tion.jda.api.entities.Member;
@@ -11,7 +10,6 @@ import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.entities.channel.concrete.Category;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
-import net.dv8tion.jda.api.entities.channel.concrete.VoiceChannel;
 import net.dv8tion.jda.api.entities.emoji.Emoji;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
@@ -20,10 +18,6 @@ import java.awt.*;
 import java.net.URI;
 import java.time.Duration;
 import java.time.Instant;
-import java.time.ZonedDateTime;
-import java.time.chrono.ChronoZonedDateTime;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public final class BotCommandArgumentConverters {
     @Contract(pure = true)
@@ -217,7 +211,7 @@ public final class BotCommandArgumentConverters {
         }
     }
 
-    public static class TextChannelConverter implements BotCommandArgumentConverter<TextChannel> {
+    public static class ChannelConverter implements BotCommandArgumentConverter<TextChannel> {
         @Override
         public @NotNull Validation<BotCommandArgumentConversionError, TextChannel> convert(
                 @NotNull BotCommandContext ctx,
@@ -228,24 +222,7 @@ public final class BotCommandArgumentConverters {
                     .toValidation(throwable -> new BotCommandArgumentConversionError(
                             name,
                             value,
-                            BotConfigCommandArgumentType.TEXT_CHANNEL,
-                            ctx.getJumpUrl()
-                    ));
-        }
-    }
-
-    public static class VoiceChannelConverter implements BotCommandArgumentConverter<VoiceChannel> {
-        @Override
-        public @NotNull Validation<BotCommandArgumentConversionError, VoiceChannel> convert(
-                @NotNull BotCommandContext ctx,
-                @NotNull String name,
-                @NotNull String value
-        ) {
-            return ctx.getVoiceChannel(value).toTry()
-                    .toValidation(throwable -> new BotCommandArgumentConversionError(
-                            name,
-                            value,
-                            BotConfigCommandArgumentType.VOICE_CHANNEL,
+                            BotConfigCommandArgumentType.CHANNEL,
                             ctx.getJumpUrl()
                     ));
         }
@@ -292,8 +269,7 @@ public final class BotCommandArgumentConverters {
                 @NotNull String name,
                 @NotNull String value
         ) {
-            return Try.of(() -> ZonedDateTime.parse(value, AcspBotApp.DATE_TIME_FORMATTER))
-                    .map(ChronoZonedDateTime::toInstant)
+            return Try.of(() -> Instant.ofEpochMilli(Long.parseLong(value)))
                     .toValidation(throwable -> new BotCommandArgumentConversionError(
                             name,
                             value,
@@ -304,42 +280,19 @@ public final class BotCommandArgumentConverters {
     }
 
     public static class DurationConverter implements BotCommandArgumentConverter<Duration> {
-        private static final Pattern DURATION_PATTERN = Pattern.compile(
-                "(?:(\\d+)d)?(?:(\\d+)h)?(?:(\\d+)m)?(?:(\\d+)s)?"
-        );
-
         @Override
         public @NotNull Validation<BotCommandArgumentConversionError, Duration> convert(
                 @NotNull BotCommandContext ctx,
                 @NotNull String name,
                 @NotNull String value
         ) {
-            return parseDuration(value).toTry()
+            return DurationUtils.parse(value).toTry()
                     .toValidation(throwable -> new BotCommandArgumentConversionError(
                             name,
                             value,
                             BotConfigCommandArgumentType.DURATION,
                             ctx.getJumpUrl()
                     ));
-        }
-
-        private static Option<Duration> parseDuration(String input) {
-            Matcher matcher = DURATION_PATTERN.matcher(input);
-            if (!matcher.matches()) { return Option.none(); }
-
-            long days = parseNumber(matcher.group(1));
-            long hours = parseNumber(matcher.group(2));
-            long minutes = parseNumber(matcher.group(3));
-            long seconds = parseNumber(matcher.group(4));
-
-            return Option.some(Duration.ofDays(days)
-                    .plusHours(hours)
-                    .plusMinutes(minutes)
-                    .plusSeconds(seconds));
-        }
-
-        private static long parseNumber(String number) {
-            return (number != null && !number.isEmpty()) ? Long.parseLong(number) : 0;
         }
     }
 
@@ -409,8 +362,7 @@ public final class BotCommandArgumentConverters {
             case USER -> BotCommandArgumentConverterProvider.USER;
             case MEMBER -> BotCommandArgumentConverterProvider.MEMBER;
             case ROLE -> BotCommandArgumentConverterProvider.ROLE;
-            case TEXT_CHANNEL -> BotCommandArgumentConverterProvider.TEXT_CHANNEL;
-            case VOICE_CHANNEL -> BotCommandArgumentConverterProvider.VOICE_CHANNEL;
+            case CHANNEL -> BotCommandArgumentConverterProvider.TEXT_CHANNEL;
             case CATEGORY -> BotCommandArgumentConverterProvider.CATEGORY;
             case EMOJI -> BotCommandArgumentConverterProvider.EMOJI;
             case TIME -> BotCommandArgumentConverterProvider.TIME;

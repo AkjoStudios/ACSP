@@ -17,4 +17,5 @@ public class BotConfigServer {
     @NotNull @PositiveOrZero private Long id;
     @NotNull private @NotNull Map<@NotNull BotConfigServerRole, @NotNull @PositiveOrZero Long> roles;
     @NotNull private @NotNull Map<@NotNull BotConfigServerChannel, @NotNull @PositiveOrZero Long> channels;
+    @NotNull private @NotNull Map<@NotNull BotConfigServerChannelCategory, @NotNull @PositiveOrZero Long> categories;
 }

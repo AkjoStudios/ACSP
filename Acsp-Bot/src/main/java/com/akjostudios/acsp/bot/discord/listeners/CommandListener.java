@@ -11,6 +11,7 @@ import com.akjostudios.acsp.bot.discord.common.command.argument.validation.BotCo
 import com.akjostudios.acsp.bot.discord.common.listener.BotListener;
 import com.akjostudios.acsp.bot.discord.config.definition.BotConfigCommand;
 import com.akjostudios.acsp.bot.discord.service.*;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.tonivade.purefun.Function1;
 import com.github.tonivade.purefun.type.Option;
 import com.github.tonivade.purefun.type.Validation;
@@ -34,8 +35,10 @@ public class CommandListener implements BotListener<MessageReceivedEvent> {
     private final BotErrorMessageService errorMessageService;
     private final BotDefinitionService botDefinitionService;
     private final BotPrimitiveService botPrimitiveService;
+    private final BotLayoutService botLayoutService;
     private final BotCommandPermissionService botCommandPermissionService;
     private final BotCommandArgumentService botCommandArgumentService;
+    private final ObjectMapper objectMapper;
 
     private final List<BotCommand> commands;
 
@@ -61,7 +64,14 @@ public class CommandListener implements BotListener<MessageReceivedEvent> {
         Option<String> subcommand = getSubcommand(commandName, commandParts);
 
         BotCommandContext context = new BotCommandContext(commandName, subcommand, event);
-        context.initialize(botDefinitionService, discordMessageService, errorMessageService, botPrimitiveService);
+        context.initialize(
+                botDefinitionService,
+                discordMessageService,
+                errorMessageService,
+                botPrimitiveService,
+                botLayoutService,
+                objectMapper
+        );
 
         if (!checkAvailability(context)) { return; }
         if (!checkSubcommandRequired(context)) { return; }
@@ -213,7 +223,7 @@ public class CommandListener implements BotListener<MessageReceivedEvent> {
         botCommandArgumentService.validateArguments(
                 ctx, convertedArguments
         ).forEach(validation -> validation.fold(
-                validationErrors::add,
+                validationErrors::addAll,
                 success -> success
         ));
 

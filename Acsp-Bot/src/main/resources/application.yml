@@ -30,6 +30,11 @@ app:
           team-chat: 1170398577722404921
           audit-log: 1170398577722404922
           admin-chat: 1170398577722404924
+        categories:
+          welcome: 1170398577722404915
+          begin: 1170398577722404918
+          team: 1170398577722404920
+          admin: 1170398577722404923
       prod:
         id: 1073266273619816549
         roles:
@@ -45,6 +50,11 @@ app:
           team-chat: 1170387449885765682
           audit-log: 1170387921463955546
           admin-chat: 1073273398693724333
+        categories:
+          welcome: 1073274747468644373
+          begin: 1073346445958201375
+          team: 1170386982011142184
+          admin: 1073273754110668931
     definition:
       command-prefix: "!"
       messages:
@@ -118,6 +128,9 @@ spring:
   output:
     ansi:
       enabled: always
+  devtools:
+    restart:
+      enabled: false
 management:
   endpoint:
     health:
@@ -161,6 +174,8 @@ server:
       enabled: off
 logging:
   level:
-    org.springframework.boot.web.embedded: OFF
-    org.springframework.boot.web.servlet.context: OFF
-    org.apache.catalina: OFF
+    org.springframework.boot.web.embedded: ERROR
+    org.springframework.boot.web.servlet.context: ERROR
+    org.springframework.boot.devtools: ERROR
+    org.apache.catalina: ERROR
+    net.dv8tion.jda: WARN
