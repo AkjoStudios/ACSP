@@ -62,6 +62,14 @@ server:
   error:
     whitelabel:
       enabled: off
+  tomcat:
+    threads:
+      min-spare: 4
+      max: 64
+  jetty:
+    threads:
+      min: 4
+      max: 64
 logging:
   level:
     org.springframework.boot.web.embedded: OFF

@@ -85,6 +85,20 @@ prometheus.scrape "acsp_backend" {
     forward_to = [prometheus.remote_write.default.receiver]
 }
 
+prometheus.scrape "acsp_bot" {
+    job_name = "acsp_bot"
+    targets = [
+        { "__address__" = "acsp-bot:8081" },
+    ]
+    metrics_path = "/actuator/prometheus"
+    basic_auth {
+        username = "prometheus"
+        password_file = "/etc/agent/prometheus_password"
+    }
+    scrape_interval = "30s"
+    forward_to = [prometheus.remote_write.default.receiver]
+}
+
 prometheus.scrape "grafana" {
   job_name = "grafana"
   targets = [
