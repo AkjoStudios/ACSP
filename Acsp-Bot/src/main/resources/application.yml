@@ -109,7 +109,7 @@ app:
             - id: "command"
               type: string
               description: "$command.help.argument.command.description$"
-              required: true
+              required: false
           permissions:
             - channels:
                 - type: all

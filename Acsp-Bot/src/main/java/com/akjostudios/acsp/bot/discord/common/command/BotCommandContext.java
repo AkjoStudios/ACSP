@@ -19,12 +19,12 @@ import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.entities.channel.concrete.Category;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
-import net.dv8tion.jda.api.entities.channel.concrete.VoiceChannel;
 import net.dv8tion.jda.api.entities.emoji.Emoji;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.requests.RestAction;
 import net.dv8tion.jda.api.requests.restaction.MessageCreateAction;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Collection;
 import java.util.List;
@@ -104,7 +104,7 @@ public class BotCommandContext {
     }
 
     @SuppressWarnings("unchecked")
-    public <T> @NotNull T getArgument(@NotNull String id, @NotNull T defaultValue) {
+    public <T> @NotNull T getArgument(@NotNull String id, @Nullable T defaultValue) {
         return Option.from(arguments.stream()
                 .filter(argument -> argument.id().equals(id))
                 .findFirst())
@@ -237,12 +237,8 @@ public class BotCommandContext {
         return botPrimitiveService.getRole(event, roleId);
     }
 
-    public @NotNull Option<TextChannel> getTextChannel(@NotNull String channelId) {
-        return botPrimitiveService.getTextChannel(event, channelId);
-    }
-
-    public @NotNull Option<VoiceChannel> getVoiceChannel(@NotNull String channelId) {
-        return botPrimitiveService.getVoiceChannel(event, channelId);
+    public @NotNull Option<TextChannel> getChannel(@NotNull String channelId) {
+        return botPrimitiveService.getChannel(event, channelId);
     }
 
     public @NotNull Option<Category> getCategory(@NotNull String categoryId) {

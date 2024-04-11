@@ -2,6 +2,7 @@ package com.akjostudios.acsp.bot.discord.config.definition;
 
 import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
+
 import static com.akjostudios.acsp.bot.discord.common.command.argument.validation.BotCommandArgumentValidationArguments.*;
 
 @Getter

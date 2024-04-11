@@ -1,6 +1,7 @@
 package com.akjostudios.acsp.bot.discord.common.command.argument.validation;
 
 import com.akjostudios.acsp.bot.discord.config.definition.BotConfigCommand;
+import com.akjostudios.acsp.bot.discord.config.definition.BotConfigCommandArgumentType;
 import com.akjostudios.acsp.bot.discord.config.layout.BotConfigServerChannel;
 import com.akjostudios.acsp.bot.discord.config.layout.BotConfigServerChannelCategory;
 import com.akjostudios.acsp.bot.discord.config.layout.BotConfigServerRole;
@@ -9,7 +10,6 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 import org.jetbrains.annotations.Contract;
-import com.akjostudios.acsp.bot.discord.config.definition.BotConfigCommandArgumentType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 

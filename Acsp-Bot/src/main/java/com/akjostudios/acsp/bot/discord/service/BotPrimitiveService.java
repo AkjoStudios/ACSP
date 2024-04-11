@@ -13,7 +13,6 @@ import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.entities.channel.concrete.Category;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
-import net.dv8tion.jda.api.entities.channel.concrete.VoiceChannel;
 import net.dv8tion.jda.api.entities.emoji.Emoji;
 import net.dv8tion.jda.api.events.Event;
 import net.dv8tion.jda.internal.utils.PermissionUtil;
@@ -133,25 +132,15 @@ public class BotPrimitiveService {
             @NotNull String roleId
     ) { return getRole(event.getJDA(), roleId); }
 
-    public Option<TextChannel> getTextChannel(
+    public Option<TextChannel> getChannel(
             @NotNull JDA botInstance,
             @NotNull String channelId
     ) { return Option.of(botInstance.getTextChannelById(channelId)); }
 
-    public Option<TextChannel> getTextChannel(
+    public Option<TextChannel> getChannel(
             @NotNull Event event,
             @NotNull String channelId
-    ) { return getTextChannel(event.getJDA(), channelId); }
-
-    public Option<VoiceChannel> getVoiceChannel(
-            @NotNull JDA botInstance,
-            @NotNull String channelId
-    ) { return Option.of(botInstance.getVoiceChannelById(channelId)); }
-
-    public Option<VoiceChannel> getVoiceChannel(
-            @NotNull Event event,
-            @NotNull String channelId
-    ) { return getVoiceChannel(event.getJDA(), channelId); }
+    ) { return getChannel(event.getJDA(), channelId); }
 
     public Option<Category> getCategory(
             @NotNull JDA botInstance,

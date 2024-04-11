@@ -218,7 +218,7 @@ public final class BotCommandArgumentConverters {
                 @NotNull String name,
                 @NotNull String value
         ) {
-            return ctx.getTextChannel(value).toTry()
+            return ctx.getChannel(value).toTry()
                     .toValidation(throwable -> new BotCommandArgumentConversionError(
                             name,
                             value,
