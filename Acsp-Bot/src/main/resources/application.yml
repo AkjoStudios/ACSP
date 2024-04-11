@@ -107,9 +107,9 @@ app:
             required: false
           arguments:
             - id: "command"
-              type: string
+              type: channel
               description: "$command.help.argument.command.description$"
-              required: false
+              required: true
           permissions:
             - channels:
                 - type: all

@@ -16,6 +16,7 @@ import net.dv8tion.jda.api.JDAInfo;
 import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.dv8tion.jda.api.requests.RestAction;
 import net.dv8tion.jda.api.utils.MemberCachePolicy;
+import net.dv8tion.jda.api.utils.cache.CacheFlag;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ConfigurableApplicationContext;
@@ -50,7 +51,8 @@ public class AcspBotImpl implements AcspBot {
 
         JDABuilder builder = JDABuilder.createDefault(properties.getBotToken())
                 .setEnabledIntents(EnumSet.allOf(GatewayIntent.class))
-                .setMemberCachePolicy(MemberCachePolicy.ALL);
+                .setMemberCachePolicy(MemberCachePolicy.ALL)
+                .enableCache(CacheFlag.ONLINE_STATUS);
 
         builder.addEventListeners(commonListener);
         builder.setEnableShutdownHook(false);

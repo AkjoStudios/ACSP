@@ -26,6 +26,7 @@ import net.dv8tion.jda.api.requests.RestAction;
 import net.dv8tion.jda.api.requests.restaction.MessageCreateAction;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -186,9 +187,16 @@ public class BotCommandContext {
         return botPrimitiveService.memberHasRole(member, role);
     }
 
-    public Map<BotConfigServerRole, Boolean> memberMatchesRoles(
+    public boolean memberInChannel(
             @NotNull Member member,
-            @NotNull List<BotConfigCommand.RolePermission> requiredRoles
+            @NotNull BotConfigServerChannel channel
+    ) {
+        return botPrimitiveService.memberInChannel(member, channel);
+    }
+
+    public @NotNull Map<BotConfigServerRole, Boolean> memberMatchesRoles(
+            @NotNull Member member,
+            @NotNull Collection<BotConfigCommand.RolePermission> requiredRoles
     ) {
         return requiredRoles.stream()
                 .map(rolePermission -> Map.entry(rolePermission.getRole(), switch (rolePermission.getType()) {

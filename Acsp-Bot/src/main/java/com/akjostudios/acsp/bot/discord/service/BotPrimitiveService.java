@@ -6,6 +6,7 @@ import com.akjostudios.acsp.bot.discord.config.layout.BotConfigServerRole;
 import com.github.tonivade.purefun.type.Option;
 import lombok.RequiredArgsConstructor;
 import net.dv8tion.jda.api.JDA;
+import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Role;
@@ -15,6 +16,7 @@ import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.entities.channel.concrete.VoiceChannel;
 import net.dv8tion.jda.api.entities.emoji.Emoji;
 import net.dv8tion.jda.api.events.Event;
+import net.dv8tion.jda.internal.utils.PermissionUtil;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Service;
 
@@ -85,6 +87,15 @@ public class BotPrimitiveService {
         if (role == BotConfigServerRole.EVERYONE) { return true; }
         return getRole(member.getJDA(), role)
                 .map(roleP -> member.getRoles().contains(roleP))
+                .getOrElse(false);
+    }
+
+    public boolean memberInChannel(
+            @NotNull Member member,
+            @NotNull BotConfigServerChannel channel
+    ) {
+        return getChannel(member.getJDA(), channel)
+                .map(channelP -> PermissionUtil.checkPermission(channelP, member, Permission.VIEW_CHANNEL))
                 .getOrElse(false);
     }
 

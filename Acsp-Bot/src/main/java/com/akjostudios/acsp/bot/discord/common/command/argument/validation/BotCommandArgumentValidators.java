@@ -222,7 +222,9 @@ public final class BotCommandArgumentValidators {
                     : Validation.invalid(new BotCommandArgumentValidationError(
                             argument.id(),
                             "$error.command_argument_validation_report.reason.user.bot$",
-                            List.of()
+                            List.of(
+                                    argument.value().getName()
+                            )
                     ));
         }
     }
@@ -250,11 +252,11 @@ public final class BotCommandArgumentValidators {
         private @NotNull Validation<BotCommandArgumentValidationError, BotCommandArgument<Member>> validateRoles(
                 @NotNull BotCommandContext ctx,
                 @NotNull BotCommandArgument<Member> argument,
-                @Nullable List<BotConfigCommand.RolePermission> roles
+                @Nullable Map<Integer, BotConfigCommand.RolePermission> roles
         ) {
             Map<BotConfigServerRole, Boolean> roleValidation = roles == null
                     ? Map.of(BotConfigServerRole.EVERYONE, true)
-                    : ctx.memberMatchesRoles(argument.value(), roles);
+                    : ctx.memberMatchesRoles(argument.value(), roles.values());
             return roleValidation.values().stream().allMatch(Boolean::booleanValue)
                     ? Validation.valid(argument)
                     : Validation.invalid(new BotCommandArgumentValidationError(
@@ -264,6 +266,7 @@ public final class BotCommandArgumentValidators {
                                     roleValidation.keySet().stream()
                                             .map(BotConfigServerRole::name)
                                             .collect(Collectors.joining(", ", "[", "]")),
+                                    argument.value().getEffectiveName(),
                                     roleValidation.entrySet().stream()
                                             .filter(entry -> !entry.getValue())
                                             .map(entry -> entry.getKey().name())
@@ -274,15 +277,25 @@ public final class BotCommandArgumentValidators {
 
         private @NotNull Validation<BotCommandArgumentValidationError, BotCommandArgument<Member>> validateStatus(
                 @NotNull BotCommandArgument<Member> argument,
-                @Nullable OnlineStatus requiredStatus
+                @Nullable Map<Integer, String> requiredStatus
         ) {
             if (requiredStatus == null) { return Validation.valid(argument); }
-            return argument.value().getOnlineStatus() == requiredStatus
+            return requiredStatus.values().stream()
+                    .map(OnlineStatus::fromKey)
+                    .toList()
+                    .contains(argument.value().getOnlineStatus())
                     ? Validation.valid(argument)
                     : Validation.invalid(new BotCommandArgumentValidationError(
                             argument.id(),
                             "$error.command_argument_validation_report.reason.member.status$",
-                            List.of(requiredStatus.name(), argument.value().getOnlineStatus().name())
+                            List.of(
+                                    requiredStatus.values().stream()
+                                            .map(OnlineStatus::fromKey)
+                                            .map(OnlineStatus::name)
+                                            .collect(Collectors.joining(", ", "[", "]")),
+                                    argument.value().getEffectiveName(),
+                                    argument.value().getOnlineStatus().name()
+                            )
                     ));
         }
 
@@ -295,7 +308,9 @@ public final class BotCommandArgumentValidators {
                     : Validation.invalid(new BotCommandArgumentValidationError(
                     argument.id(),
                     "$error.command_argument_validation_report.reason.user.bot$",
-                    List.of()
+                    List.of(
+                            argument.value().getEffectiveName()
+                    )
             ));
         }
     }
@@ -315,6 +330,7 @@ public final class BotCommandArgumentValidators {
             return aggregate(List.of(
                     checkAllowed(ctx, argument, argsValidation.get().getAllowedRoles()),
                     checkMentionable(argument, argsValidation.get().isMentionableRequired()),
+                    checkAuthorHasRole(ctx, argument, argsValidation.get().isAuthorMustHaveRole()),
                     validateMinAge(argument, argsValidation.get().getMinAge())
             ), () -> argument);
         }
@@ -322,22 +338,24 @@ public final class BotCommandArgumentValidators {
         private @NotNull Validation<BotCommandArgumentValidationError, BotCommandArgument<Role>> checkAllowed(
                 @NotNull BotCommandContext ctx,
                 @NotNull BotCommandArgument<Role> argument,
-                @Nullable List<BotConfigServerRole> allowedRoles
+                @Nullable Map<Integer, BotConfigServerRole> allowedRoles
         ) {
+            BotCommandArgumentValidationError error = new BotCommandArgumentValidationError(
+                    argument.id(),
+                    "$error.command_argument_validation_report.reason.role.allowed$",
+                    List.of(
+                            allowedRoles == null ? "[any]" : allowedRoles.values().stream()
+                                    .map(BotConfigServerRole::name)
+                                    .collect(Collectors.joining(", ", "[", "]")),
+                            ctx.getServerRole(argument.value().getIdLong())
+                                    .map(BotConfigServerRole::name)
+                                    .getOrElse("unknown")
+                    )
+            );
             return ctx.getServerRole(argument.value().getIdLong())
-                    .map(serverRole -> allowedRoles == null || allowedRoles.contains(serverRole))
-                    .toTry().toValidation(ex -> new BotCommandArgumentValidationError(
-                            argument.id(),
-                            "$error.command_argument_validation_report.reason.role.allowed$",
-                            List.of(
-                                    allowedRoles == null ? "[any]" : allowedRoles.stream()
-                                            .map(BotConfigServerRole::name)
-                                            .collect(Collectors.joining(", ", "[", "]")),
-                                    ctx.getServerRole(argument.value().getIdLong())
-                                            .map(BotConfigServerRole::name)
-                                            .getOrElse("unknown")
-                            )
-                    )).fold(Validation::invalid, valid -> Validation.valid(argument));
+                    .map(serverRole -> allowedRoles == null || allowedRoles.containsValue(serverRole))
+                    .toTry().toValidation(ex -> error)
+                    .fold(Validation::invalid, valid -> valid ? Validation.valid(argument) : Validation.invalid(error));
         }
 
         private @NotNull Validation<BotCommandArgumentValidationError, BotCommandArgument<Role>> checkMentionable(
@@ -348,6 +366,19 @@ public final class BotCommandArgumentValidators {
                     ? Validation.invalid(new BotCommandArgumentValidationError(
                             argument.id(),
                             "$error.command_argument_validation_report.reason.role.mentionable$",
+                            List.of()
+                    )) : Validation.valid(argument);
+        }
+
+        private @NotNull Validation<BotCommandArgumentValidationError, BotCommandArgument<Role>> checkAuthorHasRole(
+                @NotNull BotCommandContext ctx,
+                @NotNull BotCommandArgument<Role> argument,
+                boolean authorMustHaveRole
+        ) {
+            return authorMustHaveRole && !ctx.getOriginalAuthor().getRoles().contains(argument.value())
+                    ? Validation.invalid(new BotCommandArgumentValidationError(
+                            argument.id(),
+                            "$error.command_argument_validation_report.reason.role.author_has_role$",
                             List.of()
                     )) : Validation.valid(argument);
         }
@@ -367,6 +398,7 @@ public final class BotCommandArgumentValidators {
 
             return aggregate(List.of(
                     checkAllowed(ctx, argument, argsValidation.get().getAllowedChannels()),
+                    checkAuthorInChannel(ctx, argument, argsValidation.get().isAuthorMustBeInChannel()),
                     validateMinAge(argument, argsValidation.get().getMinAge())
             ), () -> argument);
         }
@@ -374,22 +406,42 @@ public final class BotCommandArgumentValidators {
         private @NotNull Validation<BotCommandArgumentValidationError, BotCommandArgument<TextChannel>> checkAllowed(
                 @NotNull BotCommandContext ctx,
                 @NotNull BotCommandArgument<TextChannel> argument,
-                @Nullable List<BotConfigServerChannel> allowedChannels
+                @Nullable Map<Integer, BotConfigServerChannel> allowedChannels
         ) {
+            BotCommandArgumentValidationError error = new BotCommandArgumentValidationError(
+                    argument.id(),
+                    "$error.command_argument_validation_report.reason.channel.allowed$",
+                    List.of(
+                            allowedChannels == null ? "[any]" : allowedChannels.values().stream()
+                                    .map(BotConfigServerChannel::name)
+                                    .collect(Collectors.joining(", ", "[", "]")),
+                            ctx.getServerChannel(argument.value().getIdLong())
+                                    .map(BotConfigServerChannel::name)
+                                    .getOrElse("unknown")
+                    )
+            );
             return ctx.getServerChannel(argument.value().getIdLong())
-                    .map(serverChannel -> allowedChannels == null || allowedChannels.contains(serverChannel))
-                    .toTry().toValidation(ex -> new BotCommandArgumentValidationError(
-                            argument.id(),
-                            "$error.command_argument_validation_report.reason.channel.allowed$",
-                            List.of(
-                                    allowedChannels == null ? "[any]" : allowedChannels.stream()
-                                            .map(BotConfigServerChannel::name)
-                                            .collect(Collectors.joining(", ", "[", "]")),
-                                    ctx.getServerChannel(argument.value().getIdLong())
-                                            .map(BotConfigServerChannel::name)
-                                            .getOrElse("unknown")
-                            )
-                    )).fold(Validation::invalid, valid -> Validation.valid(argument));
+                    .map(serverChannel -> allowedChannels == null || allowedChannels.containsValue(serverChannel))
+                    .toTry().toValidation(ex -> error)
+                    .fold(Validation::invalid, valid -> valid ? Validation.valid(argument) : Validation.invalid(error));
+        }
+
+        private @NotNull Validation<BotCommandArgumentValidationError, BotCommandArgument<TextChannel>> checkAuthorInChannel(
+                @NotNull BotCommandContext ctx,
+                @NotNull BotCommandArgument<TextChannel> argument,
+                boolean authorMustBeInChannel
+        ) {
+            if (!authorMustBeInChannel) { return Validation.valid(argument); }
+
+            BotCommandArgumentValidationError error = new BotCommandArgumentValidationError(
+                    argument.id(),
+                    "$error.command_argument_validation_report.reason.channel.author_in_channel$",
+                    List.of()
+            );
+            return ctx.getServerChannel(argument.value().getIdLong())
+                    .map(serverChannel -> ctx.memberInChannel(ctx.getOriginalAuthor(), serverChannel))
+                    .toTry().toValidation(ex -> error)
+                    .fold(Validation::invalid, valid -> valid ? Validation.valid(argument) : Validation.invalid(error));
         }
     }
 
@@ -414,22 +466,24 @@ public final class BotCommandArgumentValidators {
         private @NotNull Validation<BotCommandArgumentValidationError, BotCommandArgument<Category>> checkAllowed(
                 @NotNull BotCommandContext ctx,
                 @NotNull BotCommandArgument<Category> argument,
-                @Nullable List<BotConfigServerChannelCategory> allowedCategories
+                @Nullable Map<Integer, BotConfigServerChannelCategory> allowedCategories
         ) {
+            BotCommandArgumentValidationError error = new BotCommandArgumentValidationError(
+                    argument.id(),
+                    "$error.command_argument_validation_report.reason.category.allowed$",
+                    List.of(
+                            allowedCategories == null ? "[any]" : allowedCategories.values().stream()
+                                    .map(BotConfigServerChannelCategory::name)
+                                    .collect(Collectors.joining(", ", "[", "]")),
+                            ctx.getServerCategory(argument.value().getIdLong())
+                                    .map(BotConfigServerChannelCategory::name)
+                                    .getOrElse("unknown")
+                    )
+            );
             return ctx.getServerCategory(argument.value().getIdLong())
-                    .map(serverCategory -> allowedCategories == null || allowedCategories.contains(serverCategory))
-                    .toTry().toValidation(ex -> new BotCommandArgumentValidationError(
-                            argument.id(),
-                            "$error.command_argument_validation_report.reason.category.allowed$",
-                            List.of(
-                                    allowedCategories == null ? "[any]" : allowedCategories.stream()
-                                            .map(BotConfigServerChannelCategory::name)
-                                            .collect(Collectors.joining(", ", "[", "]")),
-                                    ctx.getServerCategory(argument.value().getIdLong())
-                                            .map(BotConfigServerChannelCategory::name)
-                                            .getOrElse("unknown")
-                            )
-                    )).fold(Validation::invalid, valid -> Validation.valid(argument));
+                    .map(serverCategory -> allowedCategories == null || allowedCategories.containsValue(serverCategory))
+                    .toTry().toValidation(ex -> error)
+                    .fold(Validation::invalid, valid -> valid ? Validation.valid(argument) : Validation.invalid(error));
         }
     }
 
@@ -490,32 +544,36 @@ public final class BotCommandArgumentValidators {
                 @NotNull BotCommandArgument<Instant> argument,
                 long before
         ) {
+            BotCommandArgumentValidationError error = new BotCommandArgumentValidationError(
+                    argument.id(),
+                    "$error.command_argument_validation_report.reason.time.before$",
+                    List.of(
+                            AcspBotApp.DATE_TIME_FORMATTER.format(Instant.ofEpochMilli(before)),
+                            AcspBotApp.DATE_TIME_FORMATTER.format(argument.value())
+                    )
+            );
             return Try.of(() -> Instant.ofEpochMilli(before))
                     .map(instant -> argument.value().isBefore(instant))
-                    .toValidation(ex -> new BotCommandArgumentValidationError(
-                            argument.id(),
-                            "$error.command_argument_validation_report.reason.time.before$",
-                            List.of(
-                                    AcspBotApp.DATE_TIME_FORMATTER.format(Instant.ofEpochMilli(before)),
-                                    AcspBotApp.DATE_TIME_FORMATTER.format(argument.value())
-                            )
-                    )).fold(Validation::invalid, valid -> Validation.valid(argument));
+                    .toValidation(ex -> error)
+                    .fold(Validation::invalid, valid -> valid ? Validation.valid(argument) : Validation.invalid(error));
         }
 
         private @NotNull Validation<BotCommandArgumentValidationError, BotCommandArgument<Instant>> validateAfter(
                 @NotNull BotCommandArgument<Instant> argument,
                 long after
         ) {
+            BotCommandArgumentValidationError error = new BotCommandArgumentValidationError(
+                    argument.id(),
+                    "$error.command_argument_validation_report.reason.time.after$",
+                    List.of(
+                            AcspBotApp.DATE_TIME_FORMATTER.format(Instant.ofEpochMilli(after)),
+                            AcspBotApp.DATE_TIME_FORMATTER.format(argument.value())
+                    )
+            );
             return Try.of(() -> Instant.ofEpochMilli(after))
                     .map(instant -> argument.value().isAfter(instant))
-                    .toValidation(ex -> new BotCommandArgumentValidationError(
-                            argument.id(),
-                            "$error.command_argument_validation_report.reason.time.after$",
-                            List.of(
-                                    AcspBotApp.DATE_TIME_FORMATTER.format(Instant.ofEpochMilli(after)),
-                                    AcspBotApp.DATE_TIME_FORMATTER.format(argument.value())
-                            )
-                    )).fold(Validation::invalid, valid -> Validation.valid(argument));
+                    .toValidation(ex -> error)
+                    .fold(Validation::invalid, valid -> valid ? Validation.valid(argument) : Validation.invalid(error));
         }
     }
 
@@ -541,32 +599,36 @@ public final class BotCommandArgumentValidators {
                 @NotNull BotCommandArgument<Duration> argument,
                 @NotNull String minDuration
         ) {
+            BotCommandArgumentValidationError error = new BotCommandArgumentValidationError(
+                    argument.id(),
+                    "$error.command_argument_validation_report.reason.duration.min$",
+                    List.of(
+                            minDuration,
+                            DurationUtils.format(argument.value())
+                    )
+            );
             return DurationUtils.parse(minDuration).toTry()
                     .map(duration -> argument.value().compareTo(duration) >= 0)
-                    .toValidation(ex -> new BotCommandArgumentValidationError(
-                            argument.id(),
-                            "$error.command_argument_validation_report.reason.duration.min$",
-                            List.of(
-                                    minDuration,
-                                    DurationUtils.format(argument.value())
-                            )
-                    )).fold(Validation::invalid, valid -> Validation.valid(argument));
+                    .toValidation(ex -> error)
+                    .fold(Validation::invalid, valid -> valid ? Validation.valid(argument) : Validation.invalid(error));
         }
 
         private @NotNull Validation<BotCommandArgumentValidationError, BotCommandArgument<Duration>> validateMaxDuration(
                 @NotNull BotCommandArgument<Duration> argument,
                 @NotNull String maxDuration
         ) {
+            BotCommandArgumentValidationError error = new BotCommandArgumentValidationError(
+                    argument.id(),
+                    "$error.command_argument_validation_report.reason.duration.max$",
+                    List.of(
+                            maxDuration,
+                            DurationUtils.format(argument.value())
+                    )
+            );
             return DurationUtils.parse(maxDuration).toTry()
                     .map(duration -> argument.value().compareTo(duration) <= 0)
-                    .toValidation(ex -> new BotCommandArgumentValidationError(
-                            argument.id(),
-                            "$error.command_argument_validation_report.reason.duration.max$",
-                            List.of(
-                                    maxDuration,
-                                    DurationUtils.format(argument.value())
-                            )
-                    )).fold(Validation::invalid, valid -> Validation.valid(argument));
+                    .toValidation(ex -> error)
+                    .fold(Validation::invalid, valid -> valid ? Validation.valid(argument) : Validation.invalid(error));
         }
     }
 
@@ -706,21 +768,25 @@ public final class BotCommandArgumentValidators {
 
     private static <T extends ISnowflake> @NotNull Validation<BotCommandArgumentValidationError, BotCommandArgument<T>> validateMinAge(
             @NotNull BotCommandArgument<T> argument,
-            @NotNull String minAge
+            @Nullable String minAge
     ) {
+        if (minAge == null) { return Validation.valid(argument); }
+
+        BotCommandArgumentValidationError error = new BotCommandArgumentValidationError(
+                argument.id(),
+                "$error.command_argument_validation_report.reason.primitive.min_age$",
+                List.of(
+                        minAge,
+                        DurationUtils.format(Duration.between(
+                                argument.value().getTimeCreated().toInstant(),
+                                Instant.now()
+                        ))
+                )
+        );
         return DurationUtils.parse(minAge).toTry()
                 .map(duration -> argument.value().getTimeCreated().toInstant().isBefore(Instant.now().minus(duration)))
-                .toValidation(ex -> new BotCommandArgumentValidationError(
-                        argument.id(),
-                        "$error.command_argument_validation_report.reason.primitive.min_age$",
-                        List.of(
-                                minAge,
-                                DurationUtils.format(Duration.between(
-                                        argument.value().getTimeCreated().toInstant(),
-                                        Instant.now()
-                                ))
-                        )
-                )).fold(Validation::invalid, valid -> Validation.valid(argument));
+                .toValidation(ex -> error)
+                .fold(Validation::invalid, valid -> valid ? Validation.valid(argument) : Validation.invalid(error));
     }
 
     public static <T> @NotNull Validation<BotCommandArgumentValidationError, T> getArgs(
