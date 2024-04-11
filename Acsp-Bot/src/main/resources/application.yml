@@ -175,11 +175,11 @@ server:
   tomcat:
     threads:
       min-spare: 4
-      max: 64
+      max: 16
   jetty:
     threads:
       min: 4
-      max: 64
+      max: 16
 logging:
   level:
     org.springframework.boot.web.embedded: ERROR

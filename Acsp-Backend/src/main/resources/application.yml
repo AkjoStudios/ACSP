@@ -65,13 +65,14 @@ server:
   tomcat:
     threads:
       min-spare: 4
-      max: 64
+      max: 16
   jetty:
     threads:
       min: 4
-      max: 64
+      max: 16
 logging:
   level:
-    org.springframework.boot.web.embedded: OFF
-    org.springframework.boot.web.servlet.context: OFF
-    org.apache.catalina: OFF
+    org.springframework.boot.web.embedded: ERROR
+    org.springframework.boot.web.servlet.context: ERROR
+    org.springframework.boot.devtools: ERROR
+    org.apache.catalina: ERROR
