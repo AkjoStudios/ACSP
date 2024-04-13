@@ -1,5 +1,6 @@
 package com.akjostudios.acsp.bot.discord.config.definition;
 
+import com.akjostudios.acsp.bot.discord.common.command.argument.validation.BotCommandArgumentValidationArguments;
 import com.akjostudios.acsp.bot.discord.config.layout.BotConfigServerChannel;
 import com.akjostudios.acsp.bot.discord.config.layout.BotConfigServerChannelCategory;
 import com.akjostudios.acsp.bot.discord.config.layout.BotConfigServerRole;
@@ -54,10 +55,62 @@ public class BotConfigCommand {
     @Validated
     public static class Argument {
         @NotBlank private String id;
-        @NotNull private BotConfigCommandArgumentType type;
+        @NotNull private Type type;
         @NotNull private boolean required;
         private String description;
         private Map<@NotBlank String, @NotNull Object> validation;
+
+        @Getter
+        @SuppressWarnings("unused")
+        public enum Type {
+            /**
+             * {@link BotCommandArgumentValidationArguments.StringValidationArguments Validation}: minLength, maxLength, regex **/
+            STRING,
+            /** {@link BotCommandArgumentValidationArguments.ByteValidationArguments Validation}: minValue, maxValue **/
+            BYTE,
+            /** {@link BotCommandArgumentValidationArguments.ShortValidationArguments Validation}: minValue, maxValue **/
+            SHORT,
+            /** {@link BotCommandArgumentValidationArguments.IntegerValidationArguments Validation}: minValue, maxValue **/
+            INTEGER,
+            /** {@link BotCommandArgumentValidationArguments.LongValidationArguments Validation}: minValue, maxValue **/
+            LONG,
+            /** {@link BotCommandArgumentValidationArguments.FloatValidationArguments Validation}: minValue, maxValue **/
+            FLOAT,
+            /** {@link BotCommandArgumentValidationArguments.DoubleValidationArguments Validation}: minValue, maxValue **/
+            DOUBLE,
+            /** No validation arguments **/
+            BOOLEAN,
+            /** {@link BotCommandArgumentValidationArguments.UserValidationArguments Validation}: allowBot, minAge **/
+            USER,
+            /** {@link BotCommandArgumentValidationArguments.MemberValidationArguments Validation}: requiredRoles, requiredStatus, allowBot, minAge **/
+            MEMBER,
+            /** {@link BotCommandArgumentValidationArguments.RoleValidationArguments Validation}: allowedRoles, mentionableRequired, minAge **/
+            ROLE,
+            /** {@link BotCommandArgumentValidationArguments.ChannelValidationArguments Validation}: allowedChannels, minAge **/
+            CHANNEL,
+            /** {@link BotCommandArgumentValidationArguments.CategoryValidationArguments Validation}: allowedCategories, minAge **/
+            CATEGORY,
+            /** No validation arguments **/
+            EMOJI,
+            /** {@link BotCommandArgumentValidationArguments.TimeValidationArguments Validation}: isRelative (RelativeType), isBefore, isAfter **/
+            TIME,
+            /** {@link BotCommandArgumentValidationArguments.DurationValidationArguments Validation}: minDuration, maxDuration **/
+            DURATION,
+            /** {@link BotCommandArgumentValidationArguments.UrlValidationArguments Validation}: schemeRegex, hostRegex, pathRegex, queryRegex **/
+            URL,
+            /** No validation arguments **/
+            COLOR,
+            /** No validation arguments **/
+            UNKNOWN;
+
+            public @org.jetbrains.annotations.NotNull String getTranslationKey() {
+                return "$command.arguments.type." + name().toLowerCase() + "$";
+            }
+
+            public @org.jetbrains.annotations.NotNull String getTooltipKey() {
+                return "$command.arguments.type." + name().toLowerCase() + ".tooltip$";
+            }
+        }
     }
 
     @Getter

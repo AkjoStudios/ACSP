@@ -1,7 +1,6 @@
 package com.akjostudios.acsp.bot.discord.common.command.argument.validation;
 
 import com.akjostudios.acsp.bot.discord.config.definition.BotConfigCommand;
-import com.akjostudios.acsp.bot.discord.config.definition.BotConfigCommandArgumentType;
 import com.akjostudios.acsp.bot.discord.config.layout.BotConfigServerChannel;
 import com.akjostudios.acsp.bot.discord.config.layout.BotConfigServerChannelCategory;
 import com.akjostudios.acsp.bot.discord.config.layout.BotConfigServerRole;
@@ -46,7 +45,7 @@ public final class BotCommandArgumentValidationArguments {
      *         <td>Regular expression the string must match.</td>
      *     </tr>
      * </table>
-     * @see BotConfigCommandArgumentType#STRING
+     * @see BotConfigCommand.Argument.Type#STRING
      **/
     @Getter
     @Setter(AccessLevel.PRIVATE)
@@ -78,7 +77,7 @@ public final class BotCommandArgumentValidationArguments {
      *         <td>Maximum value of the byte.</td>
      *     </tr>
      * </table>
-     * @see BotConfigCommandArgumentType#BYTE
+     * @see BotConfigCommand.Argument.Type#BYTE
      */
     @Getter
     @Setter(AccessLevel.PRIVATE)
@@ -109,7 +108,7 @@ public final class BotCommandArgumentValidationArguments {
      *         <td>Maximum value of the short.</td>
      *     </tr>
      * </table>
-     * @see BotConfigCommandArgumentType#SHORT
+     * @see BotConfigCommand.Argument.Type#SHORT
      */
     @Getter
     @Setter(AccessLevel.PRIVATE)
@@ -140,7 +139,7 @@ public final class BotCommandArgumentValidationArguments {
      *         <td>Maximum value of the integer.</td>
      *     </tr>
      * </table>
-     * @see BotConfigCommandArgumentType#INTEGER
+     * @see BotConfigCommand.Argument.Type#INTEGER
      */
     @Getter
     @Setter(AccessLevel.PRIVATE)
@@ -171,7 +170,7 @@ public final class BotCommandArgumentValidationArguments {
      *         <td>Maximum value of the long.</td>
      *     </tr>
      * </table>
-     * @see BotConfigCommandArgumentType#LONG
+     * @see BotConfigCommand.Argument.Type#LONG
      */
     @Getter
     @Setter(AccessLevel.PRIVATE)
@@ -202,7 +201,7 @@ public final class BotCommandArgumentValidationArguments {
      *         <td>Maximum value of the float.</td>
      *     </tr>
      * </table>
-     * @see BotConfigCommandArgumentType#FLOAT
+     * @see BotConfigCommand.Argument.Type#FLOAT
      */
     @Getter
     @Setter(AccessLevel.PRIVATE)
@@ -233,7 +232,7 @@ public final class BotCommandArgumentValidationArguments {
      *         <td>Maximum value of the double.</td>
      *     </tr>
      * </table>
-     * @see BotConfigCommandArgumentType#DOUBLE
+     * @see BotConfigCommand.Argument.Type#DOUBLE
      */
     @Getter
     @Setter(AccessLevel.PRIVATE)
@@ -264,7 +263,7 @@ public final class BotCommandArgumentValidationArguments {
      *         <td>Minimum account age of the user.</td>
      *     </tr>
      * </table>
-     * @see BotConfigCommandArgumentType#USER
+     * @see BotConfigCommand.Argument.Type#USER
      */
     @Getter
     @Setter(AccessLevel.PRIVATE)
@@ -307,7 +306,7 @@ public final class BotCommandArgumentValidationArguments {
      *         <td>Minimum account age of the member.</td>
      *     </tr>
      * </table>
-     * @see BotConfigCommandArgumentType#MEMBER
+     * @see BotConfigCommand.Argument.Type#MEMBER
      */
     @Getter
     @Setter(AccessLevel.PRIVATE)
@@ -352,7 +351,7 @@ public final class BotCommandArgumentValidationArguments {
      *         <td>Minimum age of the role.</td>
      *     </tr>
      * </table>
-     * @see BotConfigCommandArgumentType#ROLE
+     * @see BotConfigCommand.Argument.Type#ROLE
      */
     @Getter
     @Setter(AccessLevel.PRIVATE)
@@ -391,7 +390,7 @@ public final class BotCommandArgumentValidationArguments {
      *         <td>Minimum age of the channel.</td>
      *     </tr>
      * </table>
-     * @see BotConfigCommandArgumentType#CHANNEL
+     * @see BotConfigCommand.Argument.Type#CHANNEL
      */
     @Getter
     @Setter(AccessLevel.PRIVATE)
@@ -423,7 +422,7 @@ public final class BotCommandArgumentValidationArguments {
      *         <td>Minimum age of the category.</td>
      *     </tr>
      * </table>
-     * @see BotConfigCommandArgumentType#CATEGORY
+     * @see BotConfigCommand.Argument.Type#CATEGORY
      */
     @Getter
     @Setter(AccessLevel.PRIVATE)
@@ -460,7 +459,7 @@ public final class BotCommandArgumentValidationArguments {
      *         <td>Minimum time in milliseconds since epoch.</td>
      *     </tr>
      * </table>
-     * @see BotConfigCommandArgumentType#TIME
+     * @see BotConfigCommand.Argument.Type#TIME
      */
     @Getter
     @Setter(AccessLevel.PRIVATE)
@@ -496,7 +495,7 @@ public final class BotCommandArgumentValidationArguments {
      *         <td>Maximum duration.</td>
      *     </tr>
      * </table>
-     * @see BotConfigCommandArgumentType#DURATION
+     * @see BotConfigCommand.Argument.Type#DURATION
      */
     @Getter
     @Setter(AccessLevel.PRIVATE)
@@ -539,7 +538,7 @@ public final class BotCommandArgumentValidationArguments {
      *         <td>Regular expression the query must match.</td>
      *     </tr>
      * </table>
-     * @see BotConfigCommandArgumentType#URL
+     * @see BotConfigCommand.Argument.Type#URL
      **/
     @Getter
     @Setter(AccessLevel.PRIVATE)

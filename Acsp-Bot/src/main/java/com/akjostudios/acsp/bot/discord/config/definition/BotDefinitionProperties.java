@@ -18,5 +18,6 @@ public class BotDefinitionProperties {
     @NotBlank private String commandPrefix;
     private List<BotConfigMessage.Wrapper> messages;
     private List<BotConfigMessageEmbed.Field.Wrapper> fields;
+    private List<BotConfigComponent.Wrapper> components;
     private List<BotConfigCommand> commands;
 }

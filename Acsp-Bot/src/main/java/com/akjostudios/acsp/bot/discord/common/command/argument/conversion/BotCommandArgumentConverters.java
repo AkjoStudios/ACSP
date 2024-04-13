@@ -1,7 +1,7 @@
 package com.akjostudios.acsp.bot.discord.common.command.argument.conversion;
 
 import com.akjostudios.acsp.bot.discord.common.command.BotCommandContext;
-import com.akjostudios.acsp.bot.discord.config.definition.BotConfigCommandArgumentType;
+import com.akjostudios.acsp.bot.discord.config.definition.BotConfigCommand;
 import com.akjostudios.acsp.bot.util.DurationUtils;
 import com.github.tonivade.purefun.type.Try;
 import com.github.tonivade.purefun.type.Validation;
@@ -46,7 +46,7 @@ public final class BotCommandArgumentConverters {
                     .mapLeft(throwable -> new BotCommandArgumentConversionError(
                             name,
                             value,
-                            BotConfigCommandArgumentType.BYTE,
+                            BotConfigCommand.Argument.Type.BYTE,
                             ctx.getJumpUrl()
                     )).toValidation();
         }
@@ -64,7 +64,7 @@ public final class BotCommandArgumentConverters {
                     .mapLeft(throwable -> new BotCommandArgumentConversionError(
                             name,
                             value,
-                            BotConfigCommandArgumentType.SHORT,
+                            BotConfigCommand.Argument.Type.SHORT,
                             ctx.getJumpUrl()
                     )).toValidation();
         }
@@ -82,7 +82,7 @@ public final class BotCommandArgumentConverters {
                     .mapLeft(throwable -> new BotCommandArgumentConversionError(
                             name,
                             value,
-                            BotConfigCommandArgumentType.INTEGER,
+                            BotConfigCommand.Argument.Type.INTEGER,
                             ctx.getJumpUrl()
                     )).toValidation();
         }
@@ -100,7 +100,7 @@ public final class BotCommandArgumentConverters {
                     .mapLeft(throwable -> new BotCommandArgumentConversionError(
                             name,
                             value,
-                            BotConfigCommandArgumentType.LONG,
+                            BotConfigCommand.Argument.Type.LONG,
                             ctx.getJumpUrl()
                     )).toValidation();
         }
@@ -118,7 +118,7 @@ public final class BotCommandArgumentConverters {
                     .mapLeft(throwable -> new BotCommandArgumentConversionError(
                             name,
                             value,
-                            BotConfigCommandArgumentType.FLOAT,
+                            BotConfigCommand.Argument.Type.FLOAT,
                             ctx.getJumpUrl()
                     )).toValidation();
         }
@@ -136,7 +136,7 @@ public final class BotCommandArgumentConverters {
                     .mapLeft(throwable -> new BotCommandArgumentConversionError(
                             name,
                             value,
-                            BotConfigCommandArgumentType.DOUBLE,
+                            BotConfigCommand.Argument.Type.DOUBLE,
                             ctx.getJumpUrl()
                     )).toValidation();
         }
@@ -154,7 +154,7 @@ public final class BotCommandArgumentConverters {
                     .mapLeft(throwable -> new BotCommandArgumentConversionError(
                             name,
                             value,
-                            BotConfigCommandArgumentType.BOOLEAN,
+                            BotConfigCommand.Argument.Type.BOOLEAN,
                             ctx.getJumpUrl()
                     )).toValidation();
         }
@@ -171,7 +171,7 @@ public final class BotCommandArgumentConverters {
                     .toValidation(throwable -> new BotCommandArgumentConversionError(
                             name,
                             value,
-                            BotConfigCommandArgumentType.USER,
+                            BotConfigCommand.Argument.Type.USER,
                             ctx.getJumpUrl()
                     ));
         }
@@ -188,7 +188,7 @@ public final class BotCommandArgumentConverters {
                     .toValidation(throwable -> new BotCommandArgumentConversionError(
                             name,
                             value,
-                            BotConfigCommandArgumentType.MEMBER,
+                            BotConfigCommand.Argument.Type.MEMBER,
                             ctx.getJumpUrl()
                     ));
         }
@@ -205,7 +205,7 @@ public final class BotCommandArgumentConverters {
                     .toValidation(throwable -> new BotCommandArgumentConversionError(
                             name,
                             value,
-                            BotConfigCommandArgumentType.ROLE,
+                            BotConfigCommand.Argument.Type.ROLE,
                             ctx.getJumpUrl()
                     ));
         }
@@ -222,7 +222,7 @@ public final class BotCommandArgumentConverters {
                     .toValidation(throwable -> new BotCommandArgumentConversionError(
                             name,
                             value,
-                            BotConfigCommandArgumentType.CHANNEL,
+                            BotConfigCommand.Argument.Type.CHANNEL,
                             ctx.getJumpUrl()
                     ));
         }
@@ -239,7 +239,7 @@ public final class BotCommandArgumentConverters {
                     .toValidation(throwable -> new BotCommandArgumentConversionError(
                             name,
                             value,
-                            BotConfigCommandArgumentType.CATEGORY,
+                            BotConfigCommand.Argument.Type.CATEGORY,
                             ctx.getJumpUrl()
                     ));
         }
@@ -256,7 +256,7 @@ public final class BotCommandArgumentConverters {
                     .toValidation(throwable -> new BotCommandArgumentConversionError(
                             name,
                             value,
-                            BotConfigCommandArgumentType.EMOJI,
+                            BotConfigCommand.Argument.Type.EMOJI,
                             ctx.getJumpUrl()
                     ));
         }
@@ -273,7 +273,7 @@ public final class BotCommandArgumentConverters {
                     .toValidation(throwable -> new BotCommandArgumentConversionError(
                             name,
                             value,
-                            BotConfigCommandArgumentType.TIME,
+                            BotConfigCommand.Argument.Type.TIME,
                             ctx.getJumpUrl()
                     ));
         }
@@ -290,7 +290,7 @@ public final class BotCommandArgumentConverters {
                     .toValidation(throwable -> new BotCommandArgumentConversionError(
                             name,
                             value,
-                            BotConfigCommandArgumentType.DURATION,
+                            BotConfigCommand.Argument.Type.DURATION,
                             ctx.getJumpUrl()
                     ));
         }
@@ -307,7 +307,7 @@ public final class BotCommandArgumentConverters {
                     .toValidation(throwable -> new BotCommandArgumentConversionError(
                             name,
                             value,
-                            BotConfigCommandArgumentType.URL,
+                            BotConfigCommand.Argument.Type.URL,
                             ctx.getJumpUrl()
                     ));
         }
@@ -324,7 +324,7 @@ public final class BotCommandArgumentConverters {
                     .toValidation(throwable -> new BotCommandArgumentConversionError(
                             name,
                             value,
-                            BotConfigCommandArgumentType.COLOR,
+                            BotConfigCommand.Argument.Type.COLOR,
                             ctx.getJumpUrl()
                     ));
         }
@@ -340,7 +340,7 @@ public final class BotCommandArgumentConverters {
             return Validation.invalid(new BotCommandArgumentConversionError(
                     name,
                     value,
-                    BotConfigCommandArgumentType.UNKNOWN,
+                    BotConfigCommand.Argument.Type.UNKNOWN,
                     ctx.getJumpUrl()
             ));
         }
@@ -348,7 +348,7 @@ public final class BotCommandArgumentConverters {
 
     @SuppressWarnings({"java:S1452", "unchecked"})
     public static <T> @NotNull BotCommandArgumentConverter<T> from(
-            @NotNull BotConfigCommandArgumentType type
+            @NotNull BotConfigCommand.Argument.Type type
     ) {
         return (BotCommandArgumentConverter<T>) (switch (type) {
             case STRING -> BotCommandArgumentConverterProvider.STRING;

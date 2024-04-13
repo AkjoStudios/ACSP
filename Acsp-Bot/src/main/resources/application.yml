@@ -98,6 +98,12 @@ app:
                   text: "$footer.text.1$" # contains $1
                   timestamp: "$2"
                   icon-url: "https://cdn.discordapp.com/avatars/1220705902622150666/71317fc3ccdc919c1a47d078161fc4f0.webp?size=256"
+      fields:
+        - label: "argument-validation.error"
+          field:
+            name: "Argument $0"
+            value: "$1"
+            inline: false
       commands:
         - name: "help"
           enabled: true
@@ -116,12 +122,6 @@ app:
               roles:
                 - type: simple
                   role: everyone
-      fields:
-        - label: "argument-validation.error"
-          field:
-            name: "Argument $0"
-            value: "$1"
-            inline: false
 spring:
   application:
     name: ACSP Bot

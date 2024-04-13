@@ -4,7 +4,6 @@ import com.akjostudios.acsp.bot.AcspBotApp;
 import com.akjostudios.acsp.bot.discord.common.command.BotCommandContext;
 import com.akjostudios.acsp.bot.discord.common.command.argument.BotCommandArgument;
 import com.akjostudios.acsp.bot.discord.config.definition.BotConfigCommand;
-import com.akjostudios.acsp.bot.discord.config.definition.BotConfigCommandArgumentType;
 import com.akjostudios.acsp.bot.discord.config.layout.BotConfigServerChannel;
 import com.akjostudios.acsp.bot.discord.config.layout.BotConfigServerChannelCategory;
 import com.akjostudios.acsp.bot.discord.config.layout.BotConfigServerRole;
@@ -689,7 +688,7 @@ public final class BotCommandArgumentValidators {
 
     @SuppressWarnings({"java:S1452", "unchecked"})
     public static <T> @NotNull BotCommandArgumentValidator<T> from(
-            @NotNull BotConfigCommandArgumentType type
+            @NotNull BotConfigCommand.Argument.Type type
     ) {
         return (BotCommandArgumentValidator<T>) (switch (type) {
             case STRING -> BotCommandArgumentValidatorProvider.STRING;
