@@ -22,6 +22,10 @@ import java.util.stream.Collectors;
 @SuppressWarnings("java:S6830")
 public class ExternalServiceIndicator implements ReactiveHealthIndicator {
     private static final String SERVICE_DETAIL = "service";
+    private static final String CODE_DETAIL = "code";
+    private static final String MESSAGE_DETAIL = "message";
+    private static final String EXCEPTION_DETAIL = "exception";
+
     private static final String BACKEND_SERVICE = "backend";
 
     private final WebClient backendClient;
@@ -64,13 +68,17 @@ public class ExternalServiceIndicator implements ReactiveHealthIndicator {
                         clientResponse.statusCode().is2xxSuccessful() ? Health.up() : Health.down()
                 ).map(builder -> builder
                         .withDetail(SERVICE_DETAIL, BACKEND_SERVICE)
-                        .withDetail("code", clientResponse.statusCode().value())
+                        .withDetail(CODE_DETAIL, clientResponse.statusCode().value())
                         .build()
                 )).onErrorResume(ex -> Mono.just(Health.down()
                         .withDetail(SERVICE_DETAIL, BACKEND_SERVICE)
-                        .withDetail("message", "Unable to connect to backend service!")
-                        .withDetail("exception", ex.getLocalizedMessage())
+                        .withDetail(MESSAGE_DETAIL, "Unable to connect to backend service!")
+                        .withDetail(EXCEPTION_DETAIL, ex.getLocalizedMessage())
                         .build()
-                )).timeout(Duration.ofSeconds(5));
+                )).timeout(Duration.ofSeconds(5), Mono.just(Health.down()
+                        .withDetail(SERVICE_DETAIL, BACKEND_SERVICE)
+                        .withDetail(MESSAGE_DETAIL, "Backend service connection timed out!")
+                        .build()
+                ));
     }
 }

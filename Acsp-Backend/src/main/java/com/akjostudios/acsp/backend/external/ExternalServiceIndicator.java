@@ -23,6 +23,11 @@ import java.util.stream.Collectors;
 @SuppressWarnings("java:S6830")
 public class ExternalServiceIndicator implements ReactiveHealthIndicator {
     private static final String SERVICE_DETAIL = "service";
+    private static final String MESSAGE_DETAIL = "message";
+    private static final String EXCEPTION_DETAIL = "exception";
+    private static final String CODE_DETAIL = "code";
+    private static final String VERSION_DETAIL = "version";
+
     private static final String SUPERTOKENS_SERVICE = "supertokens";
     private static final String BOT_SERVICE = "bot";
 
@@ -71,7 +76,7 @@ public class ExternalServiceIndicator implements ReactiveHealthIndicator {
                             clientResponse.statusCode().is2xxSuccessful() ? Health.up() : Health.down()
                     ).map(builder -> builder
                             .withDetail(SERVICE_DETAIL, SUPERTOKENS_SERVICE)
-                            .withDetail("code", clientResponse.statusCode().value())
+                            .withDetail(CODE_DETAIL, clientResponse.statusCode().value())
                     );
 
                     if (!clientResponse.statusCode().is2xxSuccessful()) {
@@ -81,15 +86,19 @@ public class ExternalServiceIndicator implements ReactiveHealthIndicator {
                     return clientResponse.bodyToMono(SupertokenApiVersions.class)
                             .map(SupertokenApiVersions::getLatestVersion)
                             .flatMap(version -> healthBuilderMono.map(builder -> builder
-                                    .withDetail("version", version.toString())
+                                    .withDetail(VERSION_DETAIL, version.toString())
                                     .build()
                             ));
                 }).onErrorResume(ex -> Mono.just(Health.down()
                         .withDetail(SERVICE_DETAIL, SUPERTOKENS_SERVICE)
-                        .withDetail("message", "Unable to connect to supertokens service!")
-                        .withDetail("exception", ex.getLocalizedMessage())
+                        .withDetail(MESSAGE_DETAIL, "Unable to connect to supertokens service!")
+                        .withDetail(EXCEPTION_DETAIL, ex.getLocalizedMessage())
                         .build()
-                )).timeout(Duration.ofSeconds(5));
+                )).timeout(Duration.ofSeconds(5), Mono.just(Health.down()
+                        .withDetail(SERVICE_DETAIL, SUPERTOKENS_SERVICE)
+                        .withDetail(MESSAGE_DETAIL, "Supertokens service connection timed out!")
+                        .build()
+                ));
     }
 
     private @NotNull Mono<Health> checkBotService() {
@@ -98,13 +107,17 @@ public class ExternalServiceIndicator implements ReactiveHealthIndicator {
                         clientResponse.statusCode().is2xxSuccessful() ? Health.up() : Health.down()
                 ).map(builder -> builder
                         .withDetail(SERVICE_DETAIL, BOT_SERVICE)
-                        .withDetail("code", clientResponse.statusCode().value())
+                        .withDetail(CODE_DETAIL, clientResponse.statusCode().value())
                         .build()
                 )).onErrorResume(ex -> Mono.just(Health.down()
                         .withDetail(SERVICE_DETAIL, BOT_SERVICE)
-                        .withDetail("message", "Unable to connect to bot service!")
-                        .withDetail("exception", ex.getLocalizedMessage())
+                        .withDetail(MESSAGE_DETAIL, "Unable to connect to bot service!")
+                        .withDetail(EXCEPTION_DETAIL, ex.getLocalizedMessage())
                         .build()
-                )).timeout(Duration.ofSeconds(5));
+                )).timeout(Duration.ofSeconds(5), Mono.just(Health.down()
+                        .withDetail(SERVICE_DETAIL, BOT_SERVICE)
+                        .withDetail(MESSAGE_DETAIL, "Bot service connection timed out!")
+                        .build()
+                ));
     }
 }
