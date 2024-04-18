@@ -1,5 +1,6 @@
 package com.akjostudios.acsp.bot.discord.config.definition;
 
+import com.akjostudios.acsp.bot.discord.common.component.BotActionRowComponent;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
 import lombok.Setter;
@@ -15,6 +16,7 @@ import java.util.List;
 public class BotConfigMessage {
     private String content;
     private List<BotConfigMessageEmbed> embeds;
+    private List<BotActionRowComponent> components;
 
     @Getter
     @Setter

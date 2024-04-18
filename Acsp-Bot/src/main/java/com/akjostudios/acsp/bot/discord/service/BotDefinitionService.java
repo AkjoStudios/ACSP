@@ -1,9 +1,8 @@
 package com.akjostudios.acsp.bot.discord.service;
 
-import com.akjostudios.acsp.bot.discord.config.definition.BotConfigCommand;
-import com.akjostudios.acsp.bot.discord.config.definition.BotConfigMessage;
-import com.akjostudios.acsp.bot.discord.config.definition.BotConfigMessageEmbed;
-import com.akjostudios.acsp.bot.discord.config.definition.BotDefinitionProperties;
+import com.akjostudios.acsp.bot.discord.common.component.BotComponent;
+import com.akjostudios.acsp.bot.discord.common.component.conversion.BotComponentConverters;
+import com.akjostudios.acsp.bot.discord.config.definition.*;
 import com.github.tonivade.purefun.type.Option;
 import com.github.tonivade.purefun.type.Try;
 import lombok.RequiredArgsConstructor;
@@ -144,6 +143,44 @@ public class BotDefinitionService {
             result.setInline(field.isInline());
             return result;
         });
+    }
+
+    public <T extends BotComponent> @NotNull Option<T> getComponentDefinition(
+            @NotNull String label,
+            String@NotNull... placeholders
+    ) {
+        return getComponentDefinition(label, Option.none(), List.of(placeholders), placeholders);
+    }
+
+    public <T extends BotComponent> @NotNull Option<T> getComponentDefinition(
+            @NotNull String label,
+            @NotNull Option<Locale> locale,
+            String@NotNull... placeholders
+    ) {
+        return getComponentDefinition(label, locale, List.of(placeholders), placeholders);
+    }
+
+    public <T extends BotComponent> @NotNull Option<T> getComponentDefinition(
+            @NotNull String label,
+            @NotNull List<@NotNull String> labelPlaceholders,
+            String@NotNull... placeholders
+    ) {
+        return getComponentDefinition(label, Option.none(), labelPlaceholders, placeholders);
+    }
+
+    @SuppressWarnings("unchecked")
+    public <T extends BotComponent> @NotNull Option<T> getComponentDefinition(
+            @NotNull String label,
+            @NotNull Option<Locale> locale,
+            @NotNull List<@NotNull String> labelPlaceholders,
+            String@NotNull... placeholders
+    ) {
+        return Option.from(properties.getComponents().stream()
+                .filter(wrapper -> wrapper.getLabel().equals(label))
+                .map(BotConfigComponent.Wrapper::getComponent).findFirst()
+        ).flatMap(definition -> BotComponentConverters.forConfig(definition.getType())
+                .convert(botStringsService, definition, locale, labelPlaceholders, placeholders))
+                .map(component -> (T) component);
     }
 
     public @NotNull Option<BotConfigCommand> getCommandDefinition(

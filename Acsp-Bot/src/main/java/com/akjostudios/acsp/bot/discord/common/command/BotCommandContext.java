@@ -1,8 +1,11 @@
 package com.akjostudios.acsp.bot.discord.common.command;
 
 import com.akjostudios.acsp.bot.discord.common.command.argument.BotCommandArgument;
+import com.akjostudios.acsp.bot.discord.common.component.BotActionRowComponent;
+import com.akjostudios.acsp.bot.discord.common.component.BotComponent;
 import com.akjostudios.acsp.bot.discord.config.definition.BotConfigCommand;
 import com.akjostudios.acsp.bot.discord.config.definition.BotConfigMessage;
+import com.akjostudios.acsp.bot.discord.config.definition.BotConfigMessageEmbed;
 import com.akjostudios.acsp.bot.discord.config.layout.BotConfigServerChannel;
 import com.akjostudios.acsp.bot.discord.config.layout.BotConfigServerChannelCategory;
 import com.akjostudios.acsp.bot.discord.config.layout.BotConfigServerRole;
@@ -92,7 +95,10 @@ public class BotCommandContext {
                 );
     }
 
-    public boolean isSubcommand() { return subcommand.isPresent(); }
+    public boolean isSubcommand() {
+        return subcommand.isPresent();
+    }
+
     public Option<String> getSubcommandName() {
         return getSubcommandDefinition().map(BotConfigCommand.Subcommand::getName);
     }
@@ -115,28 +121,75 @@ public class BotCommandContext {
     public @NotNull Try<BotConfigMessage> getMessage(
             @NotNull String label,
             String@NotNull... placeholders
-    ) { return botDefinitionService.getMessageDefinition(label, placeholders); }
+    ) {
+        return botDefinitionService.getMessageDefinition(label, placeholders);
+    }
 
     public @NotNull Try<BotConfigMessage> getMessage(
             @NotNull String label,
             @NotNull List<@NotNull String> labelPlaceholders,
             String@NotNull... placeholders
-    ) { return botDefinitionService.getMessageDefinition(label, labelPlaceholders, placeholders); }
+    ) {
+        return botDefinitionService.getMessageDefinition(label, labelPlaceholders, placeholders);
+    }
 
     public @NotNull Try<BotConfigMessage> getErrorMessage(
             @NotNull String errorTitle,
             @NotNull String errorDescription
-    ) { return errorMessageService.getErrorMessage(errorTitle, errorDescription); }
+    ) {
+        return errorMessageService.getErrorMessage(errorTitle, errorDescription);
+    }
 
     public Try<BotConfigMessage> getErrorMessage(
             @NotNull String errorTitle,
             @NotNull String errorDescription,
             @NotNull List<String> placeholders
-    ) { return errorMessageService.getErrorMessage(errorTitle, errorDescription, placeholders); }
+    ) {
+        return errorMessageService.getErrorMessage(errorTitle, errorDescription, placeholders);
+    }
 
     public @NotNull Try<BotConfigMessage> getInternalErrorMessage(
             @NotNull String errorMessage
-    ) { return errorMessageService.getInternalErrorMessage(errorMessage); }
+    ) {
+        return errorMessageService.getInternalErrorMessage(errorMessage);
+    }
+
+    public @NotNull Option<BotConfigMessageEmbed.Field> getField(
+            @NotNull String label,
+            @NotNull List<@NotNull String> labelPlaceholders,
+            String@NotNull... placeholders
+    ) {
+        return botDefinitionService.getFieldDefinition(label, labelPlaceholders, placeholders);
+    }
+
+    public <T extends BotComponent> @NotNull Option<T> getComponent(
+            @NotNull String label,
+            @NotNull List<@NotNull String> labelPlaceholders,
+            String@NotNull... placeholders
+    ) {
+        return botDefinitionService.getComponentDefinition(label, labelPlaceholders, placeholders);
+    }
+
+    public @NotNull Try<BotConfigMessage> injectFields(
+            @NotNull Try<BotConfigMessage> message,
+            Option<Integer> index,
+            List<Option<BotConfigMessageEmbed.Field>> fields
+    ) {
+        return discordMessageService.injectFields(message, index, fields);
+    }
+
+    public @NotNull Try<BotConfigMessage> injectComponents(
+            @NotNull Try<BotConfigMessage> message,
+            List<Option<BotActionRowComponent>> rowComponents
+    ) {
+        return discordMessageService.injectComponents(message, rowComponents);
+    }
+
+    public @NotNull Option<BotActionRowComponent> createActionRow(
+            @NotNull List<Option<BotComponent>> components
+    ) {
+        return discordMessageService.createActionRow(components);
+    }
 
     public @NotNull Try<MessageCreateAction> answer(String message) {
         return Try.of(() -> discordMessageService.createMessage(message))
@@ -255,6 +308,10 @@ public class BotCommandContext {
 
     public @NotNull Option<BotConfigServerChannel> getServerChannel(@NotNull Long channelId) {
         return botLayoutService.getServerLayout().flatMap(server -> botLayoutService.getChannel(server, channelId));
+    }
+
+    public @NotNull Option<BotConfigServerChannel> getOriginalServerChannel() {
+        return getServerChannel(getOriginalChannel().getIdLong());
     }
 
     public @NotNull Option<BotConfigServerChannelCategory> getServerCategory(@NotNull Long categoryId) {

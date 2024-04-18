@@ -30,7 +30,6 @@ public class BotConfigComponent {
     @SuppressWarnings("unused")
     public enum Type {
         ACTION_ROW,
-        BUTTON,
-        SELECT_MENU
+        BUTTON
     }
 }
