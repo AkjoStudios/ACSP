@@ -3,6 +3,7 @@ package com.akjostudios.acsp.bot.discord.service;
 import com.akjostudios.acsp.bot.discord.common.component.BotComponent;
 import com.akjostudios.acsp.bot.discord.common.component.conversion.BotComponentConverters;
 import com.akjostudios.acsp.bot.discord.config.definition.*;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.tonivade.purefun.type.Option;
 import com.github.tonivade.purefun.type.Try;
 import lombok.RequiredArgsConstructor;
@@ -19,6 +20,7 @@ import java.util.Locale;
 public class BotDefinitionService {
     private final BotDefinitionProperties properties;
     private final BotStringsService botStringsService;
+    private final ObjectMapper objectMapper;
 
     public String getCommandPrefix() {
         return properties.getCommandPrefix();
@@ -179,7 +181,7 @@ public class BotDefinitionService {
                 .filter(wrapper -> wrapper.getLabel().equals(label))
                 .map(BotConfigComponent.Wrapper::getComponent).findFirst()
         ).flatMap(definition -> BotComponentConverters.forConfig(definition.getType())
-                .convert(botStringsService, definition, locale, labelPlaceholders, placeholders))
+                .convert(botStringsService, objectMapper, definition, locale, labelPlaceholders, placeholders))
                 .map(component -> (T) component);
     }
 

@@ -20,6 +20,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import org.jetbrains.annotations.NotNull;
+import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -31,6 +32,7 @@ import java.util.Map;
 @Slf4j
 @SuppressWarnings("java:S1192")
 public class CommandListener implements BotListener<MessageReceivedEvent> {
+    private final ApplicationContext applicationContext;
     private final DiscordMessageService discordMessageService;
     private final BotErrorMessageService errorMessageService;
     private final BotDefinitionService botDefinitionService;
@@ -65,6 +67,7 @@ public class CommandListener implements BotListener<MessageReceivedEvent> {
 
         BotCommandContext context = new BotCommandContext(commandName, subcommand, event);
         context.initialize(
+                applicationContext,
                 botDefinitionService,
                 discordMessageService,
                 errorMessageService,

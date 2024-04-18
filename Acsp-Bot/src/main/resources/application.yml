@@ -98,6 +98,22 @@ app:
                   text: "$footer.text.1$" # contains $1
                   timestamp: "$2"
                   icon-url: "https://cdn.discordapp.com/avatars/1220705902622150666/71317fc3ccdc919c1a47d078161fc4f0.webp?size=256"
+      components:
+        - label: "next-button"
+          component:
+            type: button
+            data:
+              style: "secondary"
+              interaction-id: "next-button"
+              label: "$button.next$"
+        - label: "previous-button"
+          component:
+              type: button
+              data:
+                style: "secondary"
+                interaction-id: "previous-button"
+                label: "$button.previous$"
+
       fields:
         - label: "argument-validation.error"
           field:

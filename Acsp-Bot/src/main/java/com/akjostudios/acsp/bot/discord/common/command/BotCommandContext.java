@@ -28,6 +28,7 @@ import net.dv8tion.jda.api.requests.RestAction;
 import net.dv8tion.jda.api.requests.restaction.MessageCreateAction;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.springframework.context.ApplicationContext;
 
 import java.util.Collection;
 import java.util.List;
@@ -49,6 +50,7 @@ public class BotCommandContext {
     @Setter
     private List<? extends BotCommandArgument<?>> arguments;
 
+    private ApplicationContext applicationContext;
     private BotDefinitionService botDefinitionService;
     private DiscordMessageService discordMessageService;
     private BotErrorMessageService errorMessageService;
@@ -60,6 +62,7 @@ public class BotCommandContext {
      * @apiNote Should not be called by the command implementation.
      */
     public void initialize(
+            ApplicationContext applicationContext,
             BotDefinitionService botDefinitionService,
             DiscordMessageService discordMessageService,
             BotErrorMessageService errorMessageService,
@@ -67,6 +70,7 @@ public class BotCommandContext {
             BotLayoutService botLayoutService,
             ObjectMapper objectMapper
     ) {
+        this.applicationContext = applicationContext;
         this.botDefinitionService = botDefinitionService;
         this.discordMessageService = discordMessageService;
         this.errorMessageService = errorMessageService;
@@ -320,5 +324,29 @@ public class BotCommandContext {
 
     public @NotNull ObjectMapper getMapper() {
         return objectMapper;
+    }
+
+    public <T> @NotNull T getBean(@NotNull Class<T> clazz) {
+        return applicationContext.getBean(clazz);
+    }
+
+    public <T> @NotNull T getBean(@NotNull String name, @NotNull Class<T> clazz) {
+        return applicationContext.getBean(name, clazz);
+    }
+
+    public @NotNull Option<String> getProperty(@NotNull String key) {
+        return Option.of(applicationContext.getEnvironment().getProperty(key));
+    }
+
+    public @NotNull String getProperty(@NotNull String key, @NotNull String defaultValue) {
+        return applicationContext.getEnvironment().getProperty(key, defaultValue);
+    }
+
+    public <T> @NotNull Option<T> getProperty(@NotNull String key, @NotNull Class<T> targetType) {
+        return Option.of(applicationContext.getEnvironment().getProperty(key, targetType));
+    }
+
+    public <T> @NotNull T getProperty(@NotNull String key, @NotNull Class<T> targetType, @NotNull T defaultValue) {
+        return applicationContext.getEnvironment().getProperty(key, targetType, defaultValue);
     }
 }

@@ -8,7 +8,9 @@ import org.springframework.stereotype.Component;
 @Component
 public class HelpCommand implements BotCommand {
     @Override
-    public void execute(@NotNull BotCommandContext ctx) { /* Unimplemented */ }
+    public void execute(@NotNull BotCommandContext ctx) {
+        ctx.answer("URL: " + ctx.getProperty("RAILWAY_PUBLIC_DOMAIN", "No public domain found!"));
+    }
 
     @Override
     public String getName() { return "help"; }

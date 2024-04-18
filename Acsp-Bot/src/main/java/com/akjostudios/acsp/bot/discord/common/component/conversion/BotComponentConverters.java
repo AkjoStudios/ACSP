@@ -10,6 +10,8 @@ import com.akjostudios.acsp.bot.discord.common.component.conversion.discord.BotD
 import com.akjostudios.acsp.bot.discord.common.component.conversion.discord.DiscordComponentType;
 import com.akjostudios.acsp.bot.discord.config.definition.BotConfigComponent;
 import com.akjostudios.acsp.bot.discord.service.BotStringsService;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.tonivade.purefun.type.Option;
 import com.github.tonivade.purefun.type.Try;
 import net.dv8tion.jda.api.entities.emoji.Emoji;
@@ -28,21 +30,21 @@ public final class BotComponentConverters {
 
     public static class BotActionRowComponentConverter implements BotConfigComponentConverter<BotActionRowComponent> {
         @Override
-        @SuppressWarnings("unchecked")
         public @NotNull Option<BotActionRowComponent> convert(
                 @NotNull BotStringsService stringsService,
+                @NotNull ObjectMapper objectMapper,
                 @NotNull BotConfigComponent component,
                 @NotNull Option<Locale> locale,
                 @NotNull List<@NotNull String> labelPlaceholders,
                 String@NotNull... placeholders
         ) {
-            return Try.of(() -> (
-                    (List<BotConfigComponent>) component.getData().getOrDefault("components", List.of())
-            ).stream()
-                    .map(c -> BotComponentConverters.forConfig(c.getType()).convert(
-                            stringsService, c, locale, labelPlaceholders, placeholders
-                    )).filter(Option::isPresent).map(Option::getOrElseThrow).toList()
-            ).toOption().map(BotActionRowComponent::new);
+            return Try.of(() -> objectMapper.convertValue(
+                    component.getData().getOrDefault("components", List.of()),
+                    new TypeReference<List<BotConfigComponent>>() {}
+            ).stream().map(c -> BotComponentConverters.forConfig(c.getType())
+                    .convert(stringsService, objectMapper, c, locale, labelPlaceholders, placeholders)
+            ).filter(Option::isPresent).map(Option::getOrElseThrow).toList())
+                    .toOption().map(BotActionRowComponent::new);
         }
     }
 
@@ -52,6 +54,7 @@ public final class BotComponentConverters {
         @Override
         public @NotNull Option<BotButtonComponent> convert(
                 @NotNull BotStringsService stringsService,
+                @NotNull ObjectMapper objectMapper,
                 @NotNull BotConfigComponent component,
                 @NotNull Option<Locale> locale,
                 @NotNull List<@NotNull String> labelPlaceholders,
@@ -65,7 +68,7 @@ public final class BotComponentConverters {
                         component.getData().getOrDefault("label", "Unnamed Button").toString(),
                         locale, labelPlaceholders, placeholders
                 ).getOrElse("Unnamed Button");
-                String emoji = component.getData().getOrDefault("emoji", "").toString();
+                String emoji = component.getData().get("emoji").toString();
                 boolean disabled = Boolean.parseBoolean(
                         component.getData().getOrDefault("disabled", "false").toString()
                 );

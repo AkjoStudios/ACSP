@@ -29,7 +29,21 @@ public class BotConfigComponent {
     @Getter
     @SuppressWarnings("unused")
     public enum Type {
+        /**
+         * components: List<BotConfigComponent> > []
+         */
         ACTION_ROW,
+        /**
+         * style: BotButtonComponent.Style > primary<br />
+         * label: String > "Unnamed Button"<br />
+         * emoji: String > null<br />
+         * disabled: Boolean > false<br />
+         * <br /><br />
+         * if style is link:<br />
+         * &nbsp;url: String > ""<br />
+         * else:<br />
+         * &nbsp;*interaction-id: String<br />
+         */
         BUTTON
     }
 }
