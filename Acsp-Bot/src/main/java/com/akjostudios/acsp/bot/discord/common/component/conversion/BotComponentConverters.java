@@ -76,7 +76,10 @@ public final class BotComponentConverters {
                 return style.equals(BotButtonComponent.Style.LINK) ?
                         new BotButtonComponent(
                                 label, emoji,
-                                component.getData().getOrDefault("url", "").toString(),
+                                stringsService.getString(
+                                        component.getData().getOrDefault("url", "").toString(),
+                                        locale, labelPlaceholders, placeholders
+                                ).getOrElse(""),
                                 disabled
                         ) : new BotButtonComponent(
                                 component.getData().get("interaction-id").toString(),

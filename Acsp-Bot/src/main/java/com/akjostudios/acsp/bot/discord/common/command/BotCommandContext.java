@@ -16,6 +16,7 @@ import com.github.tonivade.purefun.type.Try;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.Role;
@@ -36,8 +37,14 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
+@Slf4j
 @SuppressWarnings({"unused", "UnusedReturnValue", "java:S4968"})
 public class BotCommandContext {
+    private static final String GOTO_PRIVATE_MESSAGE_COMPONENT = "goto-private-message";
+    private static final String PRIVATE_MESSAGE_ERROR_TITLE = "$error.private_message.title$";
+    private static final String PRIVATE_MESSAGE_ERROR_DESCRIPTION = "$error.private_message.description$";
+    private static final String MESSAGE_SEND_ERROR = "Failed to send message!";
+
     @Getter private final String name;
 
     private final Option<String> subcommand;
@@ -160,10 +167,24 @@ public class BotCommandContext {
 
     public @NotNull Option<BotConfigMessageEmbed.Field> getField(
             @NotNull String label,
+            String@NotNull... placeholders
+    ) {
+        return botDefinitionService.getFieldDefinition(label, placeholders);
+    }
+
+    public @NotNull Option<BotConfigMessageEmbed.Field> getField(
+            @NotNull String label,
             @NotNull List<@NotNull String> labelPlaceholders,
             String@NotNull... placeholders
     ) {
         return botDefinitionService.getFieldDefinition(label, labelPlaceholders, placeholders);
+    }
+
+    public <T extends BotComponent> @NotNull Option<T> getComponent(
+            @NotNull String label,
+            String@NotNull... placeholders
+    ) {
+        return botDefinitionService.getComponentDefinition(label, placeholders);
     }
 
     public <T extends BotComponent> @NotNull Option<T> getComponent(
@@ -198,13 +219,25 @@ public class BotCommandContext {
     public @NotNull Try<MessageCreateAction> answer(String message) {
         return Try.of(() -> discordMessageService.createMessage(message))
                 .map(event.getChannel()::sendMessage)
-                .onSuccess(RestAction::queue);
+                .onSuccess(action -> action.setMessageReference(event.getMessageId()).queue())
+                .onFailure(err -> log.error(MESSAGE_SEND_ERROR, err));
+    }
+
+    public @NotNull Try<MessageCreateAction> answer(
+            String message,
+            @NotNull List<Option<BotActionRowComponent>> components
+    ) {
+        return Try.of(() -> discordMessageService.createMessage(message, components))
+                .map(event.getChannel()::sendMessage)
+                .onSuccess(action -> action.setMessageReference(event.getMessageId()).queue())
+                .onFailure(err -> log.error(MESSAGE_SEND_ERROR, err));
     }
 
     public @NotNull Try<MessageCreateAction> answer(@NotNull Try<BotConfigMessage> message) {
         return message.map(discordMessageService::createMessage)
                 .map(event.getChannel()::sendMessage)
-                .onSuccess(RestAction::queue);
+                .onSuccess(action -> action.setMessageReference(event.getMessageId()).queue())
+                .onFailure(err -> log.error(MESSAGE_SEND_ERROR, err));
     }
 
     public @NotNull Try<MessageCreateAction> sendMessage(String message, @NotNull BotConfigServerChannel channel) {
@@ -212,20 +245,45 @@ public class BotCommandContext {
                 textChannel -> Try.of(
                         () -> discordMessageService.createMessage(message)
                 ).map(textChannel::sendMessage)
-        ).onSuccess(RestAction::queue);
+        ).onSuccess(RestAction::queue).onFailure(err -> log.error(MESSAGE_SEND_ERROR, err));
+    }
+
+    public @NotNull Try<MessageCreateAction> sendMessage(
+            String message,
+            @NotNull BotConfigServerChannel channel,
+            @NotNull List<Option<BotActionRowComponent>> components
+    ) {
+        return botPrimitiveService.getChannel(event, channel).toTry().flatMap(
+                textChannel -> Try.of(
+                        () -> discordMessageService.createMessage(message, components)
+                ).map(textChannel::sendMessage)
+        ).onSuccess(RestAction::queue).onFailure(err -> log.error(MESSAGE_SEND_ERROR, err));
     }
 
     public @NotNull Try<MessageCreateAction> sendMessage(@NotNull Try<BotConfigMessage> message, @NotNull BotConfigServerChannel channel) {
         return botPrimitiveService.getChannel(event, channel).toTry().flatMap(
                 textChannel -> message.map(discordMessageService::createMessage).map(textChannel::sendMessage)
-        ).onSuccess(RestAction::queue);
+        ).onSuccess(RestAction::queue).onFailure(err -> log.error(MESSAGE_SEND_ERROR, err));
     }
 
-    public @NotNull Try<MessageCreateAction> sendPrivateMessage(@NotNull String message) {
+    public @NotNull Try<MessageCreateAction> sendPrivateMessage(String message) {
         return event.getAuthor().openPrivateChannel().map(
                 privateChannel -> Try.of(() -> discordMessageService.createMessage(message))
                         .map(privateChannel::sendMessage)
                         .onSuccess(RestAction::queue)
+                        .onFailure(err -> log.error(MESSAGE_SEND_ERROR, err))
+        ).complete();
+    }
+
+    public @NotNull Try<MessageCreateAction> sendPrivateMessage(
+            String message,
+            @NotNull List<Option<BotActionRowComponent>> components
+    ) {
+        return event.getAuthor().openPrivateChannel().map(
+                privateChannel -> Try.of(() -> discordMessageService.createMessage(message, components))
+                        .map(privateChannel::sendMessage)
+                        .onSuccess(RestAction::queue)
+                        .onFailure(err -> log.error(MESSAGE_SEND_ERROR, err))
         ).complete();
     }
 
@@ -234,6 +292,25 @@ public class BotCommandContext {
                 privateChannel -> message.map(discordMessageService::createMessage)
                         .map(privateChannel::sendMessage)
                         .onSuccess(RestAction::queue)
+                        .onFailure(err -> log.error(MESSAGE_SEND_ERROR, err))
+        ).complete();
+    }
+
+    public @NotNull Try<MessageCreateAction> answerPrivately(String message) {
+        return event.getAuthor().openPrivateChannel().map(
+                privateChannel -> Try.of(() -> discordMessageService.createMessage(message))
+                        .map(privateChannel::sendMessage)
+                        .flatMap(action -> action
+                                .map(Message::getJumpUrl)
+                                .map(jumpUrl -> answer(
+                                        "",
+                                        List.of(createActionRow(List.of(
+                                                getComponent(GOTO_PRIVATE_MESSAGE_COMPONENT, jumpUrl))
+                                        ))
+                                )).complete()
+                        )
+        ).onErrorMap(err -> answer(
+                getErrorMessage(PRIVATE_MESSAGE_ERROR_TITLE, PRIVATE_MESSAGE_ERROR_DESCRIPTION))
         ).complete();
     }
 

@@ -31,6 +31,20 @@ public class DiscordMessageService {
         return new MessageCreateBuilder().setContent(message).build();
     }
 
+    public @NotNull MessageCreateData createMessage(
+            String message,
+            @NotNull List<Option<BotActionRowComponent>> rowComponents
+    ) {
+        MessageCreateBuilder builder = new MessageCreateBuilder();
+        builder.setContent(message);
+        builder.setComponents(rowComponents.stream()
+                .filter(Option::isPresent)
+                .map(Option::getOrElseThrow)
+                .map(this::toActionRow)
+                .toList());
+        return builder.build();
+    }
+
     public @NotNull MessageCreateData createMessage(BotConfigMessage message) {
         MessageCreateBuilder builder = new MessageCreateBuilder();
 
@@ -40,7 +54,9 @@ public class DiscordMessageService {
 
         builder.setContent(message.getContent());
         builder.setEmbeds(message.getEmbeds().stream().map(this::toMessageEmbed).toList());
-        builder.setComponents(message.getComponents().stream().map(this::toActionRow).toList());
+        if (message.getComponents() != null) {
+            builder.setComponents(message.getComponents().stream().map(this::toActionRow).toList());
+        }
 
         return builder.build();
     }
