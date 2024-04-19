@@ -24,12 +24,17 @@ spring:
   jpa:
     open-in-view: false
     database-platform: org.hibernate.dialect.PostgreSQLDialect
-  output:
-    ansi:
-      enabled: always
   sql:
     init:
       continue-on-error: true
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: "${ACSP_SUPERTOKENS_URL}/appid-public/.well-known/jwks.json"
+  output:
+    ansi:
+      enabled: always
 management:
   endpoint:
     health:
