@@ -7,6 +7,8 @@ app:
       username: "prometheus"
       password: ${PROMETHEUS_PASSWORD}
   services:
+    auth-api-key: ${AUTH_API_KEY}
+    supertokens-url: ${ACSP_SUPERTOKENS_URL}
     backend-url: ${ACSP_BACKEND_URL}
   config:
     environment: ${BOT_ENVIRONMENT}
@@ -150,6 +152,11 @@ app:
 spring:
   application:
     name: ACSP Bot
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: "${ACSP_SUPERTOKENS_URL}/appid-public/.well-known/jwks.json"
   output:
     ansi:
       enabled: always

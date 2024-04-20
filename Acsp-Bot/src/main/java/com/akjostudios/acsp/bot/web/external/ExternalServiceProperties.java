@@ -8,5 +8,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @Getter
 @Setter
 public class ExternalServiceProperties {
+    private String authApiKey;
+    private String supertokensUrl;
     private String backendUrl;
 }

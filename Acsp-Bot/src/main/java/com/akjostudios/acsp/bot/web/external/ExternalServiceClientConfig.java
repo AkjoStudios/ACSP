@@ -25,6 +25,15 @@ public class ExternalServiceClientConfig {
         );
     }
 
+    @Bean("client.service.supertokens")
+    public @NotNull WebClient supertokensClient() {
+        return WebClient.builder()
+                .baseUrl(externalServiceProperties.getSupertokensUrl())
+                .defaultHeader("api-key", externalServiceProperties.getAuthApiKey())
+                .clientConnector(httpConnector())
+                .build();
+    }
+
     @Bean("client.service.backend")
     public @NotNull WebClient backendClient() {
         return WebClient.builder()

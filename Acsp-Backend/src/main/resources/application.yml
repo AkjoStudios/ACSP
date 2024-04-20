@@ -7,8 +7,8 @@ app:
       username: "prometheus"
       password: ${PROMETHEUS_PASSWORD}
   services:
-    supertokens-url: ${ACSP_SUPERTOKENS_URL}
     auth-api-key: ${AUTH_API_KEY}
+    supertokens-url: ${ACSP_SUPERTOKENS_URL}
     bot-url: ${ACSP_BOT_URL}
 spring:
   application:
