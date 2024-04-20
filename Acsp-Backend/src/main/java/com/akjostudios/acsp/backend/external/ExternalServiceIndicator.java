@@ -10,7 +10,6 @@ import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.ReactiveHealthIndicator;
 import org.springframework.boot.actuate.health.Status;
 import org.springframework.stereotype.Component;
-import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -31,14 +30,14 @@ public class ExternalServiceIndicator implements ReactiveHealthIndicator {
     private static final String SUPERTOKENS_SERVICE = "supertokens";
     private static final String BOT_SERVICE = "bot";
 
-    private final WebClient superTokensClient;
-    private final WebClient botClient;
+    private final ExternalServiceClient superTokensClient;
+    private final ExternalServiceClient botClient;
 
     @Autowired
     @Contract(pure = true)
     public ExternalServiceIndicator(
-            @Qualifier("client.service.supertokens") WebClient superTokensClient,
-            @Qualifier("client.service.bot") WebClient botClient
+            @Qualifier("client.service.supertokens") ExternalServiceClient superTokensClient,
+            @Qualifier("client.service.bot") ExternalServiceClient botClient
     ) {
         this.superTokensClient = superTokensClient;
         this.botClient = botClient;
@@ -70,7 +69,7 @@ public class ExternalServiceIndicator implements ReactiveHealthIndicator {
     }
 
     private @NotNull Mono<Health> checkSupertokensService() {
-        return superTokensClient.get().uri("/apiversion")
+        return superTokensClient.get("/apiversion", request -> request
                 .exchangeToMono(clientResponse -> {
                     Mono<Health.Builder> healthBuilderMono = Mono.just(
                             clientResponse.statusCode().is2xxSuccessful() ? Health.up() : Health.down()
@@ -98,11 +97,11 @@ public class ExternalServiceIndicator implements ReactiveHealthIndicator {
                         .withDetail(SERVICE_DETAIL, SUPERTOKENS_SERVICE)
                         .withDetail(MESSAGE_DETAIL, "Supertokens service connection timed out!")
                         .build()
-                ));
+                )));
     }
 
     private @NotNull Mono<Health> checkBotService() {
-        return botClient.get().uri("/actuator/health/liveness")
+        return botClient.get("/actuator/health/liveness", request -> request
                 .exchangeToMono(clientResponse -> Mono.just(
                         clientResponse.statusCode().is2xxSuccessful() ? Health.up() : Health.down()
                 ).map(builder -> builder
@@ -118,6 +117,6 @@ public class ExternalServiceIndicator implements ReactiveHealthIndicator {
                         .withDetail(SERVICE_DETAIL, BOT_SERVICE)
                         .withDetail(MESSAGE_DETAIL, "Bot service connection timed out!")
                         .build()
-                ));
+                )));
     }
 }

@@ -8,6 +8,7 @@ app:
       password: ${PROMETHEUS_PASSWORD}
   services:
     auth-api-key: ${AUTH_API_KEY}
+    token-refresh-interval: 300000
     supertokens-url: ${ACSP_SUPERTOKENS_URL}
     bot-url: ${ACSP_BOT_URL}
 spring:
