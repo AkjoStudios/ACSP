@@ -20,12 +20,14 @@ import org.springframework.security.authentication.UserDetailsRepositoryReactive
 import org.springframework.security.config.annotation.method.configuration.EnableReactiveMethodSecurity;
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.MapReactiveUserDetailsService;
 import org.springframework.security.core.userdetails.ReactiveUserDetailsService;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.jwt.ReactiveJwtDecoder;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.security.oauth2.server.resource.authentication.JwtReactiveAuthenticationManager;
 import org.springframework.security.web.server.DelegatingServerAuthenticationEntryPoint;
 import org.springframework.security.web.server.SecurityWebFilterChain;
@@ -148,8 +150,23 @@ public class SecurityConfig {
 
     @Bean("jwtAuthenticationManager")
     @Primary
-    public @NotNull ReactiveAuthenticationManager jwtAuthenticationManager(ReactiveJwtDecoder jwtDecoder) {
-        return new JwtReactiveAuthenticationManager(jwtDecoder);
+    public @NotNull ReactiveAuthenticationManager jwtAuthenticationManager(@NotNull ReactiveJwtDecoder jwtDecoder) {
+        JwtReactiveAuthenticationManager authManager = new JwtReactiveAuthenticationManager(jwtDecoder);
+        authManager.setJwtAuthenticationConverter(jwt -> {
+            if (jwt.hasClaim("service")) {
+                return Mono.just(new JwtAuthenticationToken(jwt, List.of(
+                        new SimpleGrantedAuthority("SERVICE_" + jwt.getClaimAsString("service").toUpperCase())
+                )));
+            }
+            if (jwt.hasClaim("roles")) {
+                return Mono.just(new JwtAuthenticationToken(jwt, jwt.getClaimAsStringList("roles").stream()
+                        .map(role -> new SimpleGrantedAuthority("ROLE_" + role.toUpperCase()))
+                        .toList()
+                ));
+            }
+            return Mono.just(new JwtAuthenticationToken(jwt));
+        });
+        return authManager;
     }
 
     @Bean("basicAuthenticationManager")
