@@ -30,6 +30,7 @@ spring:
       continue-on-error: true
   liquibase:
     change-log: db_changelog.yaml
+    rollback-file: db/rollback.sql
   security:
     oauth2:
       resourceserver:

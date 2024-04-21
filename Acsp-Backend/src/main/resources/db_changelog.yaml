@@ -1,1 +1,220 @@
-databaseChangeLog: []
+databaseChangeLog:
+  - changeSet:
+      id: "create-command-executions-table"
+      author: "AkjoStudios"
+      changes:
+        - createTable:
+            tableName: "command_executions"
+            columns:
+              - column:
+                  name: "execution_id"
+                  type: "bigint"
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: "message_id"
+                  type: "bigint"
+                  constraints:
+                    nullable: false
+              - column:
+                  name: "channel_id"
+                  type: "bigint"
+                  constraints:
+                    nullable: false
+              - column:
+                  name: "command_name"
+                  type: "text"
+                  constraints:
+                    nullable: false
+              - column:
+                  name: "subcommand_name"
+                  type: "text"
+                  constraints:
+                    nullable: true
+              - column:
+                  name: "finished_at"
+                  type: "timestamp"
+                  constraints:
+                    nullable: false
+      rollback:
+        - dropTable:
+            tableName: "command_executions"
+  - changeSet:
+      id: "create-command-responses-table"
+      author: "AkjoStudios"
+      changes:
+        - createTable:
+            tableName: "command_responses"
+            columns:
+              - column:
+                  name: "response_id"
+                  type: "bigint"
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: "execution_id"
+                  type: "bigint"
+                  constraints:
+                    nullable: false
+                    foreignKeyName: "fk_command_executions"
+                    references: "command_executions(execution_id)"
+              - column:
+                  name: "message_id"
+                  type: "bigint"
+                  constraints:
+                    nullable: false
+              - column:
+                  name: "channel_id"
+                  type: "bigint"
+                  constraints:
+                    nullable: false
+              - column:
+                  name: "finished_at"
+                  type: "timestamp"
+                  constraints:
+                    nullable: false
+      rollback:
+        - dropTable:
+            tableName: "command_responses"
+  - changeSet:
+      id: "create-command-interactions-table"
+      author: "AkjoStudios"
+      changes:
+        - createTable:
+            tableName: "command_interactions"
+            columns:
+              - column:
+                  name: "interaction_id"
+                  type: "bigint"
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: "response_id"
+                  type: "bigint"
+                  constraints:
+                    nullable: false
+                    foreignKeyName: "fk_command_responses"
+                    references: "command_responses(response_id)"
+              - column:
+                  name: "interaction_name"
+                  type: "text"
+                  constraints:
+                    nullable: false
+              - column:
+                  name: "finished"
+                  type: "boolean"
+                  constraints:
+                    nullable: false
+              - column:
+                  name: "finished_at"
+                  type: "timestamp"
+                  constraints:
+                    nullable: true
+      rollback:
+        - dropTable:
+            tableName: "command_interactions"
+  - changeSet:
+      id: "create-batch-executions-table"
+      author: "AkjoStudios"
+      changes:
+        - createTable:
+            tableName: "batch_executions"
+            columns:
+              - column:
+                  name: "batch_id"
+                  type: "bigint"
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: "finished"
+                  type: "boolean"
+                  constraints:
+                    nullable: false
+              - column:
+                  name: "finished_at"
+                  type: "timestamp"
+                  constraints:
+                    nullable: true
+      rollback:
+        - dropTable:
+            tableName: "batch_executions"
+  - changeSet:
+      id: "create-batch-responses-table"
+      author: "AkjoStudios"
+      changes:
+        - createTable:
+            tableName: "batch_responses"
+            columns:
+              - column:
+                  name: "response_id"
+                  type: "bigint"
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: "batch_id"
+                  type: "bigint"
+                  constraints:
+                    nullable: false
+                    foreignKeyName: "fk_batch_executions"
+                    references: "batch_executions(batch_id)"
+              - column:
+                  name: "message_id"
+                  type: "bigint"
+                  constraints:
+                    nullable: false
+              - column:
+                  name: "channel_id"
+                  type: "bigint"
+                  constraints:
+                    nullable: false
+              - column:
+                  name: "finished_at"
+                  type: "timestamp"
+                  constraints:
+                    nullable: false
+      rollback:
+        - dropTable:
+            tableName: "batch_responses"
+  - changeSet:
+      id: "create-batch-interactions-table"
+      author: "AkjoStudios"
+      changes:
+        - createTable:
+            tableName: "batch_interactions"
+            columns:
+              - column:
+                  name: "interaction_id"
+                  type: "bigint"
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: "response_id"
+                  type: "bigint"
+                  constraints:
+                    nullable: false
+                    foreignKeyName: "fk_batch_responses"
+                    references: "batch_responses(response_id)"
+              - column:
+                  name: "interaction_name"
+                  type: "text"
+                  constraints:
+                    nullable: false
+              - column:
+                  name: "finished"
+                  type: "boolean"
+                  constraints:
+                    nullable: false
+              - column:
+                  name: "finished_at"
+                  type: "timestamp"
+                  constraints:
+                    nullable: true
+      rollback:
+        - dropTable:
+            tableName: "batch_interactions"
