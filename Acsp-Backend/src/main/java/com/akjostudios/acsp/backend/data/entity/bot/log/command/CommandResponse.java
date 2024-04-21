@@ -1,4 +1,4 @@
-package com.akjostudios.acsp.backend.data.entity;
+package com.akjostudios.acsp.backend.data.entity.bot.log.command;
 
 import jakarta.persistence.*;
 import lombok.Data;

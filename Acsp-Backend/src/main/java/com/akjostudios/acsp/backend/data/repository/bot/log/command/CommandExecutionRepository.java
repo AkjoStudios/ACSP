@@ -1,6 +1,6 @@
-package com.akjostudios.acsp.backend.data.repository;
+package com.akjostudios.acsp.backend.data.repository.bot.log.command;
 
-import com.akjostudios.acsp.backend.data.entity.CommandExecution;
+import com.akjostudios.acsp.backend.data.entity.bot.log.command.CommandExecution;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
