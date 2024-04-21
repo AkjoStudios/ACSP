@@ -13,7 +13,7 @@ public class BatchInteraction {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long interactionId;
 
-    @Column(name = "created_at", nullable = false)
+    @Column(name = "created_at", nullable = false, updatable = false, insertable = false)
     private Instant createdAt;
 
     @ManyToOne

@@ -26,6 +26,6 @@ public class CommandInteraction {
     @Column(name = "finished_at")
     private Instant finishedAt;
 
-    @Column(name = "created_at", nullable = false)
+    @Column(name = "created_at", nullable = false, updatable = false, insertable = false)
     private Instant createdAt;
 }
