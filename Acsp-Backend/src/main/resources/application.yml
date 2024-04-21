@@ -28,6 +28,8 @@ spring:
   sql:
     init:
       continue-on-error: true
+  liquibase:
+    change-log: db_changelog.yaml
   security:
     oauth2:
       resourceserver:
