@@ -218,3 +218,81 @@ databaseChangeLog:
       rollback:
         - dropTable:
             tableName: "batch_interactions"
+  - changeSet:
+      id: "add-sequence-to-command-executions"
+      author: "AkjoStudios"
+      changes:
+        - addAutoIncrement:
+            tableName: "command_executions"
+            columnName: "execution_id"
+            columnDataType: "bigint"
+            incrementBy: 1
+            startWith: 1
+      rollback:
+        - dropSequence:
+            sequenceName: "command_executions_execution_id_seq"
+  - changeSet:
+      id: "add-sequence-to-command-responses"
+      author: "AkjoStudios"
+      changes:
+        - addAutoIncrement:
+            tableName: "command_responses"
+            columnName: "response_id"
+            columnDataType: "bigint"
+            incrementBy: 1
+            startWith: 1
+      rollback:
+        - dropSequence:
+            sequenceName: "command_responses_response_id_seq"
+  - changeSet:
+      id: "add-sequence-to-command-interactions"
+      author: "AkjoStudios"
+      changes:
+        - addAutoIncrement:
+            tableName: "command_interactions"
+            columnName: "interaction_id"
+            columnDataType: "bigint"
+            incrementBy: 1
+            startWith: 1
+      rollback:
+        - dropSequence:
+            sequenceName: "command_interactions_interaction_id_seq"
+  - changeSet:
+      id: "add-sequence-to-batch-executions"
+      author: "AkjoStudios"
+      changes:
+        - addAutoIncrement:
+            tableName: "batch_executions"
+            columnName: "batch_id"
+            columnDataType: "bigint"
+            incrementBy: 1
+            startWith: 1
+      rollback:
+        - dropSequence:
+            sequenceName: "batch_executions_batch_id_seq"
+  - changeSet:
+      id: "add-sequence-to-batch-responses"
+      author: "AkjoStudios"
+      changes:
+        - addAutoIncrement:
+            tableName: "batch_responses"
+            columnName: "response_id"
+            columnDataType: "bigint"
+            incrementBy: 1
+            startWith: 1
+      rollback:
+        - dropSequence:
+            sequenceName: "batch_responses_response_id_seq"
+  - changeSet:
+      id: "add-sequence-to-batch-interactions"
+      author: "AkjoStudios"
+      changes:
+        - addAutoIncrement:
+            tableName: "batch_interactions"
+            columnName: "interaction_id"
+            columnDataType: "bigint"
+            incrementBy: 1
+            startWith: 1
+      rollback:
+        - dropSequence:
+            sequenceName: "batch_interactions_interaction_id_seq"
