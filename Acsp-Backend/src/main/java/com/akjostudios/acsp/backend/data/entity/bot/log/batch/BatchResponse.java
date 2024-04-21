@@ -27,6 +27,9 @@ public class BatchResponse {
     @Column(name = "finished_at", nullable = false)
     private Instant finishedAt;
 
+    @Column(name = "created_at", nullable = false)
+    private Instant createdAt;
+
     @OneToMany(mappedBy = "response", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     private List<BatchInteraction> interactions;
 }

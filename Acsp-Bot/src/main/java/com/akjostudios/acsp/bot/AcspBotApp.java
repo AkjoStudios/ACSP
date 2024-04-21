@@ -11,6 +11,8 @@ import org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfigurat
 import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.scheduling.annotation.EnableScheduling;
+import org.springframework.web.reactive.config.EnableWebFlux;
 
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
@@ -20,6 +22,8 @@ import java.time.format.DateTimeFormatter;
         HibernateJpaAutoConfiguration.class
 })
 @ConfigurationPropertiesScan
+@EnableWebFlux
+@EnableScheduling
 @RequiredArgsConstructor
 @Slf4j
 @SuppressWarnings("unused")

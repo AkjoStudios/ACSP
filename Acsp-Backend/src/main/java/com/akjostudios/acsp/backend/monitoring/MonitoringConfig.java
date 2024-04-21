@@ -6,13 +6,11 @@ import org.springframework.context.ApplicationListener;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.event.ContextRefreshedEvent;
-import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 
 @Configuration
 @RequiredArgsConstructor
 @Slf4j
-@EnableScheduling
 public class MonitoringConfig {
     private final HealthMetricExposer healthMetricExposer;
 

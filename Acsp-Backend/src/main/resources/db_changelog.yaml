@@ -296,3 +296,105 @@ databaseChangeLog:
       rollback:
         - dropSequence:
             sequenceName: "batch_interactions_interaction_id_seq"
+  - changeSet:
+      id: "add-created-at-to-command-executions"
+      author: "AkjoStudios"
+      changes:
+        - addColumn:
+            tableName: "command_executions"
+            columns:
+              - column:
+                  name: "created_at"
+                  type: "timestamp"
+                  defaultValueComputed: "now()"
+                  constraints:
+                    nullable: false
+      rollback:
+        - dropColumn:
+            tableName: "command_executions"
+            columnName: "created_at"
+  - changeSet:
+      id: "add-created-at-to-command-responses"
+      author: "AkjoStudios"
+      changes:
+        - addColumn:
+            tableName: "command_responses"
+            columns:
+              - column:
+                  name: "created_at"
+                  type: "timestamp"
+                  defaultValueComputed: "now()"
+                  constraints:
+                    nullable: false
+      rollback:
+        - dropColumn:
+            tableName: "command_responses"
+            columnName: "created_at"
+  - changeSet:
+      id: "add-created-at-to-command-interactions"
+      author: "AkjoStudios"
+      changes:
+        - addColumn:
+            tableName: "command_interactions"
+            columns:
+              - column:
+                  name: "created_at"
+                  type: "timestamp"
+                  defaultValueComputed: "now()"
+                  constraints:
+                    nullable: false
+      rollback:
+        - dropColumn:
+            tableName: "command_interactions"
+            columnName: "created_at"
+  - changeSet:
+      id: "add-created-at-to-batch-executions"
+      author: "AkjoStudios"
+      changes:
+        - addColumn:
+            tableName: "batch_executions"
+            columns:
+              - column:
+                  name: "created_at"
+                  type: "timestamp"
+                  defaultValueComputed: "now()"
+                  constraints:
+                    nullable: false
+      rollback:
+        - dropColumn:
+            tableName: "batch_executions"
+            columnName: "created_at"
+  - changeSet:
+      id: "add-created-at-to-batch-responses"
+      author: "AkjoStudios"
+      changes:
+        - addColumn:
+            tableName: "batch_responses"
+            columns:
+              - column:
+                  name: "created_at"
+                  type: "timestamp"
+                  defaultValueComputed: "now()"
+                  constraints:
+                    nullable: false
+      rollback:
+        - dropColumn:
+            tableName: "batch_responses"
+            columnName: "created_at"
+  - changeSet:
+      id: "add-created-at-to-batch-interactions"
+      author: "AkjoStudios"
+      changes:
+        - addColumn:
+            tableName: "batch_interactions"
+            columns:
+              - column:
+                  name: "created_at"
+                  type: "timestamp"
+                  defaultValueComputed: "now()"
+                  constraints:
+                    nullable: false
+      rollback:
+        - dropColumn:
+            tableName: "batch_interactions"
+            columnName: "created_at"

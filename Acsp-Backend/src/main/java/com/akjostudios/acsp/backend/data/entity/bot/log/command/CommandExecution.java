@@ -29,6 +29,9 @@ public class CommandExecution {
     @Column(name = "finished_at", nullable = false)
     private Instant finishedAt;
 
+    @Column(name = "created_at", nullable = false)
+    private Instant createdAt;
+
     @OneToMany(mappedBy = "execution", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     private List<CommandResponse> responses;
 }
