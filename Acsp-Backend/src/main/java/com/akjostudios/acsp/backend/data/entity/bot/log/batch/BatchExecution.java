@@ -1,7 +1,9 @@
 package com.akjostudios.acsp.backend.data.entity.bot.log.batch;
 
+import com.akjostudios.acsp.common.model.bot.log.batch.BatchExecutionDao;
 import jakarta.persistence.*;
 import lombok.Data;
+import org.jetbrains.annotations.NotNull;
 
 import java.time.Instant;
 import java.util.List;
@@ -25,4 +27,14 @@ public class BatchExecution {
 
     @OneToMany(mappedBy = "execution", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     private List<BatchResponse> responses;
+
+    public @NotNull BatchExecutionDao toDao() {
+        return new BatchExecutionDao(
+                batchId,
+                finished,
+                finishedAt,
+                createdAt,
+                responses.stream().map(BatchResponse::toDao).toList()
+        );
+    }
 }

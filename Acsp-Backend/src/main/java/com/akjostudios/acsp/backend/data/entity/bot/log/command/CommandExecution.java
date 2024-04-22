@@ -1,7 +1,9 @@
 package com.akjostudios.acsp.backend.data.entity.bot.log.command;
 
+import com.akjostudios.acsp.common.model.bot.log.command.CommandExecutionDao;
 import jakarta.persistence.*;
 import lombok.Data;
+import org.jetbrains.annotations.NotNull;
 
 import java.time.Instant;
 import java.util.List;
@@ -34,4 +36,17 @@ public class CommandExecution {
 
     @OneToMany(mappedBy = "execution", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     private List<CommandResponse> responses;
+
+    public @NotNull CommandExecutionDao toDao() {
+        return new CommandExecutionDao(
+                executionId,
+                messageId,
+                channelId,
+                commandName,
+                subcommandName,
+                finishedAt,
+                createdAt,
+                responses.stream().map(CommandResponse::toDao).toList()
+        );
+    }
 }

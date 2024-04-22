@@ -1,7 +1,9 @@
 package com.akjostudios.acsp.backend.data.entity.bot.log.command;
 
+import com.akjostudios.acsp.common.model.bot.log.command.CommandInteractionDao;
 import jakarta.persistence.*;
 import lombok.Data;
+import org.jetbrains.annotations.NotNull;
 
 import java.time.Instant;
 
@@ -28,4 +30,14 @@ public class CommandInteraction {
 
     @Column(name = "created_at", nullable = false, updatable = false, insertable = false)
     private Instant createdAt;
+
+    public @NotNull CommandInteractionDao toDao() {
+        return new CommandInteractionDao(
+                interactionId,
+                interactionName,
+                finished,
+                finishedAt,
+                createdAt
+        );
+    }
 }
