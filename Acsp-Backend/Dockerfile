@@ -1,6 +1,6 @@
 FROM maven:3.9.6-eclipse-temurin-21-alpine AS build
-COPY src /home/app/src
-COPY pom.xml /home/app
+COPY . /home/app
+WORKDIR /home/app
 RUN mvn -B -DskipTests -f /home/app/pom.xml clean package -pl Acsp-Backend -am
 
 FROM eclipse-temurin:21-alpine AS runtime
