@@ -93,3 +93,16 @@ logging:
     org.springframework.boot.web.servlet.context: ERROR
     org.springframework.boot.devtools: ERROR
     org.apache.catalina: ERROR
+    org.hibernate: ERROR
+    com.zaxxer.hikari: WARN
+    org.springframework.orm: WARN
+    liquibase.lockservice: WARN
+    liquibase.command: WARN
+    liquibase.changelog: WARN
+springdoc:
+  swagger-ui:
+    enabled: false
+    path: /swagger
+  api-docs:
+    enabled: false
+    path: /api-docs

@@ -28,6 +28,7 @@
         <logback.version>1.5.3</logback.version>
         <lombok.version>1.18.30</lombok.version>
         <micrometer.prometheus.version>1.12.4</micrometer.prometheus.version>
+        <openapi.version>2.5.0</openapi.version>
         <postgres.version>42.7.3</postgres.version>
         <purefun.version>4.2</purefun.version>
         <spring-boot.version>3.2.3</spring-boot.version>
@@ -127,6 +128,11 @@
             <groupId>org.liquibase</groupId>
             <artifactId>liquibase-core</artifactId>
             <version>${liquibase.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springdoc</groupId>
+            <artifactId>springdoc-openapi-starter-webflux-ui</artifactId>
+            <version>${openapi.version}</version>
         </dependency>
 
         <!-- Testing -->
