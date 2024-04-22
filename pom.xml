@@ -12,6 +12,7 @@
     <modules>
         <module>Acsp-Bot</module>
         <module>Acsp-Backend</module>
+        <module>Acsp-Common</module>
     </modules>
 
     <properties>

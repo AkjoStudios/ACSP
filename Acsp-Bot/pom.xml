@@ -11,24 +11,27 @@
     </parent>
 
     <artifactId>Acsp-Bot</artifactId>
-    <version>${parent.version}</version>
+    <version>0.1.0</version>
     <packaging>jar</packaging>
 
     <properties>
         <main.class>com.akjostudios.acsp.bot.AcspBotApp</main.class>
 
-        <commons.lang.version>3.14.0</commons.lang.version>
-        <jackson.version>2.17.0</jackson.version>
         <jda.version>5.0.0-beta.21</jda.version>
         <jetbrains.annotations.version>24.1.0</jetbrains.annotations.version>
         <logback.version>1.5.3</logback.version>
-        <lombok.version>1.18.30</lombok.version>
         <micrometer.prometheus.version>1.12.4</micrometer.prometheus.version>
-        <purefun.version>4.2</purefun.version>
         <spring-boot.version>3.2.3</spring-boot.version>
     </properties>
 
     <dependencies>
+        <!-- Acsp Common -->
+        <dependency>
+            <groupId>com.akjostudios.acsp</groupId>
+            <artifactId>Acsp-Common</artifactId>
+            <version>0.1.0</version>
+        </dependency>
+
         <!-- Spring Boot -->
         <!--suppress VulnerableLibrariesLocal -->
         <dependency>
@@ -92,44 +95,7 @@
             </exclusions>
         </dependency>
 
-        <!-- Jackson -->
-        <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-databind</artifactId>
-            <version>${jackson.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.fasterxml.jackson.datatype</groupId>
-            <artifactId>jackson-datatype-jsr310</artifactId>
-            <version>${jackson.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.fasterxml.jackson.datatype</groupId>
-            <artifactId>jackson-datatype-jdk8</artifactId>
-            <version>${jackson.version}</version>
-        </dependency>
-
         <!-- Others -->
-        <dependency>
-            <groupId>org.projectlombok</groupId>
-            <artifactId>lombok</artifactId>
-            <version>${lombok.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.jetbrains</groupId>
-            <artifactId>annotations</artifactId>
-            <version>${jetbrains.annotations.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-lang3</artifactId>
-            <version>${commons.lang.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.github.tonivade</groupId>
-            <artifactId>purefun-free</artifactId>
-            <version>${purefun.version}</version>
-        </dependency>
         <dependency>
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-classic</artifactId>
