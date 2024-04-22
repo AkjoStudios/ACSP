@@ -38,6 +38,9 @@ spring:
   output:
     ansi:
       enabled: always
+  devtools:
+    restart:
+      enabled: false
 management:
   endpoint:
     health:

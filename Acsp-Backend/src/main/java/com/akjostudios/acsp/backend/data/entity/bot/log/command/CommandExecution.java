@@ -28,7 +28,10 @@ public class CommandExecution {
     @Column(name = "subcommand_name")
     private String subcommandName;
 
-    @Column(name = "finished_at", nullable = false)
+    @Column(name = "finished", nullable = false)
+    private boolean finished;
+
+    @Column(name = "finished_at")
     private Instant finishedAt;
 
     @Column(name = "created_at", nullable = false, updatable = false, insertable = false)
@@ -44,6 +47,7 @@ public class CommandExecution {
                 channelId,
                 commandName,
                 subcommandName,
+                finished,
                 finishedAt,
                 createdAt,
                 responses.stream().map(CommandResponse::toDao).toList()

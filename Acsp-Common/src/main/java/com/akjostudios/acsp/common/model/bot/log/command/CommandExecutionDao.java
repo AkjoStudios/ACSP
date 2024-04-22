@@ -12,6 +12,7 @@ public record CommandExecutionDao(
         long channelId,
         @NotNull String commandName,
         @Nullable String subcommandName,
+        boolean finished,
         @NotNull Instant finishedAt,
         @NotNull Instant createdAt,
         @NotNull List<CommandResponseDao> responses

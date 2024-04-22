@@ -398,3 +398,25 @@ databaseChangeLog:
         - dropColumn:
             tableName: "batch_interactions"
             columnName: "created_at"
+  - changeSet:
+      id: "add-command-execution-finished"
+      author: "AkjoStudios"
+      changes:
+        - addColumn:
+            tableName: "command_executions"
+            columns:
+              - column:
+                  name: "finished"
+                  type: "boolean"
+                  constraints:
+                    nullable: false
+        - dropNotNullConstraint:
+            tableName: "command_executions"
+            columnName: "finished_at"
+      rollback:
+        - addNotNullConstraint:
+            tableName: "command_executions"
+            columnName: "finished_at"
+        - dropColumn:
+            tableName: "command_executions"
+            columnName: "finished"
