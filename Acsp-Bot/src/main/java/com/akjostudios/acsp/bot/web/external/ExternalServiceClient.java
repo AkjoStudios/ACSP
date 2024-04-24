@@ -78,12 +78,12 @@ public class ExternalServiceClient {
                 .onErrorResume(Mono::error);
     }
 
-    public <T, D> Mono<T> exchangePost(String uri, D body, Class<D> requestType, Class<T> responseType) {
+    public <T, D> Mono<T> exchangePost(String uri, D body, Class<T> responseType) {
         return tokenProvider.getToken()
                 .map(token -> client.post()
                         .uri(uri)
                         .header(AUTHORIZATION_HEADER, BEARER_PREFIX + token)
-                        .body(body, requestType)
+                        .bodyValue(body)
                 ).flatMap(request -> request.exchangeToMono(response -> response.bodyToMono(responseType)))
                 .onErrorResume(Mono::error);
     }
@@ -95,12 +95,12 @@ public class ExternalServiceClient {
                 .onErrorResume(Mono::error);
     }
 
-    public <T, D> Mono<T> exchangePut(String uri, D body, Class<D> requestType, Class<T> responseType) {
+    public <T, D> Mono<T> exchangePut(String uri, D body, Class<T> responseType) {
         return tokenProvider.getToken()
                 .map(token -> client.put()
                         .uri(uri)
                         .header(AUTHORIZATION_HEADER, BEARER_PREFIX + token)
-                        .body(body, requestType)
+                        .bodyValue(body)
                 ).flatMap(request -> request.exchangeToMono(response -> response.bodyToMono(responseType)))
                 .onErrorResume(Mono::error);
     }
