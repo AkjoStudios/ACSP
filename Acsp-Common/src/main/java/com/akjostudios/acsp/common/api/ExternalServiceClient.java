@@ -1,4 +1,4 @@
-package com.akjostudios.acsp.backend.external;
+package com.akjostudios.acsp.common.api;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -13,7 +13,7 @@ public class ExternalServiceClient {
     private static final String BEARER_PREFIX = "Bearer ";
 
     private final WebClient client;
-    private final ExternalServiceTokenProvider tokenProvider;
+    private final TokenProvider tokenProvider;
 
     public <T> Mono<T> get(String uri, Function<WebClient.RequestHeadersSpec<?>, Mono<T>> consumer) {
         return tokenProvider.getToken()

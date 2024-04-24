@@ -1,5 +1,6 @@
 package com.akjostudios.acsp.bot.web.external;
 
+import com.akjostudios.acsp.common.api.TokenProvider;
 import com.akjostudios.acsp.common.model.supertokens.SupertokenJwtRequest;
 import com.akjostudios.acsp.common.model.supertokens.SupertokenJwtResponse;
 import lombok.extern.slf4j.Slf4j;
@@ -20,7 +21,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 @Component
 @Slf4j
-public class ExternalServiceTokenProvider {
+public class ExternalServiceTokenProvider implements TokenProvider {
     private final AtomicReference<String> currentToken = new AtomicReference<>();
     private final WebClient tokenClient;
     private final ExternalServiceProperties properties;
@@ -40,6 +41,7 @@ public class ExternalServiceTokenProvider {
         this.properties = properties;
     }
 
+    @Override
     public Mono<String> getToken() {
         return Mono.defer(() -> {
             String token = currentToken.get();

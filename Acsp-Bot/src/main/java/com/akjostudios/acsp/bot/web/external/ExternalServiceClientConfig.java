@@ -1,5 +1,6 @@
 package com.akjostudios.acsp.bot.web.external;
 
+import com.akjostudios.acsp.common.api.ExternalServiceClient;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
