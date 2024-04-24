@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.Map;
 
+@SuppressWarnings("unused")
 public record CommandExecutionCreateRequest(
         @JsonProperty(value = "messageId", required = true) long messageId,
         @JsonProperty(value = "channelId", required = true) long channelId,

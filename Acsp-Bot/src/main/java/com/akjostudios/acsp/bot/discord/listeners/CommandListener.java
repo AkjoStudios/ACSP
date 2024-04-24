@@ -11,6 +11,9 @@ import com.akjostudios.acsp.bot.discord.common.command.argument.validation.BotCo
 import com.akjostudios.acsp.bot.discord.common.listener.BotListener;
 import com.akjostudios.acsp.bot.discord.config.definition.BotConfigCommand;
 import com.akjostudios.acsp.bot.discord.service.*;
+import com.akjostudios.acsp.common.dto.bot.log.command.CommandExecutionCreateRequest;
+import com.akjostudios.acsp.common.dto.bot.log.command.CommandExecutionCreateResponse;
+import com.akjostudios.acsp.common.dto.bot.log.command.CommandExecutionFinishResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.tonivade.purefun.Function1;
 import com.github.tonivade.purefun.type.Option;
@@ -112,11 +115,11 @@ public class CommandListener implements BotListener<MessageReceivedEvent> {
                     ctx.getOriginalAuthor().getUser().getName(),
                     ctx.getName()
             );
-            ctx.answer(ctx.getErrorMessage(
+            ctx.sendMessage(ctx.getErrorMessage(
                     "$error.unknown_command.title$",
                     "$error.unknown_command.description$",
                     List.of(ctx.getName())
-            )).onFailure(ex -> log.error("Failed to send error message!", ex));
+            ));
             return false;
         }
         return true;
@@ -132,11 +135,11 @@ public class CommandListener implements BotListener<MessageReceivedEvent> {
                             ctx.getOriginalAuthor().getUser().getName(),
                             ctx.getName()
                     );
-                    ctx.answer(ctx.getErrorMessage(
+                    ctx.sendMessage(ctx.getErrorMessage(
                             "$error.subcommand_required.title$",
                             "$error.subcommand_required.description$",
                             List.of(ctx.getName())
-                    )).onFailure(ex -> log.error("Failed to send error message!", ex));
+                    ));
                     return false;
                 } else { return true; }}).getOrElse(true);
     }
@@ -149,14 +152,14 @@ public class CommandListener implements BotListener<MessageReceivedEvent> {
                                     ctx.getOriginalAuthor().getUser().getName(),
                                     ctx.getName()
                             );
-                            ctx.answer(ctx.getErrorMessage(
+                            ctx.sendMessage(ctx.getErrorMessage(
                                     "$error.permission_denied.title$",
                                     "$error.command.permission_denied.description$",
                                     List.of(
                                             ctx.getName(),
                                             validation.getError()
                                     )
-                            )).onFailure(ex -> log.error("Failed to send error message!", ex));
+                            ));
                             return false;
                         }, success -> true
                 ));
@@ -168,7 +171,7 @@ public class CommandListener implements BotListener<MessageReceivedEvent> {
                                     ctx.getSubcommandName().getOrElse("???"),
                                     ctx.getName()
                             );
-                            ctx.answer(ctx.getErrorMessage(
+                            ctx.sendMessage(ctx.getErrorMessage(
                                     "$error.permission_denied.title$",
                                     "$error.subcommand.permission_denied.description$",
                                     List.of(
@@ -176,7 +179,7 @@ public class CommandListener implements BotListener<MessageReceivedEvent> {
                                             ctx.getSubcommandName().getOrElse("???"),
                                             validation.getError()
                                     )
-                            )).onFailure(ex -> log.error("Failed to send error message!", ex));
+                            ));
                             return false;
                         }, success -> true
                 ));
@@ -206,11 +209,11 @@ public class CommandListener implements BotListener<MessageReceivedEvent> {
         Validation<BotCommandArgumentParseError, Map<String, String>> parsedArguments =
                 botCommandArgumentService.parseArguments(ctx, givenArguments);
         if (parsedArguments.isInvalid()) {
-            ctx.answer(
+            ctx.sendMessage((
                     ctx.isSubcommand()
                             ? botCommandArgumentService.getSubcommandErrorMessage(parsedArguments.getError())
                             : botCommandArgumentService.getCommandErrorMessage(parsedArguments.getError())
-            ).onFailure(ex -> log.error("Failed to send error message!", ex));
+            ));
             return false;
         }
 
@@ -236,7 +239,7 @@ public class CommandListener implements BotListener<MessageReceivedEvent> {
         );
 
         if (!validationErrors.isEmpty()) {
-            ctx.answer(botCommandArgumentService.getValidationReport(
+            ctx.sendMessage(botCommandArgumentService.getValidationReport(
                     ctx, validationErrors, Option.none()
             ));
             return false;
@@ -246,19 +249,44 @@ public class CommandListener implements BotListener<MessageReceivedEvent> {
         return true;
     }
 
+    @SuppressWarnings({"java:S1602", "CodeBlock2Expr"})
     private void runCommand(@NotNull BotCommandContext ctx) {
         Option.from(commands.stream().filter(command -> command.getName().equals(ctx.getName())).findFirst())
-                .ifPresent(command -> command.execute(ctx))
-                .ifEmpty(() -> {
+                .ifPresent(command -> {
+                    ctx.getBackendClient().exchangePost(
+                            "/api/bot/log/command/execution",
+                            new CommandExecutionCreateRequest(
+                                    ctx.getOriginalMessage().getIdLong(),
+                                    ctx.getOriginalChannel().getIdLong(),
+                                    ctx.getOriginalAuthor().getIdLong(),
+                                    ctx.getName(),
+                                    ctx.getArgumentMap(),
+                                    ctx.getSubcommandName().getOrElseNull()
+                            ), CommandExecutionCreateResponse.class
+                    ).map(CommandExecutionCreateResponse::executionId)
+                            .flatMap(executionId -> {
+                                ctx.setExecutionId(executionId);
+                                command.execute(ctx);
+                                return ctx.getBackendClient().exchangePut(
+                                        "/api/bot/log/command/execution/" + executionId + "/finish",
+                                        CommandExecutionFinishResponse.class
+                                );
+                            }).doOnError(error -> {
+                                log.error("Failed to log command execution!", error);
+                                ctx.sendMessage(ctx.getInternalErrorMessage(
+                                        "Failed to log command execution! (see logs)"
+                                ));
+                            }).subscribe();
+                }).ifEmpty(() -> {
                     log.warn("User '{}' tried to execute command '{}' but no implementation was found!",
                             ctx.getOriginalAuthor().getUser().getName(),
                             ctx.getName()
                     );
-                    ctx.answer(ctx.getErrorMessage(
+                    ctx.sendMessage(ctx.getErrorMessage(
                             "$error.unimplemented_command.title$",
                             "$error.unimplemented_command.description$",
                             List.of(ctx.getName())
-                    )).onFailure(ex -> log.error("Failed to send error message!", ex));
+                    ));
                 });
     }
 }

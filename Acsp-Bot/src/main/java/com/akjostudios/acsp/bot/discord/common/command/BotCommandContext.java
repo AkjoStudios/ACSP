@@ -10,6 +10,9 @@ import com.akjostudios.acsp.bot.discord.config.layout.BotConfigServerChannel;
 import com.akjostudios.acsp.bot.discord.config.layout.BotConfigServerChannelCategory;
 import com.akjostudios.acsp.bot.discord.config.layout.BotConfigServerRole;
 import com.akjostudios.acsp.bot.discord.service.*;
+import com.akjostudios.acsp.common.api.ExternalServiceClient;
+import com.akjostudios.acsp.common.dto.bot.log.command.CommandResponseCreateRequest;
+import com.akjostudios.acsp.common.dto.bot.log.command.CommandResponseCreateResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.tonivade.purefun.type.Option;
 import com.github.tonivade.purefun.type.Try;
@@ -17,10 +20,7 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import net.dv8tion.jda.api.entities.Member;
-import net.dv8tion.jda.api.entities.Message;
-import net.dv8tion.jda.api.entities.Role;
-import net.dv8tion.jda.api.entities.User;
+import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.entities.channel.concrete.Category;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.entities.emoji.Emoji;
@@ -56,6 +56,12 @@ public class BotCommandContext {
      */
     @Setter
     private List<? extends BotCommandArgument<?>> arguments;
+
+    /**
+     * @apiNote Should not be called by the command implementation.
+     */
+    @Setter
+    private long executionId;
 
     private ApplicationContext applicationContext;
     private BotDefinitionService botDefinitionService;
@@ -127,6 +133,11 @@ public class BotCommandContext {
                 .findFirst())
                 .map(argument -> (T) argument.value())
                 .getOrElse(defaultValue);
+    }
+
+    public @NotNull Map<String, String> getArgumentMap() {
+        return arguments.stream()
+                .collect(Collectors.toMap(BotCommandArgument::id, argument -> argument.value().toString()));
     }
 
     public @NotNull Try<BotConfigMessage> getMessage(
@@ -219,7 +230,7 @@ public class BotCommandContext {
     public @NotNull Try<MessageCreateAction> answer(String message) {
         return Try.of(() -> discordMessageService.createMessage(message))
                 .map(event.getChannel()::sendMessage)
-                .onSuccess(action -> action.setMessageReference(event.getMessageId()).queue())
+                .onSuccess(this::handleAnswerAction)
                 .onFailure(err -> log.error(MESSAGE_SEND_ERROR, err));
     }
 
@@ -229,15 +240,36 @@ public class BotCommandContext {
     ) {
         return Try.of(() -> discordMessageService.createMessage(message, components))
                 .map(event.getChannel()::sendMessage)
-                .onSuccess(action -> action.setMessageReference(event.getMessageId()).queue())
+                .onSuccess(this::handleAnswerAction)
                 .onFailure(err -> log.error(MESSAGE_SEND_ERROR, err));
     }
 
     public @NotNull Try<MessageCreateAction> answer(@NotNull Try<BotConfigMessage> message) {
         return message.map(discordMessageService::createMessage)
                 .map(event.getChannel()::sendMessage)
-                .onSuccess(action -> action.setMessageReference(event.getMessageId()).queue())
+                .onSuccess(this::handleAnswerAction)
                 .onFailure(err -> log.error(MESSAGE_SEND_ERROR, err));
+    }
+
+    private void handleAnswerAction(@NotNull MessageCreateAction action) {
+        action.setMessageReference(event.getMessageId())
+                .map(ISnowflake::getIdLong)
+                .onSuccess(id -> getBackendClient().exchangePost(
+                        "/api/bot/log/command/execution/" + executionId + "/response",
+                        new CommandResponseCreateRequest(
+                                id, event.getChannel().getIdLong()
+                        ), CommandResponseCreateResponse.class
+                ).doOnError(error -> sendMessage(
+                        getInternalErrorMessage("Failed to create response! " + error.getMessage())
+                )).subscribe()).queue();
+    }
+
+    public @NotNull Try<MessageCreateAction> sendMessage(String message) {
+        return getOriginalServerChannel().flatMap(
+                channel -> sendMessage(message, channel)
+                        .onFailure(ex -> log.error(MESSAGE_SEND_ERROR, ex))
+                        .toOption()
+        ).toTry();
     }
 
     public @NotNull Try<MessageCreateAction> sendMessage(String message, @NotNull BotConfigServerChannel channel) {
@@ -250,6 +282,17 @@ public class BotCommandContext {
 
     public @NotNull Try<MessageCreateAction> sendMessage(
             String message,
+            List<Option<BotActionRowComponent>> components
+    ) {
+        return getOriginalServerChannel().flatMap(
+                channel -> sendMessage(message, channel, components)
+                        .onFailure(ex -> log.error(MESSAGE_SEND_ERROR, ex))
+                        .toOption()
+        ).toTry();
+    }
+
+    public @NotNull Try<MessageCreateAction> sendMessage(
+            String message,
             @NotNull BotConfigServerChannel channel,
             @NotNull List<Option<BotActionRowComponent>> components
     ) {
@@ -258,6 +301,16 @@ public class BotCommandContext {
                         () -> discordMessageService.createMessage(message, components)
                 ).map(textChannel::sendMessage)
         ).onSuccess(RestAction::queue).onFailure(err -> log.error(MESSAGE_SEND_ERROR, err));
+    }
+
+    public @NotNull Try<MessageCreateAction> sendMessage(
+            @NotNull Try<BotConfigMessage> message
+    ) {
+        return getOriginalServerChannel().flatMap(
+                channel -> sendMessage(message, channel)
+                        .onFailure(ex -> log.error(MESSAGE_SEND_ERROR, ex))
+                        .toOption()
+        ).toTry();
     }
 
     public @NotNull Try<MessageCreateAction> sendMessage(@NotNull Try<BotConfigMessage> message, @NotNull BotConfigServerChannel channel) {
@@ -309,7 +362,46 @@ public class BotCommandContext {
                                         ))
                                 )).complete()
                         )
-        ).onErrorMap(err -> answer(
+        ).onErrorMap(err -> sendMessage(
+                getErrorMessage(PRIVATE_MESSAGE_ERROR_TITLE, PRIVATE_MESSAGE_ERROR_DESCRIPTION))
+        ).complete();
+    }
+
+    public @NotNull Try<MessageCreateAction> answerPrivately(
+            String message,
+            @NotNull List<Option<BotActionRowComponent>> components
+    ) {
+        return event.getAuthor().openPrivateChannel().map(
+                privateChannel -> Try.of(() -> discordMessageService.createMessage(message, components))
+                        .map(privateChannel::sendMessage)
+                        .flatMap(action -> action
+                                .map(Message::getJumpUrl)
+                                .map(jumpUrl -> answer(
+                                        "",
+                                        List.of(createActionRow(List.of(
+                                                getComponent(GOTO_PRIVATE_MESSAGE_COMPONENT, jumpUrl))
+                                        ))
+                                )).complete()
+                        )
+        ).onErrorMap(err -> sendMessage(
+                getErrorMessage(PRIVATE_MESSAGE_ERROR_TITLE, PRIVATE_MESSAGE_ERROR_DESCRIPTION))
+        ).complete();
+    }
+
+    public @NotNull Try<MessageCreateAction> answerPrivately(@NotNull Try<BotConfigMessage> message) {
+        return event.getAuthor().openPrivateChannel().map(
+                privateChannel -> message.map(discordMessageService::createMessage)
+                        .map(privateChannel::sendMessage)
+                        .flatMap(action -> action
+                                .map(Message::getJumpUrl)
+                                .map(jumpUrl -> answer(
+                                        "",
+                                        List.of(createActionRow(List.of(
+                                                getComponent(GOTO_PRIVATE_MESSAGE_COMPONENT, jumpUrl))
+                                        ))
+                                )).complete()
+                        )
+        ).onErrorMap(err -> sendMessage(
                 getErrorMessage(PRIVATE_MESSAGE_ERROR_TITLE, PRIVATE_MESSAGE_ERROR_DESCRIPTION))
         ).complete();
     }
@@ -401,6 +493,15 @@ public class BotCommandContext {
 
     public @NotNull ObjectMapper getMapper() {
         return objectMapper;
+    }
+
+    @SuppressWarnings({"LombokGetterMayBeUsed", "RedundantSuppression"})
+    public long getExecutionId() {
+        return executionId;
+    }
+
+    public @NotNull ExternalServiceClient getBackendClient() {
+        return getBean("client.service.backend", ExternalServiceClient.class);
     }
 
     public <T> @NotNull T getBean(@NotNull Class<T> clazz) {

@@ -7,6 +7,7 @@ import com.akjostudios.acsp.backend.data.repository.bot.log.command.CommandRespo
 import com.akjostudios.acsp.common.dto.bot.log.command.CommandExecutionCreateRequest;
 import com.akjostudios.acsp.common.dto.bot.log.command.CommandResponseCreateRequest;
 import com.akjostudios.acsp.common.model.ResponseStatus;
+import com.akjostudios.acsp.common.model.bot.log.command.CommandExecutionDao;
 import com.github.tonivade.purefun.type.Validation;
 import lombok.RequiredArgsConstructor;
 import org.jetbrains.annotations.NotNull;
@@ -16,6 +17,7 @@ import java.time.Instant;
 
 @Service
 @RequiredArgsConstructor
+@SuppressWarnings("java:S1192")
 public class CommandExecutionService {
     private final CommandExecutionRepository executionRepository;
     private final CommandResponseRepository responseRepository;
@@ -64,5 +66,23 @@ public class CommandExecutionService {
 
         response = responseRepository.save(response);
         return Validation.valid(response.getResponseId());
+    }
+
+    public Validation<String, CommandExecutionDao> getByExecutionId(long executionId) {
+        CommandExecution execution = executionRepository.findById(executionId).orElse(null);
+        if (execution == null) {
+            return Validation.invalid("Execution with ID " + executionId + " not found!");
+        }
+
+        return Validation.valid(execution.toDao());
+    }
+
+    public Validation<String, CommandExecutionDao> getByResponseMessageId(long responseMessageId) {
+        CommandResponse response = responseRepository.findFirstByMessageId(responseMessageId).orElse(null);
+        if (response == null) {
+            return Validation.invalid("Response with message ID " + responseMessageId + " not found!");
+        }
+
+        return Validation.valid(response.getExecution().toDao());
     }
 }
