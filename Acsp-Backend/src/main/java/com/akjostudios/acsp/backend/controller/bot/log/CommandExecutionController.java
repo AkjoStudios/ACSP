@@ -9,7 +9,7 @@ import org.springframework.security.access.annotation.Secured;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/bot/log/command")
+@RequestMapping("/api/bot/log/command")
 @Secured({"SERVICE_BOT"})
 @RequiredArgsConstructor
 public class CommandExecutionController {
