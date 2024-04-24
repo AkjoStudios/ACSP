@@ -112,12 +112,13 @@ public class SecurityConfig {
                             CorsConfiguration corsConfig = new CorsConfiguration();
 
                             corsConfig.addAllowedOrigin(externalServiceProperties.getSupertokensUrl());
+                            corsConfig.addAllowedOrigin(externalServiceProperties.getBotUrl());
 
                             corsConfig.addAllowedHeader("*");
                             corsConfig.addAllowedMethod("*");
                             return corsConfig;
                         })
-                ).csrf(ServerHttpSecurity.CsrfSpec::disable);
+                ).csrf(ServerHttpSecurity.CsrfSpec::disable); // We use JWTs, so CSRF is not needed
     }
 
     private @NotNull Mono<Void> handleException(

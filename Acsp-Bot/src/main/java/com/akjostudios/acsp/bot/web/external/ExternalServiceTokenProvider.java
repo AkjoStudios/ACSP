@@ -1,7 +1,7 @@
 package com.akjostudios.acsp.bot.web.external;
 
-import com.akjostudios.acsp.bot.web.external.model.supertokens.SupertokenJwtRequest;
-import com.akjostudios.acsp.bot.web.external.model.supertokens.SupertokenJwtResponse;
+import com.akjostudios.acsp.common.model.supertokens.SupertokenJwtRequest;
+import com.akjostudios.acsp.common.model.supertokens.SupertokenJwtResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;

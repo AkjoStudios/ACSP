@@ -1,6 +1,7 @@
 package com.akjostudios.acsp.bot.web.security;
 
 import com.akjostudios.acsp.bot.web.error.WebErrorHandler;
+import com.akjostudios.acsp.bot.web.external.ExternalServiceProperties;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -50,6 +51,7 @@ public class SecurityConfig {
     private static final String PROMETHEUS_ROLE = "PROMETHEUS";
 
     private final SecurityProperties securityProperties;
+    private final ExternalServiceProperties externalServiceProperties;
 
     private final ObjectMapper objectMapper;
 
@@ -107,12 +109,15 @@ public class SecurityConfig {
                 .cors(corsSpec -> corsSpec
                         .configurationSource(request -> {
                             CorsConfiguration corsConfig = new CorsConfiguration();
-                            corsConfig.addAllowedOrigin("*");
+
+                            corsConfig.addAllowedOrigin(externalServiceProperties.getSupertokensUrl());
+                            corsConfig.addAllowedOrigin(externalServiceProperties.getBackendUrl());
+
                             corsConfig.addAllowedHeader("*");
                             corsConfig.addAllowedMethod("*");
                             return corsConfig;
                         })
-                ).csrf(ServerHttpSecurity.CsrfSpec::disable);
+                ).csrf(ServerHttpSecurity.CsrfSpec::disable);  // We use JWTs, so CSRF is not needed
     }
 
     private @NotNull Mono<Void> handleException(
