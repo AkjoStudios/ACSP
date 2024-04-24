@@ -5,6 +5,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 
 public record CommandExecutionDao(
         long executionId,
@@ -12,6 +13,7 @@ public record CommandExecutionDao(
         long channelId,
         long userId,
         @NotNull String commandName,
+        @NotNull Map<String, String> commandArgs,
         @Nullable String subcommandName,
         boolean finished,
         @NotNull Instant finishedAt,

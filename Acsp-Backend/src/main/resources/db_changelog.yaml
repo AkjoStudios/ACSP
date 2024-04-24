@@ -507,3 +507,19 @@ databaseChangeLog:
                   defaultValueComputed: "now()"
                   constraints:
                       nullable: false
+  - changeSet:
+      id: "add-command-args-to-command-executions"
+      author: "AkjoStudios"
+      changes:
+        - addColumn:
+            tableName: "command_executions"
+            columns:
+            - column:
+                name: "command_args"
+                type: "jsonb"
+                constraints:
+                    nullable: false
+      rollback:
+        - dropColumn:
+            tableName: "command_executions"
+            columnName: "command_args"

@@ -1,12 +1,15 @@
 package com.akjostudios.acsp.backend.data.entity.bot.log.command;
 
 import com.akjostudios.acsp.common.model.bot.log.command.CommandExecutionDao;
+import io.hypersistence.utils.hibernate.type.json.JsonType;
 import jakarta.persistence.*;
 import lombok.Data;
+import org.hibernate.annotations.Type;
 import org.jetbrains.annotations.NotNull;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 
 @Data
 @Entity(name = "command_executions")
@@ -27,6 +30,10 @@ public class CommandExecution {
 
     @Column(name = "command_name", nullable = false)
     private String commandName;
+
+    @Column(name = "command_args", nullable = false)
+    @Type(JsonType.class)
+    private Map<String, String> commandArgs;
 
     @Column(name = "subcommand_name")
     private String subcommandName;
@@ -50,6 +57,7 @@ public class CommandExecution {
                 channelId,
                 userId,
                 commandName,
+                commandArgs,
                 subcommandName,
                 finished,
                 finishedAt,

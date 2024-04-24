@@ -21,6 +21,8 @@
     <properties>
         <main.class>com.akjostudios.acsp.backend.AcspBackendApp</main.class>
 
+        <hypersistence.version>3.7.4</hypersistence.version>
+        <jackson-xmlbind.version>2.17.0</jackson-xmlbind.version>
         <liquibase.version>4.27.0</liquibase.version>
         <logback.version>1.5.3</logback.version>
         <micrometer.prometheus.version>1.12.4</micrometer.prometheus.version>
@@ -99,6 +101,16 @@
             <groupId>org.springdoc</groupId>
             <artifactId>springdoc-openapi-starter-webflux-ui</artifactId>
             <version>${openapi.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.hypersistence</groupId>
+            <artifactId>hypersistence-utils-hibernate-62</artifactId>
+            <version>${hypersistence.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.module</groupId>
+            <artifactId>jackson-module-jakarta-xmlbind-annotations</artifactId>
+            <version>${jackson-xmlbind.version}</version>
         </dependency>
 
         <!-- Testing -->
