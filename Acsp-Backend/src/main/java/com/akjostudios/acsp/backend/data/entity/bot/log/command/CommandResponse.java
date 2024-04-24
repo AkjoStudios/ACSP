@@ -3,11 +3,13 @@ package com.akjostudios.acsp.backend.data.entity.bot.log.command;
 import com.akjostudios.acsp.common.model.bot.log.command.CommandResponseDao;
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.RequiredArgsConstructor;
 import org.jetbrains.annotations.NotNull;
 
 import java.time.Instant;
 
 @Data
+@RequiredArgsConstructor
 @Entity(name = "command_responses")
 public class CommandResponse {
     @Id
