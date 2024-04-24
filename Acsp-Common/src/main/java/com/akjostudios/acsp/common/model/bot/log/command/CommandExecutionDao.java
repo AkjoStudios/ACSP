@@ -10,6 +10,7 @@ public record CommandExecutionDao(
         long executionId,
         long messageId,
         long channelId,
+        long userId,
         @NotNull String commandName,
         @Nullable String subcommandName,
         boolean finished,

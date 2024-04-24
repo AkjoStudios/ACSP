@@ -420,3 +420,90 @@ databaseChangeLog:
         - dropColumn:
             tableName: "command_executions"
             columnName: "finished"
+  - changeSet:
+      id: "remove-batch-tables"
+      author: "AkjoStudios"
+      changes:
+        - dropTable:
+            tableName: "batch_interactions"
+        - dropTable:
+            tableName: "batch_responses"
+        - dropTable:
+            tableName: "batch_executions"
+      rollback: [] # Rollback not needed as the tables have not been used
+  - changeSet:
+      id: "add-user-id-to-command-executions"
+      author: "AkjoStudios"
+      changes:
+        - addColumn:
+            tableName: "command_executions"
+            columns:
+            - column:
+                name: "user_id"
+                type: "bigint"
+                constraints:
+                    nullable: false
+      rollback:
+        - dropColumn:
+            tableName: "command_executions"
+            columnName: "user_id"
+  - changeSet:
+      id: "remove-finished-at-from-command-responses"
+      author: "AkjoStudios"
+      changes:
+        - dropColumn:
+            tableName: "command_responses"
+            columnName: "finished_at"
+      rollback:
+        - addColumn:
+            tableName: "command_responses"
+            columns:
+              - column:
+                  name: "finished_at"
+                  type: "timestamp"
+                  constraints:
+                    nullable: false
+  - changeSet:
+      id: "remove-command-interactions-table"
+      author: "AkjoStudios"
+      changes:
+        - dropTable:
+            tableName: "command_interactions"
+      rollback:
+        - createTable:
+            tableName: "command_interactions"
+            columns:
+              - column:
+                  name: "interaction_id"
+                  type: "bigint"
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: "response_id"
+                  type: "bigint"
+                  constraints:
+                    nullable: false
+                    foreignKeyName: "fk_command_responses"
+                    references: "command_responses(response_id)"
+              - column:
+                  name: "interaction_name"
+                  type: "text"
+                  constraints:
+                    nullable: false
+              - column:
+                  name: "finished"
+                  type: "boolean"
+                  constraints:
+                    nullable: false
+              - column:
+                  name: "finished_at"
+                  type: "timestamp"
+                  constraints:
+                    nullable: true
+              - column:
+                  name: "created_at"
+                  type: "timestamp"
+                  defaultValueComputed: "now()"
+                  constraints:
+                      nullable: false

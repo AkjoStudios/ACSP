@@ -22,6 +22,9 @@ public class CommandExecution {
     @Column(name = "channel_id", nullable = false)
     private long channelId;
 
+    @Column(name = "user_id", nullable = false)
+    private long userId;
+
     @Column(name = "command_name", nullable = false)
     private String commandName;
 
@@ -45,6 +48,7 @@ public class CommandExecution {
                 executionId,
                 messageId,
                 channelId,
+                userId,
                 commandName,
                 subcommandName,
                 finished,
