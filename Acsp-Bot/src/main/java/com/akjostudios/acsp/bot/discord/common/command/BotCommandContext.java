@@ -97,11 +97,6 @@ public class BotCommandContext {
                 .filter(BotConfigCommand::isEnabled);
     }
 
-    public @NotNull Option<BotConfigCommand> getDefinition(String command) {
-        return botDefinitionService.getCommandDefinition(command)
-                .filter(BotConfigCommand::isEnabled);
-    }
-
     public @NotNull Option<BotConfigCommand.Subcommand> getSubcommandDefinition() {
         return getDefinition().map(BotConfigCommand::getSubcommands)
                 .filter(BotConfigCommand.Subcommands::isAvailable)
@@ -280,6 +275,10 @@ public class BotCommandContext {
         ).onSuccess(RestAction::queue).onFailure(err -> log.error(MESSAGE_SEND_ERROR, err));
     }
 
+    /**
+     * Be aware that the components don't support interactions with the user. (Link Buttons are supported)
+     * Use the {@link #answer(String, List)} method instead.
+     */
     public @NotNull Try<MessageCreateAction> sendMessage(
             String message,
             List<Option<BotActionRowComponent>> components
@@ -291,6 +290,10 @@ public class BotCommandContext {
         ).toTry();
     }
 
+    /**
+     * Be aware that the components don't support interactions with the user. (Link Buttons are supported)
+     * Use the {@link #answer(String, List)} method instead.
+     */
     public @NotNull Try<MessageCreateAction> sendMessage(
             String message,
             @NotNull BotConfigServerChannel channel,
@@ -303,6 +306,10 @@ public class BotCommandContext {
         ).onSuccess(RestAction::queue).onFailure(err -> log.error(MESSAGE_SEND_ERROR, err));
     }
 
+    /**
+     * Be aware that the components don't support interactions with the user. (Link Buttons are supported)
+     * Use the {@link #answer(Try)} method instead.
+     */
     public @NotNull Try<MessageCreateAction> sendMessage(
             @NotNull Try<BotConfigMessage> message
     ) {
@@ -313,6 +320,10 @@ public class BotCommandContext {
         ).toTry();
     }
 
+    /**
+     * Be aware that the components don't support interactions with the user. (Link Buttons are supported)
+     * Use the {@link #answer(Try)} method instead.
+     */
     public @NotNull Try<MessageCreateAction> sendMessage(@NotNull Try<BotConfigMessage> message, @NotNull BotConfigServerChannel channel) {
         return botPrimitiveService.getChannel(event, channel).toTry().flatMap(
                 textChannel -> message.map(discordMessageService::createMessage).map(textChannel::sendMessage)

@@ -38,6 +38,7 @@ import net.dv8tion.jda.api.events.guild.scheduledevent.ScheduledEventUserRemoveE
 import net.dv8tion.jda.api.events.guild.update.*;
 import net.dv8tion.jda.api.events.guild.voice.*;
 import net.dv8tion.jda.api.events.http.HttpRequestEvent;
+import net.dv8tion.jda.api.events.interaction.component.GenericComponentInteractionCreateEvent;
 import net.dv8tion.jda.api.events.message.*;
 import net.dv8tion.jda.api.events.message.react.MessageReactionAddEvent;
 import net.dv8tion.jda.api.events.message.react.MessageReactionRemoveAllEvent;
@@ -216,7 +217,8 @@ public enum BotEventType {
     AUTOMOD_EXECUTED(1000, AutoModExecutionEvent.class),
     AUTOMOD_RULE_CREATE(1001, AutoModRuleCreateEvent.class),
     AUTOMOD_RULE_UPDATE(1002, AutoModRuleUpdateEvent.class),
-    AUTOMOD_RULE_DELETE(1003, AutoModRuleDeleteEvent.class);
+    AUTOMOD_RULE_DELETE(1003, AutoModRuleDeleteEvent.class),
+    INTERACTION_EVENT(1100, GenericComponentInteractionCreateEvent.class);
 
     private final int id;
     private final Class<? extends GenericEvent> eventClass;

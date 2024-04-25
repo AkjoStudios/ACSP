@@ -11,5 +11,8 @@ public class HelpCommand implements BotCommand {
     public void execute(@NotNull BotCommandContext ctx) { /* Unimplemented */ }
 
     @Override
+    public void handleInteraction(String interactionId) { /* Unimplemented */ }
+
+    @Override
     public String getName() { return "help"; }
 }
