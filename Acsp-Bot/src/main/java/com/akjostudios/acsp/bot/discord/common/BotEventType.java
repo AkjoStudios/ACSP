@@ -235,6 +235,12 @@ public enum BotEventType {
     }
 
     public static @NotNull Option<BotEventType> getByClass(Class<? extends GenericEvent> eventClass) {
-        return Option.of(CLASS_MAP.get(eventClass));
+        Class<?> currentClass = eventClass;
+        while (currentClass != null) {
+            BotEventType type = CLASS_MAP.get(currentClass);
+            if (type != null) { return Option.some(type); }
+            currentClass = currentClass.getSuperclass();
+        }
+        return Option.none();
     }
 }

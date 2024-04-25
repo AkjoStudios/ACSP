@@ -1,6 +1,7 @@
 package com.akjostudios.acsp.bot.discord.common.listener;
 
 import com.akjostudios.acsp.bot.discord.common.BotEventType;
+import com.github.tonivade.purefun.type.Option;
 import lombok.extern.slf4j.Slf4j;
 import net.dv8tion.jda.api.events.GenericEvent;
 import net.dv8tion.jda.api.hooks.EventListener;
@@ -25,27 +26,34 @@ public class CommonListener implements EventListener {
                 .collect(Collectors.groupingBy(botListener ->
                         (Class<? extends GenericEvent>) ((ParameterizedType) botListener.getClass().getGenericInterfaces()[0]).getActualTypeArguments()[0]
                 ));
-        listeners.forEach((eventClass, botListenerList) -> log.info(
-                "Found {} listener(s) for event type {}.",
-                botListenerList.size(),
-                BotEventType.getByClass(eventClass).getOrElse(BotEventType.OTHER)
-        ));
+        log.info(listeners.entrySet().stream()
+                .map(entry -> entry.getKey().getSimpleName() + ": " + entry.getValue().size())
+                .collect(Collectors.joining(", ")));
     }
 
     @Override
     public void onEvent(@NotNull GenericEvent event) {
-        List<BotListener<?>> eventListeners = listeners.get(event.getClass());
+        Option<List<BotListener<?>>> eventListeners = getListeners(event.getClass());
+        if (eventListeners.isEmpty()) { return; }
+
         BotEventType eventType = BotEventType.getByClass(event.getClass()).getOrElse(BotEventType.OTHER);
-
-        if (eventListeners == null) { return; }
-
         if (eventType == BotEventType.OTHER) {
             log.warn("Event {} is not a known event type!", event.getClass().getSimpleName());
             listeners.get(GenericEvent.class).forEach(listener -> invokeListener(listener, event, eventType));
             return;
         }
 
-        eventListeners.forEach(listener -> invokeListener(listener, event, eventType));
+        eventListeners.getOrElseNull().forEach(listener -> invokeListener(listener, event, eventType));
+    }
+
+    private Option<List<BotListener<?>>> getListeners(@NotNull Class<? extends GenericEvent> eventClass) {
+        Class<?> currentClass = eventClass;
+        while (currentClass != null) {
+            List<BotListener<?>> eventListeners = listeners.get(currentClass);
+            if (eventListeners != null) { return Option.some(eventListeners); }
+            currentClass = currentClass.getSuperclass();
+        }
+        return Option.none();
     }
 
     @SuppressWarnings("unchecked")
