@@ -1,4 +1,4 @@
-package com.akjostudios.acsp.common.model.supertokens;
+package com.akjostudios.acsp.common.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;

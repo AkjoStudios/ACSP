@@ -1,8 +1,8 @@
 package com.akjostudios.acsp.backend.external;
 
 import com.akjostudios.acsp.common.api.TokenProvider;
-import com.akjostudios.acsp.common.model.supertokens.SupertokenJwtRequest;
-import com.akjostudios.acsp.common.model.supertokens.SupertokenJwtResponse;
+import com.akjostudios.acsp.common.dto.supertokens.SupertokenJwtRequest;
+import com.akjostudios.acsp.common.dto.supertokens.SupertokenJwtResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -69,12 +69,12 @@ public class ExternalServiceTokenProvider implements TokenProvider {
                 )).retrieve()
                 .bodyToMono(SupertokenJwtResponse.class)
                 .flatMap(response -> {
-                    if (!Objects.equals(response.getStatus(), "OK")) {
+                    if (!Objects.equals(response.status(), "OK")) {
                         return Mono.error(new RuntimeException("Failed to refresh token!"));
                     }
 
                     synchronized (refreshLock) {
-                        currentToken.set(response.getJwt());
+                        currentToken.set(response.jwt());
                         scheduleTokenRefresh();
                     }
 

@@ -1,7 +1,7 @@
 package com.akjostudios.acsp.bot.web.external;
 
 import com.akjostudios.acsp.common.api.ExternalServiceClient;
-import com.akjostudios.acsp.common.model.supertokens.SupertokenApiVersions;
+import com.akjostudios.acsp.common.model.SupertokenApiVersions;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
