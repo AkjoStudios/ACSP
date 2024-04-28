@@ -1,7 +1,7 @@
 [build]
 builder = "DOCKERFILE"
 dockerfilePath = "/Acsp-Backend/Dockerfile"
-watchPatterns = ["/Acsp-Backend"]
+watchPatterns = ["/Acsp-Backend", "/Acsp-Common"]
 
 [deploy]
 numReplicas = 1

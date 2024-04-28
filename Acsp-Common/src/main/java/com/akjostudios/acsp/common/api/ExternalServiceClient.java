@@ -1,5 +1,7 @@
 package com.akjostudios.acsp.common.api;
 
+import com.akjostudios.acsp.common.dto.ExternalServiceResponse;
+import com.akjostudios.acsp.common.model.ResponseStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
@@ -20,6 +22,7 @@ public class ExternalServiceClient {
                 .map(token -> client.get().uri(uri).header(AUTHORIZATION_HEADER, BEARER_PREFIX + token))
                 .flatMap(consumer)
                 .onErrorResume(Mono::error);
+
     }
 
     public <T> Mono<T> post(String uri, Function<WebClient.RequestHeadersSpec<?>, Mono<T>> consumer) {
@@ -64,72 +67,99 @@ public class ExternalServiceClient {
                 .onErrorResume(Mono::error);
     }
 
-    public <T> Mono<T> exchangeGet(String uri, Class<T> responseType) {
+    public <T extends ExternalServiceResponse> Mono<T> exchangeGet(String uri, Class<T> responseType) {
         return tokenProvider.getToken()
                 .map(token -> client.get().uri(uri).header(AUTHORIZATION_HEADER, BEARER_PREFIX + token))
                 .flatMap(request -> request.exchangeToMono(response -> response.bodyToMono(responseType)))
-                .onErrorResume(Mono::error);
+                .flatMap(response -> response.status() == ResponseStatus.SUCCESS
+                        ? Mono.just(response) :
+                        Mono.error(new RuntimeException(response.error()))
+                ).onErrorResume(Mono::error);
     }
 
-    public <T> Mono<T> exchangePost(String uri, Class<T> responseType) {
+    public <T extends ExternalServiceResponse> Mono<T> exchangePost(String uri, Class<T> responseType) {
         return tokenProvider.getToken()
                 .map(token -> client.post().uri(uri).header(AUTHORIZATION_HEADER, BEARER_PREFIX + token))
                 .flatMap(request -> request.exchangeToMono(response -> response.bodyToMono(responseType)))
-                .onErrorResume(Mono::error);
+                .flatMap(response -> response.status() == ResponseStatus.SUCCESS
+                        ? Mono.just(response) :
+                        Mono.error(new RuntimeException(response.error()))
+                ).onErrorResume(Mono::error);
     }
 
-    public <T, D> Mono<T> exchangePost(String uri, D body, Class<T> responseType) {
+    public <T extends ExternalServiceResponse, D> Mono<T> exchangePost(String uri, D body, Class<T> responseType) {
         return tokenProvider.getToken()
                 .map(token -> client.post()
                         .uri(uri)
                         .header(AUTHORIZATION_HEADER, BEARER_PREFIX + token)
                         .bodyValue(body)
                 ).flatMap(request -> request.exchangeToMono(response -> response.bodyToMono(responseType)))
-                .onErrorResume(Mono::error);
+                .flatMap(response -> response.status() == ResponseStatus.SUCCESS
+                        ? Mono.just(response) :
+                        Mono.error(new RuntimeException(response.error()))
+                ).onErrorResume(Mono::error);
     }
 
-    public <T> Mono<T> exchangePut(String uri, Class<T> responseType) {
+    public <T extends ExternalServiceResponse> Mono<T> exchangePut(String uri, Class<T> responseType) {
         return tokenProvider.getToken()
                 .map(token -> client.put().uri(uri).header(AUTHORIZATION_HEADER, BEARER_PREFIX + token))
                 .flatMap(request -> request.exchangeToMono(response -> response.bodyToMono(responseType)))
-                .onErrorResume(Mono::error);
+                .flatMap(response -> response.status() == ResponseStatus.SUCCESS
+                        ? Mono.just(response) :
+                        Mono.error(new RuntimeException(response.error()))
+                ).onErrorResume(Mono::error);
     }
 
-    public <T, D> Mono<T> exchangePut(String uri, D body, Class<T> responseType) {
+    public <T extends ExternalServiceResponse, D> Mono<T> exchangePut(String uri, D body, Class<T> responseType) {
         return tokenProvider.getToken()
                 .map(token -> client.put()
                         .uri(uri)
                         .header(AUTHORIZATION_HEADER, BEARER_PREFIX + token)
                         .bodyValue(body)
                 ).flatMap(request -> request.exchangeToMono(response -> response.bodyToMono(responseType)))
-                .onErrorResume(Mono::error);
+                .flatMap(response -> response.status() == ResponseStatus.SUCCESS
+                        ? Mono.just(response) :
+                        Mono.error(new RuntimeException(response.error()))
+                ).onErrorResume(Mono::error);
     }
 
-    public <T> Mono<T> exchangeDelete(String uri, Class<T> responseType) {
+    public <T extends ExternalServiceResponse> Mono<T> exchangeDelete(String uri, Class<T> responseType) {
         return tokenProvider.getToken()
                 .map(token -> client.delete().uri(uri).header(AUTHORIZATION_HEADER, BEARER_PREFIX + token))
                 .flatMap(request -> request.exchangeToMono(response -> response.bodyToMono(responseType)))
-                .onErrorResume(Mono::error);
+                .flatMap(response -> response.status() == ResponseStatus.SUCCESS
+                        ? Mono.just(response) :
+                        Mono.error(new RuntimeException(response.error()))
+                ).onErrorResume(Mono::error);
     }
 
-    public <T> Mono<T> exchangePatch(String uri, Class<T> responseType) {
+    public <T extends ExternalServiceResponse> Mono<T> exchangePatch(String uri, Class<T> responseType) {
         return tokenProvider.getToken()
                 .map(token -> client.patch().uri(uri).header(AUTHORIZATION_HEADER, BEARER_PREFIX + token))
                 .flatMap(request -> request.exchangeToMono(response -> response.bodyToMono(responseType)))
-                .onErrorResume(Mono::error);
+                .flatMap(response -> response.status() == ResponseStatus.SUCCESS
+                        ? Mono.just(response) :
+                        Mono.error(new RuntimeException(response.error()))
+                ).onErrorResume(Mono::error);
     }
 
-    public <T> Mono<T> exchangeHead(String uri, Class<T> responseType) {
+    public <T extends ExternalServiceResponse> Mono<T> exchangeHead(String uri, Class<T> responseType) {
         return tokenProvider.getToken()
                 .map(token -> client.head().uri(uri).header(AUTHORIZATION_HEADER, BEARER_PREFIX + token))
                 .flatMap(request -> request.exchangeToMono(response -> response.bodyToMono(responseType)))
-                .onErrorResume(Mono::error);
+                .flatMap(response -> response.status() == ResponseStatus.SUCCESS
+                        ? Mono.just(response) :
+                        Mono.error(new RuntimeException(response.error()))
+                ).onErrorResume(Mono::error);
     }
 
-    public <T> Mono<T> exchangeOptions(String uri, Class<T> responseType) {
+    public <T extends ExternalServiceResponse> Mono<T> exchangeOptions(String uri, Class<T> responseType) {
         return tokenProvider.getToken()
                 .map(token -> client.options().uri(uri).header(AUTHORIZATION_HEADER, BEARER_PREFIX + token))
                 .flatMap(request -> request.exchangeToMono(response -> response.bodyToMono(responseType)))
-                .onErrorResume(Mono::error);
+                .flatMap(response -> response.status() == ResponseStatus.SUCCESS
+                        ? Mono.just(response) :
+                        Mono.error(new RuntimeException(response.error()))
+                ).onErrorResume(Mono::error);
     }
 }

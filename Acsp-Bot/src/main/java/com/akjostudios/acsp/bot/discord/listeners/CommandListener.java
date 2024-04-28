@@ -26,6 +26,7 @@ import org.jetbrains.annotations.NotNull;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -264,13 +265,14 @@ public class CommandListener implements BotListener<MessageReceivedEvent> {
                                     ctx.getSubcommandName().getOrElseNull()
                             ), CommandExecutionCreateResponse.class
                     ).map(CommandExecutionCreateResponse::executionId)
+                            .timeout(Duration.ofSeconds(5))
                             .flatMap(executionId -> {
                                 ctx.setExecutionId(executionId);
                                 command.execute(ctx);
                                 return ctx.getBackendClient().exchangePut(
                                         "/api/bot/log/command/execution/" + executionId + "/finish",
                                         CommandExecutionFinishResponse.class
-                                );
+                                ).timeout(Duration.ofSeconds(5));
                             }).doOnError(error -> {
                                 log.error("Failed to log command execution!", error);
                                 ctx.sendMessage(ctx.getInternalErrorMessage(

@@ -28,7 +28,7 @@ public class CommonListener implements EventListener {
                 ));
         log.info(listeners.entrySet().stream()
                 .map(entry -> entry.getKey().getSimpleName() + ": " + entry.getValue().size())
-                .collect(Collectors.joining(", ")));
+                .collect(Collectors.joining(", ", "[", "]")));
     }
 
     @Override
