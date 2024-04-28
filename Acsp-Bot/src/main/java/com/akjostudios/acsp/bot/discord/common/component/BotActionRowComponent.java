@@ -9,10 +9,10 @@ import java.util.List;
 
 @Getter
 public class BotActionRowComponent extends BotComponent {
-    @NotNull private final List<BotComponent> components;
+    @NotNull private final List<? extends BotComponent> components;
 
     public BotActionRowComponent(
-            @NotNull List<BotComponent> components
+            @NotNull List<? extends BotComponent> components
     ) {
         super(BotConfigComponent.Type.ACTION_ROW, false);
         this.components = components;

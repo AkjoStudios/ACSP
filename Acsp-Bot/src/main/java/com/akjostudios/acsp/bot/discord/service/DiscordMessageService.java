@@ -2,6 +2,7 @@ package com.akjostudios.acsp.bot.discord.service;
 
 import com.akjostudios.acsp.bot.AcspBotApp;
 import com.akjostudios.acsp.bot.discord.common.component.BotActionRowComponent;
+import com.akjostudios.acsp.bot.discord.common.component.BotButtonComponent;
 import com.akjostudios.acsp.bot.discord.common.component.BotComponent;
 import com.akjostudios.acsp.bot.discord.common.component.conversion.BotComponentConverters;
 import com.akjostudios.acsp.bot.discord.common.component.conversion.discord.DiscordComponentType;
@@ -27,6 +28,8 @@ import java.util.List;
 @RequiredArgsConstructor
 @SuppressWarnings("unused")
 public class DiscordMessageService {
+    public static final String MESSAGE_SEND_ERROR = "Failed to send message!";
+
     public @NotNull MessageCreateData createMessage(String message) {
         return new MessageCreateBuilder().setContent(message).build();
     }
@@ -81,7 +84,7 @@ public class DiscordMessageService {
     }
 
     public @NotNull Option<BotActionRowComponent> createActionRow(
-            @NotNull List<Option<BotComponent>> components
+            @NotNull List<Option<? extends BotComponent>> components
     ) {
         return Try.of(() -> components.stream()
                 .filter(Option::isPresent)
@@ -91,6 +94,25 @@ public class DiscordMessageService {
                 .toOption()
                 .filter(row -> !row.getComponents().isEmpty())
                 .filter(row -> row.getComponents().size() <= 5);
+    }
+
+    public @NotNull Option<BotButtonComponent> createButton(
+            @NotNull String label,
+            @NotNull Option<String> emoji,
+            @NotNull String url,
+            boolean disabled
+    ) {
+        return Option.some(new BotButtonComponent(label, emoji.getOrElseNull(), url, disabled));
+    }
+
+    public @NotNull Option<BotButtonComponent> createButton(
+            @NotNull String interactionId,
+            @NotNull String label,
+            @NotNull BotButtonComponent.Style style,
+            @NotNull Option<String> emoji,
+            boolean disabled
+    ) {
+        return Option.some(new BotButtonComponent(interactionId, label, style, emoji.getOrElseNull(), disabled));
     }
 
     private @NotNull MessageEmbed toMessageEmbed(@NotNull BotConfigMessageEmbed embed) {

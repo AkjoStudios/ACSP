@@ -2,6 +2,7 @@ package com.akjostudios.acsp.bot.discord.common.command;
 
 import com.akjostudios.acsp.bot.discord.common.command.argument.BotCommandArgument;
 import com.akjostudios.acsp.bot.discord.common.component.BotActionRowComponent;
+import com.akjostudios.acsp.bot.discord.common.component.BotButtonComponent;
 import com.akjostudios.acsp.bot.discord.common.component.BotComponent;
 import com.akjostudios.acsp.bot.discord.config.definition.BotConfigCommand;
 import com.akjostudios.acsp.bot.discord.config.definition.BotConfigMessage;
@@ -43,7 +44,6 @@ public class BotCommandContext {
     private static final String GOTO_PRIVATE_MESSAGE_COMPONENT = "goto-private-message";
     private static final String PRIVATE_MESSAGE_ERROR_TITLE = "$error.private_message.title$";
     private static final String PRIVATE_MESSAGE_ERROR_DESCRIPTION = "$error.private_message.description$";
-    private static final String MESSAGE_SEND_ERROR = "Failed to send message!";
 
     @Getter private final String name;
 
@@ -217,16 +217,35 @@ public class BotCommandContext {
     }
 
     public @NotNull Option<BotActionRowComponent> createActionRow(
-            @NotNull List<Option<BotComponent>> components
+            @NotNull List<Option<? extends BotComponent>> components
     ) {
         return discordMessageService.createActionRow(components);
+    }
+
+    public @NotNull Option<BotButtonComponent> createButton(
+            @NotNull String label,
+            @NotNull Option<String> emoji,
+            @NotNull String url,
+            boolean disabled
+    ) {
+        return discordMessageService.createButton(label, emoji, url, disabled);
+    }
+
+    public @NotNull Option<BotButtonComponent> createButton(
+            @NotNull String interactionId,
+            @NotNull String label,
+            @NotNull BotButtonComponent.Style style,
+            @NotNull Option<String> emoji,
+            boolean disabled
+    ) {
+        return discordMessageService.createButton(interactionId, label, style, emoji, disabled);
     }
 
     public @NotNull Try<MessageCreateAction> answer(String message) {
         return Try.of(() -> discordMessageService.createMessage(message))
                 .map(event.getChannel()::sendMessage)
                 .onSuccess(this::handleAnswerAction)
-                .onFailure(err -> log.error(MESSAGE_SEND_ERROR, err));
+                .onFailure(err -> log.error(DiscordMessageService.MESSAGE_SEND_ERROR, err));
     }
 
     public @NotNull Try<MessageCreateAction> answer(
@@ -236,14 +255,14 @@ public class BotCommandContext {
         return Try.of(() -> discordMessageService.createMessage(message, components))
                 .map(event.getChannel()::sendMessage)
                 .onSuccess(this::handleAnswerAction)
-                .onFailure(err -> log.error(MESSAGE_SEND_ERROR, err));
+                .onFailure(err -> log.error(DiscordMessageService.MESSAGE_SEND_ERROR, err));
     }
 
     public @NotNull Try<MessageCreateAction> answer(@NotNull Try<BotConfigMessage> message) {
         return message.map(discordMessageService::createMessage)
                 .map(event.getChannel()::sendMessage)
                 .onSuccess(this::handleAnswerAction)
-                .onFailure(err -> log.error(MESSAGE_SEND_ERROR, err));
+                .onFailure(err -> log.error(DiscordMessageService.MESSAGE_SEND_ERROR, err));
     }
 
     private void handleAnswerAction(@NotNull MessageCreateAction action) {
@@ -262,7 +281,7 @@ public class BotCommandContext {
     public @NotNull Try<MessageCreateAction> sendMessage(String message) {
         return getOriginalServerChannel().flatMap(
                 channel -> sendMessage(message, channel)
-                        .onFailure(ex -> log.error(MESSAGE_SEND_ERROR, ex))
+                        .onFailure(ex -> log.error(DiscordMessageService.MESSAGE_SEND_ERROR, ex))
                         .toOption()
         ).toTry();
     }
@@ -272,7 +291,7 @@ public class BotCommandContext {
                 textChannel -> Try.of(
                         () -> discordMessageService.createMessage(message)
                 ).map(textChannel::sendMessage)
-        ).onSuccess(RestAction::queue).onFailure(err -> log.error(MESSAGE_SEND_ERROR, err));
+        ).onSuccess(RestAction::queue).onFailure(err -> log.error(DiscordMessageService.MESSAGE_SEND_ERROR, err));
     }
 
     /**
@@ -285,7 +304,7 @@ public class BotCommandContext {
     ) {
         return getOriginalServerChannel().flatMap(
                 channel -> sendMessage(message, channel, components)
-                        .onFailure(ex -> log.error(MESSAGE_SEND_ERROR, ex))
+                        .onFailure(ex -> log.error(DiscordMessageService.MESSAGE_SEND_ERROR, ex))
                         .toOption()
         ).toTry();
     }
@@ -303,7 +322,7 @@ public class BotCommandContext {
                 textChannel -> Try.of(
                         () -> discordMessageService.createMessage(message, components)
                 ).map(textChannel::sendMessage)
-        ).onSuccess(RestAction::queue).onFailure(err -> log.error(MESSAGE_SEND_ERROR, err));
+        ).onSuccess(RestAction::queue).onFailure(err -> log.error(DiscordMessageService.MESSAGE_SEND_ERROR, err));
     }
 
     /**
@@ -315,7 +334,7 @@ public class BotCommandContext {
     ) {
         return getOriginalServerChannel().flatMap(
                 channel -> sendMessage(message, channel)
-                        .onFailure(ex -> log.error(MESSAGE_SEND_ERROR, ex))
+                        .onFailure(ex -> log.error(DiscordMessageService.MESSAGE_SEND_ERROR, ex))
                         .toOption()
         ).toTry();
     }
@@ -327,7 +346,7 @@ public class BotCommandContext {
     public @NotNull Try<MessageCreateAction> sendMessage(@NotNull Try<BotConfigMessage> message, @NotNull BotConfigServerChannel channel) {
         return botPrimitiveService.getChannel(event, channel).toTry().flatMap(
                 textChannel -> message.map(discordMessageService::createMessage).map(textChannel::sendMessage)
-        ).onSuccess(RestAction::queue).onFailure(err -> log.error(MESSAGE_SEND_ERROR, err));
+        ).onSuccess(RestAction::queue).onFailure(err -> log.error(DiscordMessageService.MESSAGE_SEND_ERROR, err));
     }
 
     public @NotNull Try<MessageCreateAction> sendPrivateMessage(String message) {
@@ -335,7 +354,7 @@ public class BotCommandContext {
                 privateChannel -> Try.of(() -> discordMessageService.createMessage(message))
                         .map(privateChannel::sendMessage)
                         .onSuccess(RestAction::queue)
-                        .onFailure(err -> log.error(MESSAGE_SEND_ERROR, err))
+                        .onFailure(err -> log.error(DiscordMessageService.MESSAGE_SEND_ERROR, err))
         ).complete();
     }
 
@@ -347,7 +366,7 @@ public class BotCommandContext {
                 privateChannel -> Try.of(() -> discordMessageService.createMessage(message, components))
                         .map(privateChannel::sendMessage)
                         .onSuccess(RestAction::queue)
-                        .onFailure(err -> log.error(MESSAGE_SEND_ERROR, err))
+                        .onFailure(err -> log.error(DiscordMessageService.MESSAGE_SEND_ERROR, err))
         ).complete();
     }
 
@@ -356,7 +375,7 @@ public class BotCommandContext {
                 privateChannel -> message.map(discordMessageService::createMessage)
                         .map(privateChannel::sendMessage)
                         .onSuccess(RestAction::queue)
-                        .onFailure(err -> log.error(MESSAGE_SEND_ERROR, err))
+                        .onFailure(err -> log.error(DiscordMessageService.MESSAGE_SEND_ERROR, err))
         ).complete();
     }
 

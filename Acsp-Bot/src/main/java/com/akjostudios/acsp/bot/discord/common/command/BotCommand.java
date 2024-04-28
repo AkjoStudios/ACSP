@@ -6,5 +6,6 @@ import org.springframework.stereotype.Component;
 @Component
 public interface BotCommand {
     void execute(@NotNull BotCommandContext ctx);
+    void onInteraction();
     String getName();
 }
