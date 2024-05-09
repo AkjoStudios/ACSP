@@ -2,27 +2,41 @@ package com.akjostudios.acsp.bot.discord.listeners;
 
 import com.akjostudios.acsp.bot.discord.common.BotEventType;
 import com.akjostudios.acsp.bot.discord.common.command.BotCommand;
+import com.akjostudios.acsp.bot.discord.common.command.BotCommandContext;
+import com.akjostudios.acsp.bot.discord.common.command.BotCommandInteractionContext;
+import com.akjostudios.acsp.bot.discord.common.command.argument.BotCommandArgument;
 import com.akjostudios.acsp.bot.discord.common.listener.BotListener;
-import com.akjostudios.acsp.bot.discord.service.BotErrorMessageService;
-import com.akjostudios.acsp.bot.discord.service.DiscordMessageService;
+import com.akjostudios.acsp.bot.discord.service.*;
 import com.akjostudios.acsp.common.api.ExternalServiceClient;
 import com.akjostudios.acsp.common.dto.bot.log.command.CommandExecutionGetResponse;
+import com.akjostudios.acsp.common.model.bot.log.command.CommandExecutionDao;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.tonivade.purefun.type.Option;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.dv8tion.jda.api.events.interaction.component.GenericComponentInteractionCreateEvent;
 import net.dv8tion.jda.api.requests.RestAction;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
+import reactor.core.publisher.Mono;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Component
 @RequiredArgsConstructor
 @Slf4j
 public class CommandInteractionListener implements BotListener<GenericComponentInteractionCreateEvent> {
+    private final ApplicationContext applicationContext;
     private final DiscordMessageService discordMessageService;
     private final BotErrorMessageService errorMessageService;
+    private final BotDefinitionService botDefinitionService;
+    private final BotPrimitiveService botPrimitiveService;
+    private final BotLayoutService botLayoutService;
+    private final BotCommandArgumentService botCommandArgumentService;
+    private final ObjectMapper objectMapper;
 
     @Qualifier("client.service.backend")
     private final ExternalServiceClient backendClient;
@@ -39,19 +53,61 @@ public class CommandInteractionListener implements BotListener<GenericComponentI
         backendClient.exchangeGet(
                 "/api/bot/log/command/execution/rmid/" + messageId,
                 CommandExecutionGetResponse.class
-        ).doOnError(__ -> onInvalidInteraction(event)).map(CommandExecutionGetResponse::result).subscribe(
-                commandExecution -> commands.stream()
+        ).onErrorResume(ex -> {
+            onInvalidInteraction(event);
+            return Mono.empty();
+        }).map(CommandExecutionGetResponse::result)
+                .filter(CommandExecutionDao::finished)
+                .subscribe(commandExecution -> commands.stream()
                         .filter(command -> command.getName().equals(commandExecution.commandName()))
                         .findFirst()
-                        .ifPresent(BotCommand::onInteraction)
+                        .ifPresent(command -> onSuccessfulInteraction(command, commandExecution, event))
+                );
+    }
+
+    private void onSuccessfulInteraction(
+            @NotNull BotCommand command,
+            @NotNull CommandExecutionDao commandExecution,
+            @NotNull GenericComponentInteractionCreateEvent event
+    ) {
+        BotCommandInteractionContext context = new BotCommandInteractionContext(
+                commandExecution.commandName(),
+                Option.of(commandExecution::subcommandName),
+                event.getComponentId(),
+                event,
+                commandExecution.executionId(),
+                commandExecution.messageId(),
+                commandExecution.channelId(),
+                commandExecution.userId()
         );
+        BotCommandContext commandContext = context.initialize(
+                applicationContext,
+                botDefinitionService,
+                discordMessageService,
+                errorMessageService,
+                botPrimitiveService,
+                botLayoutService,
+                objectMapper
+        );
+
+        List<BotCommandArgument<?>> convertedArguments = new ArrayList<>();
+        botCommandArgumentService.convertArguments(
+                commandContext,
+                commandExecution.commandArgs()
+        ).forEach(validation -> validation.fold(
+                err -> false,
+                convertedArguments::add
+        ));
+        context.setArguments(convertedArguments);
+
+        command.onInteraction(context);
     }
 
     private void onInvalidInteraction(@NotNull GenericComponentInteractionCreateEvent event) {
         errorMessageService.getErrorMessage(
                 "$error.invalid_interaction.invalid.title$",
                 "$error.invalid_interaction.invalid.description$"
-        ).map(discordMessageService::createMessage).map(event.getChannel()::sendMessage)
+        ).map(discordMessageService::editMessage).map(event::editMessage)
                 .onSuccess(RestAction::queue)
                 .onFailure(err -> log.error(DiscordMessageService.MESSAGE_SEND_ERROR, err));
     }

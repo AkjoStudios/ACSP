@@ -12,23 +12,26 @@ import com.akjostudios.acsp.bot.discord.config.layout.BotConfigServerChannelCate
 import com.akjostudios.acsp.bot.discord.config.layout.BotConfigServerRole;
 import com.akjostudios.acsp.bot.discord.service.*;
 import com.akjostudios.acsp.common.api.ExternalServiceClient;
-import com.akjostudios.acsp.common.dto.bot.log.command.CommandResponseCreateRequest;
-import com.akjostudios.acsp.common.dto.bot.log.command.CommandResponseCreateResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.tonivade.purefun.type.Option;
 import com.github.tonivade.purefun.type.Try;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import net.dv8tion.jda.api.entities.*;
+import net.dv8tion.jda.api.entities.Member;
+import net.dv8tion.jda.api.entities.Message;
+import net.dv8tion.jda.api.entities.Role;
+import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.entities.channel.concrete.Category;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.entities.emoji.Emoji;
-import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
+import net.dv8tion.jda.api.events.interaction.component.GenericComponentInteractionCreateEvent;
+import net.dv8tion.jda.api.interactions.InteractionHook;
 import net.dv8tion.jda.api.requests.RestAction;
 import net.dv8tion.jda.api.requests.restaction.MessageCreateAction;
 import net.dv8tion.jda.api.requests.restaction.MessageEditAction;
+import net.dv8tion.jda.api.requests.restaction.interactions.MessageEditCallbackAction;
+import net.dv8tion.jda.api.requests.restaction.interactions.ReplyCallbackAction;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.springframework.context.ApplicationContext;
@@ -36,46 +39,43 @@ import org.springframework.context.ApplicationContext;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 @Slf4j
 @SuppressWarnings({"unused", "UnusedReturnValue", "java:S4968"})
-public class BotCommandContext implements IBotCommandContext {
+public class BotCommandInteractionContext implements IBotCommandContext {
     private static final String GOTO_PRIVATE_MESSAGE_COMPONENT = "goto-private-message";
     private static final String PRIVATE_MESSAGE_ERROR_TITLE = "$error.private_message.title$";
     private static final String PRIVATE_MESSAGE_ERROR_DESCRIPTION = "$error.private_message.description$";
 
-    @Getter private final String name;
+    @Getter
+    private final String commandName;
 
-    private final Option<String> subcommand;
+    private final Option<String> subcommandName;
 
-    private final MessageReceivedEvent event;
+    private final String interactionId;
 
-    /**
-     * @apiNote Should not be called by the command implementation.
-     */
-    @Setter(onMethod_={@Override})
-    private List<? extends BotCommandArgument<?>> arguments;
+    private final GenericComponentInteractionCreateEvent event;
 
-    /**
-     * @apiNote Should not be called by the command implementation.
-     */
-    @Setter
-    private long executionId;
+    private final long executionId;
 
-    private ApplicationContext applicationContext;
-    private BotDefinitionService botDefinitionService;
+    private final long originalMessageId;
+
+    private final long originalChannelId;
+
+    private final long originalAuthorId;
+
     private DiscordMessageService discordMessageService;
-    private BotErrorMessageService errorMessageService;
     private BotPrimitiveService botPrimitiveService;
-    private BotLayoutService botLayoutService;
-    private ObjectMapper objectMapper;
+
+    private BotCommandContext commandContext;
+
+    private boolean replied = false;
 
     /**
      * @apiNote Should not be called by the command implementation.
      */
-    public void initialize(
+    public BotCommandContext initialize(
             ApplicationContext applicationContext,
             BotDefinitionService botDefinitionService,
             DiscordMessageService discordMessageService,
@@ -84,63 +84,68 @@ public class BotCommandContext implements IBotCommandContext {
             BotLayoutService botLayoutService,
             ObjectMapper objectMapper
     ) {
-        this.applicationContext = applicationContext;
-        this.botDefinitionService = botDefinitionService;
         this.discordMessageService = discordMessageService;
-        this.errorMessageService = errorMessageService;
         this.botPrimitiveService = botPrimitiveService;
-        this.botLayoutService = botLayoutService;
-        this.objectMapper = objectMapper;
+
+        this.commandContext = new BotCommandContext(
+                commandName,
+                subcommandName,
+                null
+        );
+        this.commandContext.initialize(
+                applicationContext,
+                botDefinitionService,
+                discordMessageService,
+                errorMessageService,
+                botPrimitiveService,
+                botLayoutService,
+                objectMapper
+        );
+
+        return this.commandContext;
+    }
+
+    /**
+     * @apiNote Should not be called by the command implementation.
+     */
+    @Override
+    public void setArguments(List<? extends BotCommandArgument<?>> arguments) {
+        this.commandContext.setArguments(arguments);
     }
 
     @Override
     public @NotNull Option<BotConfigCommand> getDefinition() {
-        return botDefinitionService.getCommandDefinition(name)
-                .filter(BotConfigCommand::isEnabled);
+        return commandContext.getDefinition();
     }
 
     @Override
     public @NotNull Option<BotConfigCommand.Subcommand> getSubcommandDefinition() {
-        return getDefinition().map(BotConfigCommand::getSubcommands)
-                .filter(BotConfigCommand.Subcommands::isAvailable)
-                .map(BotConfigCommand.Subcommands::getCommands)
-                .flatMap(subcommands -> Option.from(subcommands.stream()
-                        .filter(subcommandP -> subcommandP.getName().equals(subcommand.getOrElseNull()))
-                        .findFirst())
-                );
+        return commandContext.getSubcommandDefinition();
     }
 
     @Override
     public boolean isSubcommand() {
-        return subcommand.isPresent();
+        return commandContext.isSubcommand();
     }
 
     @Override
     public Option<String> getSubcommandName() {
-        return getSubcommandDefinition().map(BotConfigCommand.Subcommand::getName);
+        return commandContext.getSubcommandName();
     }
 
     @Override
     public @NotNull List<BotConfigCommand.Argument> getArgumentDefinitions() {
-        return isSubcommand()
-                ? getSubcommandDefinition().flatMap(subcommandP -> Option.of(subcommandP::getArguments)).getOrElse(List.of())
-                : getDefinition().flatMap(subcommandP -> Option.of(subcommandP::getArguments)).getOrElse(List.of());
+        return commandContext.getArgumentDefinitions();
     }
 
     @Override
-    @SuppressWarnings("unchecked")
     public <T> @NotNull T getArgument(@NotNull String id, @Nullable T defaultValue) {
-        return Option.from(arguments.stream()
-                .filter(argument -> argument.id().equals(id))
-                .findFirst())
-                .map(argument -> (T) argument.value())
-                .getOrElse(defaultValue);
+        return commandContext.getArgument(id, defaultValue);
     }
 
     @Override
     public @NotNull Map<String, String> getArgumentMap() {
-        return arguments.stream()
-                .collect(Collectors.toMap(BotCommandArgument::id, argument -> argument.value().toString()));
+        return commandContext.getArgumentMap();
     }
 
     @Override
@@ -148,7 +153,7 @@ public class BotCommandContext implements IBotCommandContext {
             @NotNull String label,
             String@NotNull... placeholders
     ) {
-        return botDefinitionService.getMessageDefinition(label, placeholders);
+        return commandContext.getMessage(label, placeholders);
     }
 
     @Override
@@ -157,7 +162,7 @@ public class BotCommandContext implements IBotCommandContext {
             @NotNull List<@NotNull String> labelPlaceholders,
             String@NotNull... placeholders
     ) {
-        return botDefinitionService.getMessageDefinition(label, labelPlaceholders, placeholders);
+        return commandContext.getMessage(label, labelPlaceholders, placeholders);
     }
 
     @Override
@@ -165,7 +170,7 @@ public class BotCommandContext implements IBotCommandContext {
             @NotNull String errorTitle,
             @NotNull String errorDescription
     ) {
-        return errorMessageService.getErrorMessage(errorTitle, errorDescription);
+        return commandContext.getErrorMessage(errorTitle, errorDescription);
     }
 
     @Override
@@ -174,14 +179,14 @@ public class BotCommandContext implements IBotCommandContext {
             @NotNull String errorDescription,
             @NotNull List<String> placeholders
     ) {
-        return errorMessageService.getErrorMessage(errorTitle, errorDescription, placeholders);
+        return commandContext.getErrorMessage(errorTitle, errorDescription, placeholders);
     }
 
     @Override
     public @NotNull Try<BotConfigMessage> getInternalErrorMessage(
             @NotNull String errorMessage
     ) {
-        return errorMessageService.getInternalErrorMessage(errorMessage);
+        return commandContext.getInternalErrorMessage(errorMessage);
     }
 
     @Override
@@ -189,7 +194,7 @@ public class BotCommandContext implements IBotCommandContext {
             @NotNull String label,
             String@NotNull... placeholders
     ) {
-        return botDefinitionService.getFieldDefinition(label, placeholders);
+        return commandContext.getField(label, placeholders);
     }
 
     @Override
@@ -198,7 +203,7 @@ public class BotCommandContext implements IBotCommandContext {
             @NotNull List<@NotNull String> labelPlaceholders,
             String@NotNull... placeholders
     ) {
-        return botDefinitionService.getFieldDefinition(label, labelPlaceholders, placeholders);
+        return commandContext.getField(label, labelPlaceholders, placeholders);
     }
 
     @Override
@@ -206,7 +211,7 @@ public class BotCommandContext implements IBotCommandContext {
             @NotNull String label,
             String@NotNull... placeholders
     ) {
-        return botDefinitionService.getComponentDefinition(label, placeholders);
+        return commandContext.getComponent(label, placeholders);
     }
 
     @Override
@@ -215,7 +220,7 @@ public class BotCommandContext implements IBotCommandContext {
             @NotNull List<@NotNull String> labelPlaceholders,
             String@NotNull... placeholders
     ) {
-        return botDefinitionService.getComponentDefinition(label, labelPlaceholders, placeholders);
+        return commandContext.getComponent(label, labelPlaceholders, placeholders);
     }
 
     @Override
@@ -224,7 +229,7 @@ public class BotCommandContext implements IBotCommandContext {
             Option<Integer> index,
             List<Option<BotConfigMessageEmbed.Field>> fields
     ) {
-        return discordMessageService.injectFields(message, index, fields);
+        return commandContext.injectFields(message, index, fields);
     }
 
     @Override
@@ -232,14 +237,14 @@ public class BotCommandContext implements IBotCommandContext {
             @NotNull Try<BotConfigMessage> message,
             List<Option<BotActionRowComponent>> rowComponents
     ) {
-        return discordMessageService.injectComponents(message, rowComponents);
+        return commandContext.injectComponents(message, rowComponents);
     }
 
     @Override
     public @NotNull Option<BotActionRowComponent> createActionRow(
             @NotNull List<Option<? extends BotComponent>> components
     ) {
-        return discordMessageService.createActionRow(components);
+        return commandContext.createActionRow(components);
     }
 
     @Override
@@ -249,7 +254,7 @@ public class BotCommandContext implements IBotCommandContext {
             @NotNull String url,
             boolean disabled
     ) {
-        return discordMessageService.createButton(label, emoji, url, disabled);
+        return commandContext.createButton(label, emoji, url, disabled);
     }
 
     @Override
@@ -260,101 +265,94 @@ public class BotCommandContext implements IBotCommandContext {
             @NotNull Option<String> emoji,
             boolean disabled
     ) {
-        return discordMessageService.createButton(interactionId, label, style, emoji, disabled);
+        return commandContext.createButton(interactionId, label, style, emoji, disabled);
     }
 
-    public @NotNull Try<MessageCreateAction> answer(String message) {
+    public @NotNull Try<ReplyCallbackAction> reply(
+            @NotNull String message,
+            boolean ephemeral
+    ) {
         return Try.of(() -> discordMessageService.createMessage(message))
-                .map(event.getChannel()::sendMessage)
-                .onSuccess(this::handleAnswerAction)
-                .onFailure(err -> log.error(DiscordMessageService.MESSAGE_SEND_ERROR, err));
+                .filter(msg -> !replied)
+                .map(msg -> event.reply(msg).setEphemeral(ephemeral))
+                .onSuccess(action -> {
+                    replied = true;
+                    action.queue();
+                }).onFailure(err -> log.error(DiscordMessageService.MESSAGE_SEND_ERROR, err));
     }
 
-    public @NotNull Try<MessageCreateAction> answer(
-            String message,
-            @NotNull List<Option<BotActionRowComponent>> components
+    public @NotNull Try<ReplyCallbackAction> reply(
+            @NotNull String message,
+            @NotNull List<Option<BotActionRowComponent>> components,
+            boolean ephemeral
     ) {
         return Try.of(() -> discordMessageService.createMessage(message, components))
-                .map(event.getChannel()::sendMessage)
-                .onSuccess(this::handleAnswerAction)
-                .onFailure(err -> log.error(DiscordMessageService.MESSAGE_SEND_ERROR, err));
+                .filter(msg -> !replied)
+                .map(msg -> event.reply(msg).setEphemeral(ephemeral))
+                .onSuccess(action -> {
+                    replied = true;
+                    action.queue();
+                }).onFailure(err -> log.error(DiscordMessageService.MESSAGE_SEND_ERROR, err));
     }
 
-    public @NotNull Try<MessageCreateAction> answer(@NotNull Try<BotConfigMessage> message) {
-        return message.map(discordMessageService::createMessage)
-                .map(event.getChannel()::sendMessage)
-                .onSuccess(this::handleAnswerAction)
-                .onFailure(err -> log.error(DiscordMessageService.MESSAGE_SEND_ERROR, err));
+    public @NotNull Try<ReplyCallbackAction> reply(
+            @NotNull BotConfigMessage message,
+            boolean ephemeral
+    ) {
+        return Try.of(() -> discordMessageService.createMessage(message))
+                .filter(msg -> !replied)
+                .map(msg -> event.reply(msg).setEphemeral(ephemeral))
+                .onSuccess(action -> {
+                    replied = true;
+                    action.queue();
+                }).onFailure(err -> log.error(DiscordMessageService.MESSAGE_SEND_ERROR, err));
     }
 
-    private void handleAnswerAction(@NotNull MessageCreateAction action) {
-        action.setMessageReference(event.getMessageId())
-                .map(ISnowflake::getIdLong)
-                .onSuccess(id -> getBackendClient().exchangePost(
-                        "/api/bot/log/command/execution/" + executionId + "/response",
-                        new CommandResponseCreateRequest(
-                                id, event.getChannel().getIdLong()
-                        ), CommandResponseCreateResponse.class
-                ).doOnError(error -> sendMessage(
-                        getInternalErrorMessage("Failed to create response! " + error.getMessage())
-                )).subscribe()).queue();
+    public @NotNull Try<MessageEditCallbackAction> editReply(@NotNull String message) {
+        return Try.of(() -> discordMessageService.editMessage(message))
+                .filter(msg -> !replied)
+                .map(event::editMessage)
+                .onSuccess(action -> {
+                    replied = true;
+                    action.queue();
+                }).onFailure(err -> log.error(DiscordMessageService.MESSAGE_EDIT_ERROR, err));
     }
 
-    public @NotNull Try<MessageCreateAction> answerPrivately(String message) {
-        return event.getAuthor().openPrivateChannel().map(
-                privateChannel -> Try.of(() -> discordMessageService.createMessage(message))
-                        .map(privateChannel::sendMessage)
-                        .flatMap(action -> action
-                                .map(Message::getJumpUrl)
-                                .map(jumpUrl -> answer(
-                                        "",
-                                        List.of(createActionRow(List.of(
-                                                getComponent(GOTO_PRIVATE_MESSAGE_COMPONENT, jumpUrl))
-                                        ))
-                                )).complete()
-                        )
-        ).onErrorMap(err -> sendMessage(
-                getErrorMessage(PRIVATE_MESSAGE_ERROR_TITLE, PRIVATE_MESSAGE_ERROR_DESCRIPTION))
-        ).complete();
-    }
-
-    public @NotNull Try<MessageCreateAction> answerPrivately(
-            String message,
+    public @NotNull Try<MessageEditCallbackAction> editReply(
+            @NotNull String message,
             @NotNull List<Option<BotActionRowComponent>> components
     ) {
-        return event.getAuthor().openPrivateChannel().map(
-                privateChannel -> Try.of(() -> discordMessageService.createMessage(message, components))
-                        .map(privateChannel::sendMessage)
-                        .flatMap(action -> action
-                                .map(Message::getJumpUrl)
-                                .map(jumpUrl -> answer(
-                                        "",
-                                        List.of(createActionRow(List.of(
-                                                getComponent(GOTO_PRIVATE_MESSAGE_COMPONENT, jumpUrl))
-                                        ))
-                                )).complete()
-                        )
-        ).onErrorMap(err -> sendMessage(
-                getErrorMessage(PRIVATE_MESSAGE_ERROR_TITLE, PRIVATE_MESSAGE_ERROR_DESCRIPTION))
-        ).complete();
+        return Try.of(() -> discordMessageService.editMessage(message, components))
+                .filter(msg -> !replied)
+                .map(event::editMessage)
+                .onSuccess(action -> {
+                    replied = true;
+                    action.queue();
+                }).onFailure(err -> log.error(DiscordMessageService.MESSAGE_EDIT_ERROR, err));
     }
 
-    public @NotNull Try<MessageCreateAction> answerPrivately(@NotNull Try<BotConfigMessage> message) {
-        return event.getAuthor().openPrivateChannel().map(
-                privateChannel -> message.map(discordMessageService::createMessage)
-                        .map(privateChannel::sendMessage)
-                        .flatMap(action -> action
-                                .map(Message::getJumpUrl)
-                                .map(jumpUrl -> answer(
-                                        "",
-                                        List.of(createActionRow(List.of(
-                                                getComponent(GOTO_PRIVATE_MESSAGE_COMPONENT, jumpUrl))
-                                        ))
-                                )).complete()
-                        )
-        ).onErrorMap(err -> sendMessage(
-                getErrorMessage(PRIVATE_MESSAGE_ERROR_TITLE, PRIVATE_MESSAGE_ERROR_DESCRIPTION))
-        ).complete();
+    public @NotNull Try<MessageEditCallbackAction> editReply(@NotNull BotConfigMessage message) {
+        return Try.of(() -> discordMessageService.editMessage(message))
+                .filter(msg -> !replied)
+                .map(event::editMessage)
+                .onSuccess(action -> {
+                    replied = true;
+                    action.queue();
+                }).onFailure(err -> log.error(DiscordMessageService.MESSAGE_EDIT_ERROR, err));
+    }
+
+    public @NotNull Try<InteractionHook> deferReply(boolean ephemeral) {
+        return Try.of(() -> event.deferReply(ephemeral))
+                .map(__ -> event.getHook())
+                .onSuccess(hook -> replied = true)
+                .onFailure(err -> log.error(DiscordMessageService.MESSAGE_SEND_ERROR, err));
+    }
+
+    public @NotNull Try<InteractionHook> deferEdit() {
+        return Try.of(event::deferEdit)
+                .map(__ -> event.getHook())
+                .onSuccess(hook -> replied = true)
+                .onFailure(err -> log.error(DiscordMessageService.MESSAGE_EDIT_ERROR, err));
     }
 
     @Override
@@ -379,8 +377,7 @@ public class BotCommandContext implements IBotCommandContext {
     }
 
     /**
-     * Be aware that the components don't support interactions with the user. (Link Buttons are supported)
-     * Use the {@link #answer(String, List)} method instead.
+     * Be aware that the components don't support further interactions with the user. (Link Buttons are supported)
      */
     @Override
     public @NotNull Try<MessageCreateAction> sendMessage(
@@ -395,8 +392,7 @@ public class BotCommandContext implements IBotCommandContext {
     }
 
     /**
-     * Be aware that the components don't support interactions with the user. (Link Buttons are supported)
-     * Use the {@link #answer(String, List)} method instead.
+     * Be aware that the components don't support further interactions with the user. (Link Buttons are supported)
      */
     @Override
     public @NotNull Try<MessageCreateAction> sendMessage(
@@ -412,8 +408,7 @@ public class BotCommandContext implements IBotCommandContext {
     }
 
     /**
-     * Be aware that the components don't support interactions with the user. (Link Buttons are supported)
-     * Use the {@link #answer(Try)} method instead.
+     * Be aware that the components don't support further interactions with the user. (Link Buttons are supported)
      */
     @Override
     public @NotNull Try<MessageCreateAction> sendMessage(
@@ -427,8 +422,7 @@ public class BotCommandContext implements IBotCommandContext {
     }
 
     /**
-     * Be aware that the components don't support interactions with the user. (Link Buttons are supported)
-     * Use the {@link #answer(Try)} method instead.
+     * Be aware that the components don't support further interactions with the user. (Link Buttons are supported)
      */
     @Override
     public @NotNull Try<MessageCreateAction> sendMessage(
@@ -440,8 +434,9 @@ public class BotCommandContext implements IBotCommandContext {
         ).onSuccess(RestAction::queue).onFailure(err -> log.error(DiscordMessageService.MESSAGE_SEND_ERROR, err));
     }
 
+    @Override
     public @NotNull Try<MessageCreateAction> sendPrivateMessage(String message) {
-        return event.getAuthor().openPrivateChannel().map(
+        return getOriginalAuthor().getUser().openPrivateChannel().map(
                 privateChannel -> Try.of(() -> discordMessageService.createMessage(message))
                         .map(privateChannel::sendMessage)
                         .onSuccess(RestAction::queue)
@@ -449,11 +444,12 @@ public class BotCommandContext implements IBotCommandContext {
         ).complete();
     }
 
+    @Override
     public @NotNull Try<MessageCreateAction> sendPrivateMessage(
             String message,
             @NotNull List<Option<BotActionRowComponent>> components
     ) {
-        return event.getAuthor().openPrivateChannel().map(
+        return getOriginalAuthor().getUser().openPrivateChannel().map(
                 privateChannel -> Try.of(() -> discordMessageService.createMessage(message, components))
                         .map(privateChannel::sendMessage)
                         .onSuccess(RestAction::queue)
@@ -461,10 +457,11 @@ public class BotCommandContext implements IBotCommandContext {
         ).complete();
     }
 
+    @Override
     public @NotNull Try<MessageCreateAction> sendPrivateMessage(
             @NotNull Try<BotConfigMessage> message
     ) {
-        return event.getAuthor().openPrivateChannel().map(
+        return getOriginalAuthor().getUser().openPrivateChannel().map(
                 privateChannel -> message.map(discordMessageService::createMessage)
                         .map(privateChannel::sendMessage)
                         .onSuccess(RestAction::queue)
@@ -509,7 +506,7 @@ public class BotCommandContext implements IBotCommandContext {
             @NotNull Member member,
             @NotNull BotConfigServerRole role
     ) {
-        return botPrimitiveService.memberHasRole(member, role);
+        return commandContext.memberHasRole(member, role);
     }
 
     @Override
@@ -517,7 +514,7 @@ public class BotCommandContext implements IBotCommandContext {
             @NotNull Member member,
             @NotNull BotConfigServerChannel channel
     ) {
-        return botPrimitiveService.memberInChannel(member, channel);
+        return commandContext.memberInChannel(member, channel);
     }
 
     @Override
@@ -525,34 +522,31 @@ public class BotCommandContext implements IBotCommandContext {
             @NotNull Member member,
             @NotNull Collection<BotConfigCommand.RolePermission> requiredRoles
     ) {
-        return requiredRoles.stream()
-                .map(rolePermission -> Map.entry(rolePermission.getRole(), switch (rolePermission.getType()) {
-                    case SIMPLE -> memberHasRole(member, rolePermission.getRole());
-                    case EXCLUSION -> !memberHasRole(member, rolePermission.getRole());
-                })).collect(Collectors.toMap(
-                        Map.Entry::getKey,
-                        Map.Entry::getValue,
-                        (existing, replacement) -> existing && replacement
-                ));
+        return commandContext.memberMatchesRoles(member, requiredRoles);
     }
 
     @Override
     public @NotNull Member getOriginalAuthor() {
-        return Option.of(event.getMember()).getOrElseThrow();
+        return getOriginalChannel().getGuild().retrieveMemberById(originalAuthorId).complete();
     }
 
     @Override
     public @NotNull Message getOriginalMessage() {
-        return event.getMessage();
+        return getOriginalChannel().retrieveMessageById(originalMessageId).complete();
     }
 
     @Override
     public @NotNull TextChannel getOriginalChannel() {
-        return event.getChannel().asTextChannel();
+        return Option.of(event.getJDA().getTextChannelById(originalChannelId))
+                .getOrElseThrow();
     }
 
     @Override
     public @NotNull String getJumpUrl() {
+        return getOriginalMessage().getJumpUrl();
+    }
+
+    public @NotNull String getResponseJumpUrl() {
         return event.getMessage().getJumpUrl();
     }
 
@@ -562,8 +556,8 @@ public class BotCommandContext implements IBotCommandContext {
     }
 
     @Override
-    public @NotNull Option<Member> getMember(@NotNull String userId) {
-        return botPrimitiveService.getMember(event, userId);
+    public @NotNull Option<Member> getMember(@NotNull String memberId) {
+        return botPrimitiveService.getMember(event, memberId);
     }
 
     @Override
@@ -588,12 +582,12 @@ public class BotCommandContext implements IBotCommandContext {
 
     @Override
     public @NotNull Option<BotConfigServerRole> getServerRole(@NotNull Long roleId) {
-        return botLayoutService.getServerLayout().flatMap(server -> botLayoutService.getRole(server, roleId));
+        return commandContext.getServerRole(roleId);
     }
 
     @Override
     public @NotNull Option<BotConfigServerChannel> getServerChannel(@NotNull Long channelId) {
-        return botLayoutService.getServerLayout().flatMap(server -> botLayoutService.getChannel(server, channelId));
+        return commandContext.getServerChannel(channelId);
     }
 
     @Override
@@ -603,12 +597,12 @@ public class BotCommandContext implements IBotCommandContext {
 
     @Override
     public @NotNull Option<BotConfigServerChannelCategory> getServerCategory(@NotNull Long categoryId) {
-        return botLayoutService.getServerLayout().flatMap(server -> botLayoutService.getCategory(server, categoryId));
+        return commandContext.getServerCategory(categoryId);
     }
 
     @Override
     public @NotNull ObjectMapper getMapper() {
-        return objectMapper;
+        return commandContext.getMapper();
     }
 
     @Override
@@ -619,14 +613,14 @@ public class BotCommandContext implements IBotCommandContext {
 
     @Override
     public @NotNull ExternalServiceClient getBackendClient() {
-        return getBean("client.service.backend", ExternalServiceClient.class);
+        return commandContext.getBackendClient();
     }
 
     @Override
     public <T> @NotNull T getBean(
             @NotNull Class<T> clazz
     ) {
-        return applicationContext.getBean(clazz);
+        return commandContext.getBean(clazz);
     }
 
     @Override
@@ -634,14 +628,14 @@ public class BotCommandContext implements IBotCommandContext {
             @NotNull String name,
             @NotNull Class<T> clazz
     ) {
-        return applicationContext.getBean(name, clazz);
+        return commandContext.getBean(name, clazz);
     }
 
     @Override
     public @NotNull Option<String> getProperty(
             @NotNull String key
     ) {
-        return Option.of(applicationContext.getEnvironment().getProperty(key));
+        return commandContext.getProperty(key);
     }
 
     @Override
@@ -649,7 +643,7 @@ public class BotCommandContext implements IBotCommandContext {
             @NotNull String key,
             @NotNull String defaultValue
     ) {
-        return applicationContext.getEnvironment().getProperty(key, defaultValue);
+        return commandContext.getProperty(key, defaultValue);
     }
 
     @Override
@@ -657,7 +651,7 @@ public class BotCommandContext implements IBotCommandContext {
             @NotNull String key,
             @NotNull Class<T> targetType
     ) {
-        return Option.of(applicationContext.getEnvironment().getProperty(key, targetType));
+        return commandContext.getProperty(key, targetType);
     }
 
     @Override
@@ -666,6 +660,6 @@ public class BotCommandContext implements IBotCommandContext {
             @NotNull Class<T> targetType,
             @NotNull T defaultValue
     ) {
-        return applicationContext.getEnvironment().getProperty(key, targetType, defaultValue);
+        return commandContext.getProperty(key, targetType, defaultValue);
     }
 }

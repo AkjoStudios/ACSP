@@ -14,8 +14,7 @@ import lombok.RequiredArgsConstructor;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.interactions.components.ActionRow;
-import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder;
-import net.dv8tion.jda.api.utils.messages.MessageCreateData;
+import net.dv8tion.jda.api.utils.messages.*;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Service;
@@ -29,39 +28,81 @@ import java.util.List;
 @SuppressWarnings("unused")
 public class DiscordMessageService {
     public static final String MESSAGE_SEND_ERROR = "Failed to send message!";
+    public static final String MESSAGE_EDIT_ERROR = "Failed to edit message!";
 
     public @NotNull MessageCreateData createMessage(String message) {
-        return new MessageCreateBuilder().setContent(message).build();
+        return finishMessage(new MessageCreateBuilder(), message);
     }
 
     public @NotNull MessageCreateData createMessage(
             String message,
             @NotNull List<Option<BotActionRowComponent>> rowComponents
     ) {
-        MessageCreateBuilder builder = new MessageCreateBuilder();
-        builder.setContent(message);
-        builder.setComponents(rowComponents.stream()
-                .filter(Option::isPresent)
-                .map(Option::getOrElseThrow)
-                .map(this::toActionRow)
-                .toList());
-        return builder.build();
+        return finishMessage(new MessageCreateBuilder(), message, rowComponents);
     }
 
     public @NotNull MessageCreateData createMessage(BotConfigMessage message) {
         MessageCreateBuilder builder = new MessageCreateBuilder();
-
         if (message == null) {
             return builder.build();
         }
 
-        builder.setContent(message.getContent());
-        builder.setEmbeds(message.getEmbeds().stream().map(this::toMessageEmbed).toList());
-        if (message.getComponents() != null) {
-            builder.setComponents(message.getComponents().stream().map(this::toActionRow).toList());
+        return finishMessage(builder, message);
+    }
+
+    public @NotNull MessageEditData editMessage(String message) {
+        return finishMessage(new MessageEditBuilder(), message);
+    }
+
+    public @NotNull MessageEditData editMessage(
+            String message,
+            @NotNull List<Option<BotActionRowComponent>> rowComponents
+    ) {
+        return finishMessage(new MessageEditBuilder(), message, rowComponents);
+    }
+
+    public @NotNull MessageEditData editMessage(BotConfigMessage message) {
+        MessageEditBuilder builder = new MessageEditBuilder();
+        if (message == null) {
+            return builder.build();
         }
 
-        return builder.build();
+        return finishMessage(builder, message);
+    }
+
+    private <T extends MessageData, B extends AbstractMessageBuilder<T, B>> @NotNull T finishMessage(
+            @NotNull B builder,
+            String message
+    ) {
+        return builder.setContent(message).build();
+    }
+
+    private <T extends MessageData, B  extends AbstractMessageBuilder<T, B>> @NotNull T finishMessage(
+            @NotNull B builder,
+            String message,
+            @NotNull List<Option<BotActionRowComponent>> rowComponents
+    ) {
+        return builder.setContent(message)
+                .setComponents(rowComponents.stream()
+                        .filter(Option::isPresent)
+                        .map(Option::getOrElseThrow)
+                        .map(this::toActionRow)
+                        .toList()
+                ).build();
+    }
+
+    private <T extends MessageData, B  extends AbstractMessageBuilder<T, B>> @NotNull T finishMessage(
+            @NotNull B builder,
+            @NotNull BotConfigMessage message
+    ) {
+        return builder.setContent(message.getContent())
+                .setEmbeds(message.getEmbeds() != null
+                        ? message.getEmbeds().stream().map(this::toMessageEmbed).toList()
+                        : List.of())
+                .setComponents(message.getComponents() != null
+                        ? message.getComponents().stream().map(this::toActionRow).toList()
+                        : List.of()
+                ).build();
     }
 
     public @NotNull Try<BotConfigMessage> injectFields(
