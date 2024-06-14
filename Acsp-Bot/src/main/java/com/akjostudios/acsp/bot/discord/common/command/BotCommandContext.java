@@ -12,8 +12,12 @@ import com.akjostudios.acsp.bot.discord.config.layout.BotConfigServerChannelCate
 import com.akjostudios.acsp.bot.discord.config.layout.BotConfigServerRole;
 import com.akjostudios.acsp.bot.discord.service.*;
 import com.akjostudios.acsp.common.api.ExternalServiceClient;
+import com.akjostudios.acsp.common.dto.SimpleExternalServiceResponse;
+import com.akjostudios.acsp.common.dto.bot.log.command.CommandExecutionDataRequest;
+import com.akjostudios.acsp.common.dto.bot.log.command.CommandExecutionGetResponse;
 import com.akjostudios.acsp.common.dto.bot.log.command.CommandResponseCreateRequest;
 import com.akjostudios.acsp.common.dto.bot.log.command.CommandResponseCreateResponse;
+import com.akjostudios.acsp.common.model.bot.log.command.CommandExecutionDao;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.tonivade.purefun.type.Option;
 import com.github.tonivade.purefun.type.Try;
@@ -30,8 +34,8 @@ import net.dv8tion.jda.api.requests.RestAction;
 import net.dv8tion.jda.api.requests.restaction.MessageCreateAction;
 import net.dv8tion.jda.api.requests.restaction.MessageEditAction;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.springframework.context.ApplicationContext;
+import reactor.core.publisher.Mono;
 
 import java.util.Collection;
 import java.util.List;
@@ -128,13 +132,32 @@ public class BotCommandContext implements IBotCommandContext {
     }
 
     @Override
-    @SuppressWarnings("unchecked")
-    public <T> @NotNull T getArgument(@NotNull String id, @Nullable T defaultValue) {
+    public Mono<Map<String, Object>> getCommandData() {
+        return getBackendClient().exchangeGet("/api/bot/log/command/execution/exid/" + executionId, CommandExecutionGetResponse.class)
+                .doOnError(error -> sendMessage(
+                        getInternalErrorMessage("Failed to get command data! " + error.getMessage())
+                )).map(CommandExecutionGetResponse::result)
+                .map(CommandExecutionDao::commandData);
+    }
+
+    @Override
+    public void setCommandData(Map<String, Object> commandData) {
+        getBackendClient().exchangePut(
+                "/api/bot/log/command/execution/" + executionId + "/data",
+                new CommandExecutionDataRequest(commandData),
+                SimpleExternalServiceResponse.class
+        ).map(SimpleExternalServiceResponse::status)
+                .doOnError(error -> sendMessage(
+                        getInternalErrorMessage("Failed to set command data! " + error.getMessage())
+                )).subscribe();
+    }
+
+    @Override
+    public <T> @NotNull Option<T> getArgument(@NotNull String id, @NotNull Class<T> type) {
         return Option.from(arguments.stream()
-                .filter(argument -> argument.id().equals(id))
-                .findFirst())
-                .map(argument -> (T) argument.value())
-                .getOrElse(defaultValue);
+                        .filter(argument -> argument.id().equals(id))
+                        .findFirst())
+                .map(argument -> type.cast(argument.value()));
     }
 
     @Override
@@ -635,6 +658,12 @@ public class BotCommandContext implements IBotCommandContext {
             @NotNull Class<T> clazz
     ) {
         return applicationContext.getBean(name, clazz);
+    }
+
+    public <T> @NotNull List<T> getBeans(
+            @NotNull Class<T> clazz
+    ) {
+        return applicationContext.getBeansOfType(clazz).values().stream().toList();
     }
 
     @Override

@@ -38,6 +38,10 @@ public class CommandExecution {
     @Column(name = "subcommand_name")
     private String subcommandName;
 
+    @Column(name = "command_data", nullable = false)
+    @Type(JsonType.class)
+    private Map<String, Object> commandData;
+
     @Column(name = "finished", nullable = false)
     private boolean finished;
 
@@ -59,6 +63,7 @@ public class CommandExecution {
                 commandName,
                 commandArgs,
                 subcommandName,
+                commandData,
                 finished,
                 finishedAt,
                 createdAt,

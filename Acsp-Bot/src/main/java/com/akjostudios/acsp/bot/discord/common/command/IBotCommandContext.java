@@ -24,7 +24,7 @@ import net.dv8tion.jda.api.entities.emoji.Emoji;
 import net.dv8tion.jda.api.requests.restaction.MessageCreateAction;
 import net.dv8tion.jda.api.requests.restaction.MessageEditAction;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import reactor.core.publisher.Mono;
 
 import java.util.Collection;
 import java.util.List;
@@ -44,7 +44,12 @@ public interface IBotCommandContext {
 
     @NotNull List<BotConfigCommand.Argument> getArgumentDefinitions();
 
-    <T> @NotNull T getArgument(@NotNull String id, @Nullable T defaultValue);
+
+    Mono<Map<String, Object>> getCommandData();
+    void setCommandData(Map<String, Object> commandData);
+
+
+    <T> @NotNull Option<T> getArgument(@NotNull String id, @NotNull Class<T> type);
 
     @NotNull Map<String, String> getArgumentMap();
 
@@ -232,6 +237,8 @@ public interface IBotCommandContext {
     <T> @NotNull T getBean(@NotNull Class<T> clazz);
 
     <T> @NotNull T getBean(@NotNull String name, @NotNull Class<T> clazz);
+
+    <T> @NotNull List<T> getBeans(@NotNull Class<T> clazz);
 
     @NotNull Option<String> getProperty(@NotNull String key);
 

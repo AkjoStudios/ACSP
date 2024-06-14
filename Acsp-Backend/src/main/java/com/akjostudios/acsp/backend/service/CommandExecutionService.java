@@ -14,6 +14,7 @@ import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -46,6 +47,20 @@ public class CommandExecutionService {
         execution.setFinished(true);
         execution.setFinishedAt(Instant.now());
 
+        executionRepository.save(execution);
+        return Validation.valid(ResponseStatus.SUCCESS);
+    }
+
+    public Validation<String, ResponseStatus> setCommandData(
+            long executionId,
+            @NotNull Map<String, Object> data
+    ) {
+        CommandExecution execution = executionRepository.findById(executionId).orElse(null);
+        if (execution == null) {
+            return Validation.invalid("Execution with ID " + executionId + " not found!");
+        }
+
+        execution.setCommandData(data);
         executionRepository.save(execution);
         return Validation.valid(ResponseStatus.SUCCESS);
     }

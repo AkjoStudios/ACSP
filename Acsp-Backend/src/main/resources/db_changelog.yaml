@@ -523,3 +523,19 @@ databaseChangeLog:
         - dropColumn:
             tableName: "command_executions"
             columnName: "command_args"
+  - changeSet:
+      id: "add-command-data-to-command-executions"
+      author: "AkjoStudios"
+      changes:
+        - addColumn:
+            tableName: "command_executions"
+            columns:
+              - column:
+                  name: "command_data"
+                  type: "jsonb"
+                  constraints:
+                    nullable: false
+      rollback:
+        - dropColumn:
+            tableName: "command_executions"
+            columnName: "command_data"

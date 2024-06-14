@@ -33,8 +33,8 @@ import net.dv8tion.jda.api.requests.restaction.MessageEditAction;
 import net.dv8tion.jda.api.requests.restaction.interactions.MessageEditCallbackAction;
 import net.dv8tion.jda.api.requests.restaction.interactions.ReplyCallbackAction;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.springframework.context.ApplicationContext;
+import reactor.core.publisher.Mono;
 
 import java.util.Collection;
 import java.util.List;
@@ -53,6 +53,7 @@ public class BotCommandInteractionContext implements IBotCommandContext {
 
     private final Option<String> subcommandName;
 
+    @Getter
     private final String interactionId;
 
     private final GenericComponentInteractionCreateEvent event;
@@ -139,8 +140,18 @@ public class BotCommandInteractionContext implements IBotCommandContext {
     }
 
     @Override
-    public <T> @NotNull T getArgument(@NotNull String id, @Nullable T defaultValue) {
-        return commandContext.getArgument(id, defaultValue);
+    public Mono<Map<String, Object>> getCommandData() {
+        return commandContext.getCommandData();
+    }
+
+    @Override
+    public void setCommandData(Map<String, Object> commandData) {
+        commandContext.setCommandData(commandData);
+    }
+
+    @Override
+    public <T> @NotNull Option<T> getArgument(@NotNull String id, @NotNull Class<T> type) {
+        return commandContext.getArgument(id, type);
     }
 
     @Override
@@ -629,6 +640,12 @@ public class BotCommandInteractionContext implements IBotCommandContext {
             @NotNull Class<T> clazz
     ) {
         return commandContext.getBean(name, clazz);
+    }
+
+    public <T> @NotNull List<T> getBeans(
+            @NotNull Class<T> clazz
+    ) {
+        return commandContext.getBeans(clazz);
     }
 
     @Override

@@ -1,9 +1,11 @@
 package com.akjostudios.acsp.backend.controller.bot.log;
 
 import com.akjostudios.acsp.backend.service.CommandExecutionService;
+import com.akjostudios.acsp.common.dto.SimpleExternalServiceResponse;
 import com.akjostudios.acsp.common.dto.bot.log.command.*;
 import com.akjostudios.acsp.common.model.ResponseStatus;
 import lombok.RequiredArgsConstructor;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.web.bind.annotation.*;
@@ -26,13 +28,27 @@ public class CommandExecutionController {
     }
 
     @PutMapping("/{executionId}/finish")
-    public ResponseEntity<CommandExecutionFinishResponse> finishExecution(
+    public ResponseEntity<SimpleExternalServiceResponse> finishExecution(
             @PathVariable(value = "executionId") long executionId
     ) {
         return service.finishExecution(executionId).fold(
-                error -> ResponseEntity.badRequest().body(new CommandExecutionFinishResponse(
+                error -> ResponseEntity.badRequest().body(new SimpleExternalServiceResponse(
                         ResponseStatus.FAILURE, error
-                )), status -> ResponseEntity.ok(new CommandExecutionFinishResponse(
+                )), status -> ResponseEntity.ok(new SimpleExternalServiceResponse(
+                        status, null
+                ))
+        );
+    }
+
+    @PutMapping("/{executionId}/data")
+    public ResponseEntity<SimpleExternalServiceResponse> setCommandData(
+            @PathVariable(value = "executionId") long executionId,
+            @RequestBody @NotNull CommandExecutionDataRequest request
+    ) {
+        return service.setCommandData(executionId, request.data()).fold(
+                error -> ResponseEntity.badRequest().body(new SimpleExternalServiceResponse(
+                        ResponseStatus.FAILURE, error
+                )), status -> ResponseEntity.ok(new SimpleExternalServiceResponse(
                         status, null
                 ))
         );
@@ -41,7 +57,7 @@ public class CommandExecutionController {
     @PostMapping("/{executionId}/response")
     public ResponseEntity<CommandResponseCreateResponse> logResponse(
             @PathVariable(value = "executionId") long executionId,
-            @RequestBody CommandResponseCreateRequest request
+            @RequestBody @NotNull CommandResponseCreateRequest request
     ) {
         return service.logResponse(executionId, request).fold(
                 error -> ResponseEntity.badRequest().body(new CommandResponseCreateResponse(

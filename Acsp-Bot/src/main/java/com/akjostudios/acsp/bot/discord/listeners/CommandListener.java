@@ -13,7 +13,7 @@ import com.akjostudios.acsp.bot.discord.config.definition.BotConfigCommand;
 import com.akjostudios.acsp.bot.discord.service.*;
 import com.akjostudios.acsp.common.dto.bot.log.command.CommandExecutionCreateRequest;
 import com.akjostudios.acsp.common.dto.bot.log.command.CommandExecutionCreateResponse;
-import com.akjostudios.acsp.common.dto.bot.log.command.CommandExecutionFinishResponse;
+import com.akjostudios.acsp.common.dto.SimpleExternalServiceResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.tonivade.purefun.Function1;
 import com.github.tonivade.purefun.type.Option;
@@ -268,10 +268,11 @@ public class CommandListener implements BotListener<MessageReceivedEvent> {
                             .timeout(Duration.ofSeconds(5))
                             .flatMap(executionId -> {
                                 ctx.setExecutionId(executionId);
+                                command.init(ctx);
                                 command.execute(ctx);
                                 return ctx.getBackendClient().exchangePut(
                                         "/api/bot/log/command/execution/" + executionId + "/finish",
-                                        CommandExecutionFinishResponse.class
+                                        SimpleExternalServiceResponse.class
                                 ).timeout(Duration.ofSeconds(5));
                             }).doOnError(error -> {
                                 log.error("Failed to log command execution!", error);

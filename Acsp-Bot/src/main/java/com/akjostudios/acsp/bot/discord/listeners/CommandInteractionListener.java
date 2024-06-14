@@ -70,7 +70,7 @@ public class CommandInteractionListener implements BotListener<GenericComponentI
             @NotNull CommandExecutionDao commandExecution,
             @NotNull GenericComponentInteractionCreateEvent event
     ) {
-        BotCommandInteractionContext context = new BotCommandInteractionContext(
+        BotCommandInteractionContext ctx = new BotCommandInteractionContext(
                 commandExecution.commandName(),
                 Option.of(commandExecution::subcommandName),
                 event.getComponentId(),
@@ -80,7 +80,7 @@ public class CommandInteractionListener implements BotListener<GenericComponentI
                 commandExecution.channelId(),
                 commandExecution.userId()
         );
-        BotCommandContext commandContext = context.initialize(
+        BotCommandContext originalCtx = ctx.initialize(
                 applicationContext,
                 botDefinitionService,
                 discordMessageService,
@@ -92,15 +92,16 @@ public class CommandInteractionListener implements BotListener<GenericComponentI
 
         List<BotCommandArgument<?>> convertedArguments = new ArrayList<>();
         botCommandArgumentService.convertArguments(
-                commandContext,
+                originalCtx,
                 commandExecution.commandArgs()
         ).forEach(validation -> validation.fold(
                 err -> false,
                 convertedArguments::add
         ));
-        context.setArguments(convertedArguments);
+        ctx.setArguments(convertedArguments);
 
-        command.onInteraction(context);
+        command.init(ctx);
+        command.onInteraction(ctx);
     }
 
     private void onInvalidInteraction(@NotNull GenericComponentInteractionCreateEvent event) {

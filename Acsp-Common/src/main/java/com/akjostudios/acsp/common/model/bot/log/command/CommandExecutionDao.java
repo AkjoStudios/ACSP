@@ -15,6 +15,7 @@ public record CommandExecutionDao(
         @NotNull String commandName,
         @NotNull Map<String, String> commandArgs,
         @Nullable String subcommandName,
+        @NotNull Map<String, Object> commandData,
         boolean finished,
         @NotNull Instant finishedAt,
         @NotNull Instant createdAt,
