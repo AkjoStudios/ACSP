@@ -17,11 +17,11 @@
     <properties>
         <main.class>com.akjostudios.acsp.bot.AcspBotApp</main.class>
 
-        <jda.version>5.0.0-beta.21</jda.version>
+        <jda.version>5.0.0-beta.24</jda.version>
         <jetbrains.annotations.version>24.1.0</jetbrains.annotations.version>
-        <logback.version>1.5.3</logback.version>
-        <micrometer.prometheus.version>1.12.4</micrometer.prometheus.version>
-        <spring-boot.version>3.2.3</spring-boot.version>
+        <logback.version>1.5.6</logback.version>
+        <micrometer.prometheus.version>1.13.1</micrometer.prometheus.version>
+        <spring-boot.version>3.3.0</spring-boot.version>
     </properties>
 
     <dependencies>

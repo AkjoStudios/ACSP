@@ -15,7 +15,7 @@ import com.akjostudios.acsp.common.dto.bot.log.command.CommandExecutionCreateReq
 import com.akjostudios.acsp.common.dto.bot.log.command.CommandExecutionCreateResponse;
 import com.akjostudios.acsp.common.dto.SimpleExternalServiceResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github.tonivade.purefun.Function1;
+import com.github.tonivade.purefun.core.Function1;
 import com.github.tonivade.purefun.type.Option;
 import com.github.tonivade.purefun.type.Validation;
 import jakarta.annotation.PostConstruct;

@@ -14,6 +14,7 @@ import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
+import java.util.HashMap;
 import java.util.Map;
 
 @Service
@@ -31,6 +32,7 @@ public class CommandExecutionService {
         execution.setCommandName(request.commandName());
         execution.setCommandArgs(request.commandArgs());
         execution.setSubcommandName(request.subcommandName());
+        execution.setCommandData(new HashMap<>());
         execution.setFinished(false);
         execution.setFinishedAt(null);
 
