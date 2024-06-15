@@ -11,19 +11,16 @@ import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
-import java.util.Map;
 
 @Component
 public class HelpCommand implements BotCommand {
     private BotDefinitionService botDefinitionService;
     private List<BotCommand> botCommands;
-    private Map<String, Object> commandData;
 
     @Override
     public void init(@NotNull IBotCommandContext ctx) {
         botDefinitionService = ctx.getBean(BotDefinitionService.class);
         botCommands = ctx.getBeans(BotCommand.class);
-        commandData = ctx.getCommandData().block();
     }
 
     @Override
@@ -35,9 +32,9 @@ public class HelpCommand implements BotCommand {
 
     @Override
     public void onInteraction(@NotNull BotCommandInteractionContext ctx) {
-        ctx.getArgument("command", String.class).ifEmpty(() -> printCommandList(
-                (int) commandData.getOrDefault("page", 1))
-        );
+        ctx.getCommandData().subscribe(data -> ctx.getArgument("command", String.class).ifEmpty(
+                () -> printCommandList((int) data.getOrDefault("page", 1))
+        ));
     }
 
     private void printCommandList(int page) {
@@ -48,7 +45,7 @@ public class HelpCommand implements BotCommand {
                 .map(Option::getOrElseThrow)
                 .collect(new PagingCollector<>(25)))
                 .filter(map -> !map.isEmpty())
-                .map(map -> map.get(page))
+                .map(map -> map.getOrDefault(page, List.of()))
                 .ifPresent(System.out::println);
     }
 

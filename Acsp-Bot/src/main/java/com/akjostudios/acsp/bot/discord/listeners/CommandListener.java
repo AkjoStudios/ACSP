@@ -11,9 +11,9 @@ import com.akjostudios.acsp.bot.discord.common.command.argument.validation.BotCo
 import com.akjostudios.acsp.bot.discord.common.listener.BotListener;
 import com.akjostudios.acsp.bot.discord.config.definition.BotConfigCommand;
 import com.akjostudios.acsp.bot.discord.service.*;
+import com.akjostudios.acsp.common.dto.SimpleExternalServiceResponse;
 import com.akjostudios.acsp.common.dto.bot.log.command.CommandExecutionCreateRequest;
 import com.akjostudios.acsp.common.dto.bot.log.command.CommandExecutionCreateResponse;
-import com.akjostudios.acsp.common.dto.SimpleExternalServiceResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.tonivade.purefun.core.Function1;
 import com.github.tonivade.purefun.type.Option;
@@ -275,9 +275,9 @@ public class CommandListener implements BotListener<MessageReceivedEvent> {
                                         SimpleExternalServiceResponse.class
                                 ).timeout(Duration.ofSeconds(5));
                             }).doOnError(error -> {
-                                log.error("Failed to log command execution!", error);
+                                log.error("Failed to execute command!", error);
                                 ctx.sendMessage(ctx.getInternalErrorMessage(
-                                        "Failed to log command execution! (see logs)"
+                                        "Failed to log execute command! (see logs)"
                                 ));
                             }).subscribe();
                 }).ifEmpty(() -> {
