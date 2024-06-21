@@ -108,7 +108,7 @@ app:
                   name: "$help.author.name$" # contains $1
                   icon_url: "https://pics.freeicons.io/uploads/icons/png/5851494071557740370-512.png"
                 title: "$help.command-list.title$"
-                description: "$help.command-list.description" # contains $0
+                description: "$help.command-list.description$" # contains $0
                 color: "#202225"
                 fields: [] # see field "help-command-list.command"
                 footer:

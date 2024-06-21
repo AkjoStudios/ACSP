@@ -23,6 +23,7 @@ import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.entities.emoji.Emoji;
 import net.dv8tion.jda.api.requests.restaction.MessageCreateAction;
 import net.dv8tion.jda.api.requests.restaction.MessageEditAction;
+import net.dv8tion.jda.api.utils.messages.MessageCreateRequest;
 import org.jetbrains.annotations.NotNull;
 import reactor.core.publisher.Mono;
 
@@ -129,6 +130,19 @@ public interface IBotCommandContext {
             @NotNull BotButtonComponent.Style style,
             @NotNull Option<String> emoji,
             boolean disabled
+    );
+
+    <T extends MessageCreateRequest<T>> @NotNull Try<T> answerOrReply(
+            @NotNull String message
+    );
+
+    <T extends MessageCreateRequest<T>> @NotNull Try<T> answerOrReply(
+            @NotNull String message,
+            @NotNull List<Option<BotActionRowComponent>> components
+    );
+
+    <T extends MessageCreateRequest<T>> @NotNull Try<T> answerOrReply(
+            @NotNull Try<BotConfigMessage> message
     );
 
     @NotNull Try<MessageCreateAction> sendMessage(String message);

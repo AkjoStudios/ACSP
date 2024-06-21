@@ -277,7 +277,7 @@ public class CommandListener implements BotListener<MessageReceivedEvent> {
                             }).doOnError(error -> {
                                 log.error("Failed to execute command!", error);
                                 ctx.sendMessage(ctx.getInternalErrorMessage(
-                                        "Failed to log execute command! (see logs)"
+                                        "Failed to execute command! (see logs)"
                                 ));
                             }).subscribe();
                 }).ifEmpty(() -> {

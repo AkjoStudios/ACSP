@@ -32,6 +32,7 @@ import net.dv8tion.jda.api.requests.restaction.MessageCreateAction;
 import net.dv8tion.jda.api.requests.restaction.MessageEditAction;
 import net.dv8tion.jda.api.requests.restaction.interactions.MessageEditCallbackAction;
 import net.dv8tion.jda.api.requests.restaction.interactions.ReplyCallbackAction;
+import net.dv8tion.jda.api.utils.messages.MessageCreateRequest;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.context.ApplicationContext;
 import reactor.core.publisher.Mono;
@@ -319,7 +320,9 @@ public class BotCommandInteractionContext implements IBotCommandContext {
                 }).onFailure(err -> log.error(DiscordMessageService.MESSAGE_SEND_ERROR, err));
     }
 
-    public @NotNull Try<MessageEditCallbackAction> editReply(@NotNull String message) {
+    public @NotNull Try<MessageEditCallbackAction> editReply(
+            @NotNull String message
+    ) {
         return Try.of(() -> discordMessageService.editMessage(message))
                 .filter(msg -> !replied)
                 .map(event::editMessage)
@@ -342,7 +345,9 @@ public class BotCommandInteractionContext implements IBotCommandContext {
                 }).onFailure(err -> log.error(DiscordMessageService.MESSAGE_EDIT_ERROR, err));
     }
 
-    public @NotNull Try<MessageEditCallbackAction> editReply(@NotNull BotConfigMessage message) {
+    public @NotNull Try<MessageEditCallbackAction> editReply(
+            @NotNull BotConfigMessage message
+    ) {
         return Try.of(() -> discordMessageService.editMessage(message))
                 .filter(msg -> !replied)
                 .map(event::editMessage)
@@ -364,6 +369,31 @@ public class BotCommandInteractionContext implements IBotCommandContext {
                 .map(__ -> event.getHook())
                 .onSuccess(hook -> replied = true)
                 .onFailure(err -> log.error(DiscordMessageService.MESSAGE_EDIT_ERROR, err));
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public @NotNull <T extends MessageCreateRequest<T>> Try<T> answerOrReply(
+            @NotNull String message
+    ) {
+        return (Try<T>) reply(message, false);
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public @NotNull <T extends MessageCreateRequest<T>> Try<T> answerOrReply(
+            @NotNull String message,
+            @NotNull List<Option<BotActionRowComponent>> components
+    ) {
+        return (Try<T>) reply(message, components, false);
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public @NotNull <T extends MessageCreateRequest<T>> Try<T> answerOrReply(
+            @NotNull Try<BotConfigMessage> message
+    ) {
+        return (Try<T>) reply(message.getOrElseThrow(), false);
     }
 
     @Override

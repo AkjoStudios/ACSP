@@ -33,6 +33,7 @@ import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.requests.RestAction;
 import net.dv8tion.jda.api.requests.restaction.MessageCreateAction;
 import net.dv8tion.jda.api.requests.restaction.MessageEditAction;
+import net.dv8tion.jda.api.utils.messages.MessageCreateRequest;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.context.ApplicationContext;
 import reactor.core.publisher.Mono;
@@ -286,7 +287,9 @@ public class BotCommandContext implements IBotCommandContext {
         return discordMessageService.createButton(interactionId, label, style, emoji, disabled);
     }
 
-    public @NotNull Try<MessageCreateAction> answer(String message) {
+    public @NotNull Try<MessageCreateAction> answer(
+            @NotNull String message
+    ) {
         return Try.of(() -> discordMessageService.createMessage(message))
                 .map(event.getChannel()::sendMessage)
                 .onSuccess(this::handleAnswerAction)
@@ -294,7 +297,7 @@ public class BotCommandContext implements IBotCommandContext {
     }
 
     public @NotNull Try<MessageCreateAction> answer(
-            String message,
+            @NotNull String message,
             @NotNull List<Option<BotActionRowComponent>> components
     ) {
         return Try.of(() -> discordMessageService.createMessage(message, components))
@@ -303,12 +306,33 @@ public class BotCommandContext implements IBotCommandContext {
                 .onFailure(err -> log.error(DiscordMessageService.MESSAGE_SEND_ERROR, err));
     }
 
-    public @NotNull Try<MessageCreateAction> answer(@NotNull Try<BotConfigMessage> message) {
+    public @NotNull Try<MessageCreateAction> answer(
+            @NotNull Try<BotConfigMessage> message
+    ) {
         return message.map(discordMessageService::createMessage)
                 .map(event.getChannel()::sendMessage)
                 .onSuccess(this::handleAnswerAction)
                 .onFailure(err -> log.error(DiscordMessageService.MESSAGE_SEND_ERROR, err));
     }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public <T extends MessageCreateRequest<T>> @NotNull Try<T> answerOrReply(
+            @NotNull String message
+    ) { return (Try<T>) answer(message); }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public <T extends MessageCreateRequest<T>> @NotNull Try<T> answerOrReply(
+            @NotNull String message,
+            @NotNull List<Option<BotActionRowComponent>> components
+    ) { return (Try<T>) answer(message, components); }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public <T extends MessageCreateRequest<T>> @NotNull Try<T> answerOrReply(
+            @NotNull Try<BotConfigMessage> message
+    ) { return (Try<T>) answer(message); }
 
     private void handleAnswerAction(@NotNull MessageCreateAction action) {
         action.setMessageReference(event.getMessageId())
