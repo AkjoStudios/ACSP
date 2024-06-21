@@ -2,6 +2,7 @@ package com.akjostudios.acsp.bot.discord.config;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
@@ -20,13 +21,13 @@ import java.util.Objects;
 @RequiredArgsConstructor
 @Slf4j
 public class BotLocalizationConfig {
-    public static final Locale DEFAULT_LOCALE = Locale.ENGLISH;
-
     @Bean
     @Primary
-    public LocaleContextResolver localeResolver() {
+    public LocaleContextResolver localeResolver(
+            @NotNull BotConfigProperties configProperties
+    ) {
         AcceptHeaderLocaleContextResolver localeResolver = new AcceptHeaderLocaleContextResolver();
-        localeResolver.setDefaultLocale(DEFAULT_LOCALE);
+        localeResolver.setDefaultLocale(Locale.forLanguageTag(configProperties.getDefaultLocale()));
         return localeResolver;
     }
 
@@ -40,7 +41,9 @@ public class BotLocalizationConfig {
     }
 
     @Bean
-    public List<Locale> availableLocales() {
+    public List<Locale> availableLocales(
+            @NotNull BotConfigProperties configProperties
+    ) {
         PathMatchingResourcePatternResolver resolver = new PathMatchingResourcePatternResolver();
         try {
             List<Locale> locales = Arrays.stream(resolver.getResources("classpath*:/BotStrings*.properties"))
@@ -51,7 +54,7 @@ public class BotLocalizationConfig {
             return locales;
         } catch (Exception ex) {
             log.warn("Failed to load available locales!", ex);
-            return List.of(DEFAULT_LOCALE);
+            return List.of(Locale.forLanguageTag(configProperties.getDefaultLocale()));
         }
     }
 }

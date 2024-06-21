@@ -101,6 +101,10 @@ public class BotDefinitionService {
                     result.getEmbeds().add(resultEmbed);
                 }
             }
+            result.setComponents(new ArrayList<>());
+            if (message.getComponents() != null) {
+                result.getComponents().addAll(message.getComponents());
+            }
 
             return result;
         });

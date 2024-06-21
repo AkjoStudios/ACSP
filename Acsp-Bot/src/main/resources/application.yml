@@ -12,6 +12,7 @@ app:
     supertokens-url: ${ACSP_SUPERTOKENS_URL}
     backend-url: ${ACSP_BACKEND_URL}
   config:
+    default-locale: "de"
     environment: ${BOT_ENVIRONMENT}
     client-id: ${BOT_CLIENT_ID}
     client-secret: ${BOT_CLIENT_SECRET}
@@ -103,6 +104,7 @@ app:
                   icon-url: "https://cdn.discordapp.com/avatars/1220705902622150666/71317fc3ccdc919c1a47d078161fc4f0.webp?size=256"
         - label: "help-command-list"
           message:
+            components: []
             embeds:
               - author:
                   name: "$help.author.name$" # contains $1
@@ -112,8 +114,22 @@ app:
                 color: "#202225"
                 fields: [] # see field "help-command-list.command"
                 footer:
+                  text: "$footer.text.1.paginated$" # contains $1, $2 and $3
+                  timestamp: "$4"
+                  icon-url: "https://cdn.discordapp.com/avatars/1220705902622150666/71317fc3ccdc919c1a47d078161fc4f0.webp?size=256"
+        - label: "help-command"
+          message:
+            embeds:
+              - author:
+                  name: "$help.author.name$" # contains $1
+                  icon_url: "https://pics.freeicons.io/uploads/icons/png/5851494071557740370-512.png"
+                title: "$help.command.title$" # contains $0
+                description: "$help.command.description$" # contains $2
+                color: "#202225"
+                fields: [] # see field "help-command.argument" and "help-command.subcommand
+                footer:
                   text: "$footer.text.1$" # contains $1
-                  timestamp: "$2"
+                  timestamp: "$3"
                   icon-url: "https://cdn.discordapp.com/avatars/1220705902622150666/71317fc3ccdc919c1a47d078161fc4f0.webp?size=256"
       components:
         - label: "next-page-button"
@@ -151,6 +167,16 @@ app:
             name: "Command $0"
             value: "$1"
             inline: false
+        - label: "help-command.argument"
+          field:
+              name: "Argument $0"
+              value: "$1"
+              inline: false
+        - label: "help-command.subcommand"
+          field:
+              name: "Subcommand $0"
+              value: "$1"
+              inline: false
       commands:
         - name: "help"
           enabled: true

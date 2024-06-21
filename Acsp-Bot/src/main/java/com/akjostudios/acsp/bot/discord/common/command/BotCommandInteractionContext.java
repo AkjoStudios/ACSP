@@ -103,6 +103,7 @@ public class BotCommandInteractionContext implements IBotCommandContext {
                 botLayoutService,
                 objectMapper
         );
+        this.commandContext.setExecutionId(executionId);
 
         return this.commandContext;
     }

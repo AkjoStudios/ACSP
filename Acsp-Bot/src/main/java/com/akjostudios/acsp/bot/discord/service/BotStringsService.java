@@ -1,6 +1,6 @@
 package com.akjostudios.acsp.bot.discord.service;
 
-import com.akjostudios.acsp.bot.discord.config.BotLocalizationConfig;
+import com.akjostudios.acsp.bot.discord.config.BotConfigProperties;
 import com.github.tonivade.purefun.type.Option;
 import lombok.RequiredArgsConstructor;
 import org.jetbrains.annotations.NotNull;
@@ -19,6 +19,7 @@ import java.util.regex.Pattern;
 public class BotStringsService {
     private static final Pattern LABEL_PATTERN = Pattern.compile("\\$(.*)\\$");
 
+    private final BotConfigProperties configProperties;
     private final ResourceBundleMessageSource messageSource;
 
     public @NotNull Option<String> getString(
@@ -53,7 +54,10 @@ public class BotStringsService {
         int lastEnd = 0;
         while (matcher.find()) {
             String label = matcher.group(1);
-            String replacement = messageSource.getMessage(label, null, locale.getOrElse(BotLocalizationConfig.DEFAULT_LOCALE));
+            String replacement = messageSource.getMessage(
+                    label, null,
+                    locale.getOrElse(Locale.forLanguageTag(configProperties.getDefaultLocale()))
+            );
             result.append(message, lastEnd, matcher.start()).append(replacement);
             lastEnd = matcher.end();
         }

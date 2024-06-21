@@ -19,6 +19,8 @@ import java.util.Map;
 @ToString
 @Validated
 public class BotConfigProperties {
+    @NotNull private String defaultLocale;
+
     @NotNull private BotEnvironment environment;
     @NotNull private String deploymentId;
 

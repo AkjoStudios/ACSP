@@ -21,6 +21,7 @@ import org.springframework.stereotype.Service;
 
 import java.awt.*;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -29,6 +30,8 @@ import java.util.List;
 public class DiscordMessageService {
     public static final String MESSAGE_SEND_ERROR = "Failed to send message!";
     public static final String MESSAGE_EDIT_ERROR = "Failed to edit message!";
+
+    private final BotDefinitionService botDefinitionService;
 
     public @NotNull MessageCreateData createMessage(String message) {
         return finishMessage(new MessageCreateBuilder(), message);
@@ -115,11 +118,30 @@ public class DiscordMessageService {
         ));
     }
 
+    public @NotNull Try<BotConfigMessage> injectFields(
+            @NotNull BotConfigMessage message,
+            Option<Integer> index,
+            List<Option<BotConfigMessageEmbed.Field>> fields
+    ) {
+        return Try.of(() -> message).onSuccess(msg -> msg.getEmbeds().get(index.getOrElse(0)).getFields().addAll(
+                fields.stream().filter(Option::isPresent).map(Option::getOrElseThrow).toList()
+        ));
+    }
+
     public @NotNull Try<BotConfigMessage> injectComponents(
             @NotNull Try<BotConfigMessage> message,
             List<Option<BotActionRowComponent>> rowComponents
     ) {
         return message.onSuccess(msg -> msg.getComponents().addAll(
+                rowComponents.stream().filter(Option::isPresent).map(Option::getOrElseThrow).toList()
+        ));
+    }
+
+    public @NotNull Try<BotConfigMessage> injectComponents(
+            @NotNull BotConfigMessage message,
+            List<Option<BotActionRowComponent>> rowComponents
+    ) {
+        return Try.of(() -> message).onSuccess(msg -> msg.getComponents().addAll(
                 rowComponents.stream().filter(Option::isPresent).map(Option::getOrElseThrow).toList()
         ));
     }
@@ -154,6 +176,24 @@ public class DiscordMessageService {
             boolean disabled
     ) {
         return Option.some(new BotButtonComponent(interactionId, label, style, emoji.getOrElseNull(), disabled));
+    }
+
+    public @NotNull List<Option<BotActionRowComponent>> createPaginationComponents(
+            int page,
+            boolean hasNextPage,
+            boolean hasPreviousPage
+    ) {
+        List<Option<? extends BotComponent>> components = new ArrayList<>();
+        if (hasPreviousPage) {
+            components.add(botDefinitionService.getComponentDefinition("previous-page-button"));
+        }
+        if (hasNextPage) {
+            components.add(botDefinitionService.getComponentDefinition("next-page-button"));
+        }
+
+        return components.isEmpty()
+                ? List.of()
+                : List.of(createActionRow(components));
     }
 
     private @NotNull MessageEmbed toMessageEmbed(@NotNull BotConfigMessageEmbed embed) {
